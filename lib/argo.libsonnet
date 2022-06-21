@@ -34,7 +34,11 @@ local kube = import 'kube.libsonnet';
         repoURL: 'https://github.com/gutmensch/argocd.git',
 	targetRevision: 'HEAD',
 	path: path,
-      }
-    }
+      },
+      destination: {
+        server: 'https://kubernetes.default.svc',
+	namespace: name,
+      },
+    },
   },
 }
