@@ -116,7 +116,7 @@ def write_file(path, data):
     with open(path, 'w') as f:
         f.write(data)
 
-def generate_resources(path, secret_data_structure):
+def generate_resources(app_root_path, secret_data_structure):
     for proj, apps in secret_data_structure.items():
         for app, data in apps.items():
             out = {}
@@ -130,11 +130,12 @@ def generate_resources(path, secret_data_structure):
                         out[tenant][key] = sealed_secret(sec, ns, kv)
                 except KeyError:
                     pass
-                if not os.path.isdir(os.path.join(getenv('PWD'), path)):
-                    log.error('path {path} does not exist from PWD')
-                    continue
 
-            dst = os.path.join(getenv('PWD'), path, app, 'resources', 'sealedSecrets.libsonnet')
+            if not os.path.isdir(os.path.join(getenv('PWD'), app_root_path)):
+                log.error('app root path {path} does not exist from PWD')
+                continue
+
+            dst = os.path.join(getenv('PWD'), app_root_path, app, 'resources', 'sealedSecrets.libsonnet')
             log.debug(f'writing file {dst}')
             write_file(dst, jsonnet(out))
 
