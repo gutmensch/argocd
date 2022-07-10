@@ -52,8 +52,10 @@ def bitwarden_ensure_session():
         cmd += ['--method', '0', '--code', c] if c != '' else []
         env = { 'HOME': getenv('HOME') }
 
-        bw_session = run(cmd, env=env, capture_output=True).stdout
+        res = run(cmd, env=env, stdout=PIPE)
+        res.check_returncode()
 
+        bw_session = res.stdout
         log.info('BW_SESSION={}'.format(bw_session.decode('utf-8')))
     except CalledProcessError:
         log.error('bitwarden: login failed.')
