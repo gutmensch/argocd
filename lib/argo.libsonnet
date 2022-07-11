@@ -44,14 +44,15 @@ local kube = import 'kube.libsonnet';
         directory: {
           recurse: false,
           jsonnet: {
-            tlas: [
+            tlas: std.prune([
               {code: false, name: 'name', value: app.name },
               {code: false, name: 'namespace', value: full_name },
               {code: false, name: 'region', value: app.region },
               {code: false, name: 'tenant', value: tenant },
               {code: false, name: 'project', value: app.project },
-              {code: false, name: 'ingressRoot', value: app.ingressRoot },
-            ],
+              if app.ingressDomain != null then {code: false, name: 'ingressDomain', value: app.ingressDomain } else null,
+              if app.ingressRoot != null then {code: false, name: 'ingressRoot', value: app.ingressRoot } else null,
+            ]),
             extVars:: [],
           },
 	},
