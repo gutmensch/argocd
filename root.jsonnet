@@ -26,7 +26,7 @@ local projectList = [
     desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.',
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
-      { group: '', kind: 'cert-manager.io:ClusterIssuer' },
+      { group: '', kind: 'ClusterIssuer' },
     ],
   }),
 ];
