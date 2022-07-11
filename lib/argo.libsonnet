@@ -41,24 +41,24 @@ local kube = import 'kube.libsonnet';
         repoURL: app.repoURL,
 	targetRevision: app.targetRevision,
 	path: std.join('/', [app.directory, app.path]),
+        directory: {
+          recurse: false,
+          jsonnet: {
+            tlas: [
+              {code: false, name: 'name', value: app.name },
+              {code: false, name: 'namespace', value: full_name },
+              {code: false, name: 'region', value: app.region },
+              {code: false, name: 'tenant', value: tenant },
+              {code: false, name: 'project', value: app.project },
+              {code: false, name: 'ingressRoot', value: app.ingressRoot },
+            ],
+            extVars:: [],
+          },
+	},
       },
       destination: {
         server: 'https://kubernetes.default.svc',
 	namespace: full_name,
-      },
-      directory: {
-        recurse: false,
-	jsonnet: {
-	  tlas: [
-	    {code: false, name: 'name', value: app.name },
-	    {code: false, name: 'namespace', value: full_name },
-	    {code: false, name: 'region', value: app.region },
-	    {code: false, name: 'tenant', value: tenant },
-	    {code: false, name: 'project', value: app.project },
-	    {code: false, name: 'ingressRoot', value: app.ingressRoot },
-	  ],
-	  extVars:: [],
-        },
       },
       syncPolicy: {
         automated: {
