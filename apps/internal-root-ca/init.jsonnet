@@ -3,7 +3,7 @@ local defaults = {
   local ca = self,
 };
 
-function(name, namespace, config)
+function(name, namespace, project, tenant, region)
   local resources = {
     selfsignedclusterissuer: kube._Object('cert-manager.io/v1', 'ClusterIssuer', name) {
       metadata+: {
