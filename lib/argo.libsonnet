@@ -72,7 +72,7 @@ local kube = import 'kube.libsonnet';
 	  backoff: {
 	    duration: '5s',
             factor: 2,
-            maxDuration: 10m,
+            maxDuration: '10m',
 	  },
 	},
         syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background', 'PruneLast=true'],
