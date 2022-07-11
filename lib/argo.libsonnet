@@ -64,8 +64,18 @@ local kube = import 'kube.libsonnet';
       syncPolicy: {
         automated: {
           prune: true,
+	  selfHeal: true,
+	  allowEmpty: true,
 	},
-        syncOptions: ['CreateNamespace=true'],
+	retry: {
+	  limit: 10,
+	  backoff: {
+	    duration: '5s',
+            factor: 2,
+            maxDuration: 10m,
+	  },
+	},
+        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background', 'PruneLast=true'],
       },
     },
   },
