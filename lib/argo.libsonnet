@@ -1,7 +1,7 @@
 local kube = import 'kube.libsonnet';
 
 {
-  Project(name, namespaces, description): kube._Object("argoproj.io/v1alpha1", "AppProject", name) {
+  Project(name, namespaces, description, clusterResourceAllowList): kube._Object("argoproj.io/v1alpha1", "AppProject", name) {
     metadata: {
       namespace: 'argo-cd-system',
       name: name,
@@ -17,9 +17,7 @@ local kube = import 'kube.libsonnet';
         { namespace: ns, server: 'https://kubernetes.default.svc' }
 	for ns in namespaces
       ],
-      clusterResourceWhitelist: [
-        { group: '', kind: 'Namespace' },
-      ],
+      clusterResourceWhitelist: clusterResourceAllowList,
     }
   },
 

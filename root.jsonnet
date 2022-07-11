@@ -10,15 +10,25 @@ local defaults = {
     ingressRoot: null,
     ingressDomain: null,
   },
+  project: {
+    clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
+  },
 };
 local withAppDef(map) = defaults.app + map;
-
+local withProjDef(map) = defaults.project + map;
 
 //
 // --- root projects and apps definitions - app of app pattern
 //
 local projectList = [
-  { name: 'base', desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.' },
+  withProjDef({
+    name: 'base',
+    desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.',
+    clusterResourceAllowList: [
+      { group: '', kind: 'Namespace' },
+      { group: '', kind: 'ClusterIssuer' },
+    ],
+  }),
 ];
 
 local appList = [
@@ -40,7 +50,7 @@ local projects = [
     for app in appList
     for tenant in app.tenant
     for proj in projectList
-  ], proj.desc)
+  ], proj.desc, proj.clusterResourceAllowList)
   for proj in projectList
 ];
 
