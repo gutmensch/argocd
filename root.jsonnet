@@ -26,13 +26,12 @@ local projectList = [
     desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.',
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
-      { group: 'cert-manager.io', kind: 'ClusterIssuer' },
     ],
   }),
 ];
 
 local appList = [
-  withAppDef({ name: 'internal-root-ca', project: 'base', path: 'internal-root-ca', tenant: ['lts'] }),
+//  withAppDef({ name: 'internal-root-ca', project: 'base', path: 'internal-root-ca', tenant: ['lts'] }),
 //  withAppDef({ name: 'openldap', project: 'base', path: 'openldap', tenant: ['lts'] }),
 //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', ingressRoot: 'bln.space', ingressDomain: 'auth' }),
 //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
