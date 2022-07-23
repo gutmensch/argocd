@@ -1,0 +1,24 @@
+{
+  "image_repository": "https://github.com/gutmensch/docker-webapp.git",
+  "image_history": [
+    { "image": "registry.lan:5000/bla:0.0.0-alpha", "timestamp": "2022-06-01 12:20:00", "user": "robert" } 
+  ],
+  "deployment_history": [
+    { "active": "20220601123423000", "tenant": "staging", "version": "0.0.0-alpha", "user": "robert", "previous_version": "" },
+    { "active": "20220601123456000", "tenant": "lts", "version": "0.0.0-alpha", "user": "robert", "previous_version": "" }
+  ],
+  "deployment": {
+    "staging": {
+      "version": "0.0.1",
+      "user": "",
+      "timestamp": "",
+      "risk_rating": "none"
+    },
+    "lts": {
+      "version": "0.0.2",
+      "user": "",
+      "timestamp": "",
+      "risk_rating": "none"
+    }
+  }
+}

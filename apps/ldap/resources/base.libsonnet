@@ -1,0 +1,348 @@
+local kube = import '../../../lib/kube.libsonnet';
+local ca = import '../../../lib/localca.libsonnet';
+local schemaDefinitions = import 'schema/definitions.libsonnet';
+local ldifDefinitions = import 'ldif/definitions.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+
+{
+  generate(
+    name,
+    namespace,
+    version='2.6.2',
+    base='dc=ldap,dc=local',
+    schemas=['virtualmail', 'nextcloud'],
+    mailDomains=['bln.space', 'schumann.link'],
+    storageClass='fast',
+  ):: {
+    
+    local res = self,
+
+    local defaultLabels = {
+      'app.kubernetes.io/name': name,
+      'app.kubernetes.io/version': version,
+      'app.kubernetes.io/component': 'openldap',
+      'app.kubernetes.io/managed-by': 'ArgoCD',
+    },
+
+    local ldapModifications = ldifDefinitions {
+      ldapBase: base,
+      ldapMailDomains: mailDomains,
+    },
+
+    certificateservice: ca.serverCert(
+      name=name,
+      namespace=namespace,
+      createIssuer=true,
+      dnsNames=['%s.%s.svc.cluster.local' % [name, namespace]],
+      labels=defaultLabels,
+    ),
+  
+    configmapenv: kube.ConfigMap(name) {
+      metadata+: {
+        name: '%s-env' % [name],
+        namespace: namespace,
+	labels+: defaultLabels,
+      },
+      data: {
+        LDAP_ADD_SCHEMAS: 'yes',
+        LDAP_ADMIN_PASSWORD_FILE: '',
+        LDAP_ALLOW_ANON_BINDING: 'yes',
+        LDAP_CONFIG_ADMIN_ENABLED: 'yes',
+        LDAP_CONFIG_ADMIN_PASSWORD_FILE: '',
+        LDAP_CUSTOM_LDIF_DIR: '/ldifs',
+        LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
+        LDAP_DOMAIN: base,
+        LDAP_ENABLE_TLS: 'no',
+        LDAP_EXTRA_SCHEMAS: std.join(',', ['cosine', 'inetorgperson', 'nis'] + schemas),
+        LDAP_GROUP: 'Readers',
+        LDAP_LDAPS_PORT_NUMBER: '1636',
+        LDAP_LOGLEVEL: '64',
+        LDAP_PASSWORDS: 'bitnami1,bitnami2',
+        LDAP_PORT_NUMBER: '1389',
+        LDAP_ROOT: 'dc=ldap,dc=local',
+        LDAP_SKIP_DEFAULT_TREE: 'no',
+        LDAP_ULIMIT_NOFILES: '1024',
+        LDAP_USERS: 'user01,user02',
+        LDAP_USER_DC: 'People',
+      },
+    },
+  
+    servicecluster: kube.Service(name) {
+      metadata+: {
+        name: name,
+        namespace: namespace,
+	labels+: defaultLabels,
+      },
+      spec: {
+        ports: [
+          {
+            name: 'ldap-port',
+            nodePort: null,
+            port: 389,
+            protocol: 'TCP',
+            targetPort: 'ldap-port',
+          },
+          {
+            name: 'ldaps-port',
+            nodePort: null,
+            port: 636,
+            protocol: 'TCP',
+            targetPort: 'ldaps-port',
+          },
+        ],
+	selector: helper.removeVersion(defaultLabels),
+        sessionAffinity: 'None',
+        type: 'ClusterIP',
+      },
+    },
+  
+    serviceheadless: kube.Service('%s-headless' % [name]) {
+      apiVersion: 'v1',
+      kind: 'Service',
+      metadata: {
+        name: '%s-headless' % [name],
+        namespace: namespace,
+	labels+: defaultLabels,
+      },
+      spec: {
+        clusterIP: 'None',
+        ports: [
+          {
+            name: 'ldap-port',
+            port: 389,
+            targetPort: 'ldap-port',
+          },
+        ],
+	selector: helper.removeVersion(defaultLabels),
+        sessionAffinity: 'None',
+        type: 'ClusterIP',
+      },
+    },
+  
+    statefulset: kube.StatefulSet(name) {
+      metadata+: {
+        name: name,
+        namespace: namespace,
+      },
+      spec: {
+        replicas: 1,
+        selector: {
+          matchLabels: helper.removeVersion(defaultLabels),
+        },
+        serviceName: '%s-headless' % [name],
+        template: {
+          metadata+: {
+            annotations+: {
+              'checksum/configmapenv': std.md5(std.toString(res.configmapenv)),
+            },
+            labels: defaultLabels,
+          },
+          spec: {
+            affinity: {
+              nodeAffinity: null,
+              podAffinity: null,
+              podAntiAffinity: {
+                preferredDuringSchedulingIgnoredDuringExecution: [
+                  {
+                    podAffinityTerm: {
+                      labelSelector: {
+                        matchLabels: defaultLabels,
+                      },
+                      namespaces: [
+                        namespace,
+                      ],
+                      topologyKey: 'kubernetes.io/hostname',
+                    },
+                    weight: 1,
+                  },
+                ],
+              },
+            },
+            containers: [
+              {
+                args: [],
+                env: [
+                  {
+                    name: 'POD_NAME',
+                    valueFrom: {
+                      fieldRef: {
+                        apiVersion: 'v1',
+                        fieldPath: 'metadata.name',
+                      },
+                    },
+                  },
+                  {
+                    name: 'LDAP_TLS_CERT_FILE',
+                    value: '/ssl/server.crt',
+                  },
+                  {
+                    name: 'LDAP_TLS_KEY_FILE',
+                    value: '/ssl/server.key',
+                  },
+                  {
+                    name: 'LDAP_TLS_CA_FILE',
+                    value: '/ssl/ca.crt',
+                  },
+                ],
+                envFrom: [
+                  {
+                    configMapRef: {
+                      name: 'openldap-env',
+                    },
+                  },
+                  {
+                    secretRef: {
+                      name: 'openldap',
+                    },
+                  },
+                ],
+                image: 'registry.lan:5000/bitnami/openldap:%s' % [version],
+                imagePullPolicy: 'Always',
+                livenessProbe: {
+                  failureThreshold: 10,
+                  initialDelaySeconds: 20,
+                  periodSeconds: 10,
+                  successThreshold: 1,
+                  tcpSocket: {
+                    port: 'ldap-port',
+                  },
+                  timeoutSeconds: 1,
+                },
+                name: 'openldap-stack-ha',
+                ports: [
+                  {
+                    containerPort: 1389,
+                    name: 'ldap-port',
+                  },
+                  {
+                    containerPort: 1636,
+                    name: 'ldaps-port',
+                  },
+                ],
+                readinessProbe: {
+                  failureThreshold: 10,
+                  initialDelaySeconds: 20,
+                  periodSeconds: 10,
+                  successThreshold: 1,
+                  tcpSocket: {
+                    port: 'ldap-port',
+                  },
+                  timeoutSeconds: 1,
+                },
+                resources: {
+                  limits: {},
+                  requests: {},
+                },
+                securityContext: {
+                  runAsNonRoot: true,
+                  runAsUser: 1001,
+                },
+                volumeMounts: [
+                  {
+                    mountPath: '/bitnami/openldap',
+                    name: 'data',
+                  },
+                  {
+                    mountPath: '/ssl/server.crt',
+                    name: 'certificate',
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: '/ssl/server.key',
+                    name: 'certificate',
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: '/ssl/ca.crt',
+                    name: 'certificate',
+                    subPath: 'ca.crt',
+                  }] + [
+                  {
+                    mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
+                    name: '%s-schema' % [schema],
+                    subPath: '%s.ldif' % [schema],
+                  }
+		  for schema in schemas
+		],
+              },
+            ],
+            initContainers: null,
+            nodeSelector: {
+              'topology.kubernetes.io/region': 'helsinki',
+            },
+            securityContext: {
+              fsGroup: 1001,
+            },
+            volumes: [
+              {
+                name: 'certificate',
+                secret: {
+                  secretName: 'openldap-cert',
+                },
+              } ] + [
+                {
+		  configMap: {
+		    name: 'configmap-%s-schema' % [schema],
+		  },
+		  name: '%s-schema' % [schema],
+		}
+                for schema in schemas
+	      ],
+          },
+        },
+        updateStrategy: {
+          type: 'RollingUpdate',
+        },
+        volumeClaimTemplates: [
+          {
+            metadata: {
+              annotations: null,
+              name: 'data',
+            },
+            spec: {
+              accessModes: [
+                'ReadWriteOnce',
+              ],
+              resources: {
+                requests: {
+                  storage: '8Gi',
+                },
+              },
+              storageClassName: storageClass,
+            },
+          },
+        ],
+      },
+    },
+
+    configmapldapinit: kube.ConfigMap(name) {
+      metadata+: {
+        labels: defaultLabels,
+      },
+      data: {
+        'init.ldif': helper.manifestLdif(ldapModifications),
+      },
+    }
+  } + {
+
+  local res = self,
+
+  local defaultLabels = {
+    'app.kubernetes.io/name': name,
+    'app.kubernetes.io/version': version,
+    'app.kubernetes.io/component': 'auth',
+    'app.kubernetes.io/managed-by': 'ArgoCD',
+  },
+
+  ['%s-schema' % [schema]]: kube.ConfigMap(schema) {
+    metadata+: {
+      labels: defaultLabels,
+      name: 'configmap-%s-schema' % [schema],
+    },
+    data: {
+      [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
+    },
+  }
+  for schema in schemas
+  }
+}
