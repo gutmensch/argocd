@@ -38,6 +38,7 @@ local helper = import '../../../lib/helper.libsonnet';
     },
 
     deployment: kube.Deployment(self._name) {
+      local this = self,
       metadata+: {
         namespace: namespace,
         labels+: defaultLabels,
@@ -57,7 +58,7 @@ local helper = import '../../../lib/helper.libsonnet';
                 envFrom: [
                   {
                     configMapRef: {
-                      name: 'ldap-phpldapadmin',
+                      name: this.metadata.name,
                     },
                   },
                 ],
