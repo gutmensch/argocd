@@ -118,6 +118,9 @@ local helper = import '../../../lib/helper.libsonnet';
       metadata+: {
         namespace: namespace,
         annotations+: {
+          'cert-manager.io/cluster-issuer': 'letsencrypt-prod',
+          'kubernetes.io/ingress.class': 'nginx',
+          'kubernetes.io/tls-acme': 'true',
           'nginx.ingress.kubernetes.io/auth-type': 'basic',
 	  // resource defined in sealedSecrets
           'nginx.ingress.kubernetes.io/auth-secret': 'phpldapadmin-basic-auth',
