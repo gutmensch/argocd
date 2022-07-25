@@ -9,10 +9,11 @@ local helper = import '../../../lib/helper.libsonnet';
     name,
     namespace,
     version='2.6.2',
-    base='dc=ldap,dc=local',
-    schemas=['virtualmail', 'nextcloud'],
-    mailDomains=['bln.space', 'schumann.link'],
+    base='o=auth,dc=local',
+    schemas=[],
+    mailDomains=[],
     storageClass='fast',
+    defaultSchemas=['cosine', 'inetorgperson', 'nis'],
   ):: {
     
     local res = self,
@@ -29,14 +30,17 @@ local helper = import '../../../lib/helper.libsonnet';
       ldapMailDomains: mailDomains,
     },
 
-    certificateservice: ca.serverCert(
+    local certCRDs = ca.serverCert(
       name=name,
       namespace=namespace,
       createIssuer=true,
       dnsNames=['%s.%s.svc.cluster.local' % [name, namespace]],
       labels=defaultLabels,
     ),
-  
+    localrootcacert: certCRDs['localrootcacert'],
+    localcertissuer: certCRDs['localcertissuer'],
+    servercert: certCRDs['localservercert'],
+
     configmapenv: kube.ConfigMap(name) {
       metadata+: {
         name: '%s-env' % [name],
@@ -52,18 +56,19 @@ local helper = import '../../../lib/helper.libsonnet';
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
         LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
         LDAP_DOMAIN: base,
-        LDAP_ENABLE_TLS: 'no',
-        LDAP_EXTRA_SCHEMAS: std.join(',', ['cosine', 'inetorgperson', 'nis'] + schemas),
+        LDAP_ENABLE_TLS: 'yes',
+        LDAP_EXTRA_SCHEMAS: std.join(',', defaultSchemas + schemas),
         LDAP_GROUP: 'Readers',
         LDAP_LDAPS_PORT_NUMBER: '1636',
         LDAP_LOGLEVEL: '64',
-        LDAP_PASSWORDS: 'bitnami1,bitnami2',
+        LDAP_PASSWORDS: '',
         LDAP_PORT_NUMBER: '1389',
         LDAP_ROOT: 'dc=ldap,dc=local',
-        LDAP_SKIP_DEFAULT_TREE: 'no',
+	// init.ldif defined ourselves in ldif/definitions
+        LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_ULIMIT_NOFILES: '1024',
-        LDAP_USERS: 'user01,user02',
-        LDAP_USER_DC: 'People',
+        LDAP_USERS: '',
+        LDAP_USER_DC: 'Users',
       },
     },
   
@@ -146,7 +151,7 @@ local helper = import '../../../lib/helper.libsonnet';
                   {
                     podAffinityTerm: {
                       labelSelector: {
-                        matchLabels: defaultLabels,
+                        matchLabels: helper.removeVersion(defaultLabels),
                       },
                       namespaces: [
                         namespace,
@@ -187,12 +192,12 @@ local helper = import '../../../lib/helper.libsonnet';
                 envFrom: [
                   {
                     configMapRef: {
-                      name: 'openldap-env',
+                      name: 'ldap-env',
                     },
                   },
                   {
                     secretRef: {
-                      name: 'openldap',
+                      name: 'ldap',
                     },
                   },
                 ],
@@ -256,14 +261,20 @@ local helper = import '../../../lib/helper.libsonnet';
                     mountPath: '/ssl/ca.crt',
                     name: 'certificate',
                     subPath: 'ca.crt',
-                  }] + [
+                  },
+                  {
+                    mountPath: '/ldifs/init.ldif',
+                    name: '%s-init-ldif' % [name],
+                    subPath: 'init.ldif',
+                  },
+		  ] + [
                   {
                     mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
                     name: '%s-schema' % [schema],
                     subPath: '%s.ldif' % [schema],
-                  }
+                  },
 		  for schema in schemas
-		],
+                 ],
               },
             ],
             initContainers: null,
@@ -277,12 +288,19 @@ local helper = import '../../../lib/helper.libsonnet';
               {
                 name: 'certificate',
                 secret: {
-                  secretName: 'openldap-cert',
+                  secretName: 'ldap-server-cert',
                 },
-              } ] + [
+              },
+              {
+                configMap: {
+                  name: '%s-init-ldif' % [name],
+                },
+                name: '%s-init-ldif' % [name],
+              }
+	      ] + [
                 {
 		  configMap: {
-		    name: 'configmap-%s-schema' % [schema],
+		    name: '%s-schema' % [schema],
 		  },
 		  name: '%s-schema' % [schema],
 		}
@@ -315,8 +333,9 @@ local helper = import '../../../lib/helper.libsonnet';
       },
     },
 
-    configmapldapinit: kube.ConfigMap(name) {
+    configmapldapinit: kube.ConfigMap('%s-init-ldif' % [name]) {
       metadata+: {
+        namespace: namespace,
         labels: defaultLabels,
       },
       data: {
@@ -334,10 +353,10 @@ local helper = import '../../../lib/helper.libsonnet';
     'app.kubernetes.io/managed-by': 'ArgoCD',
   },
 
-  ['%s-schema' % [schema]]: kube.ConfigMap(schema) {
+  ['%s-schema' % [schema]]: kube.ConfigMap('%s-schema' % [schema]) {
     metadata+: {
+      namespace: namespace,
       labels: defaultLabels,
-      name: 'configmap-%s-schema' % [schema],
     },
     data: {
       [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,

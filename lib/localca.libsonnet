@@ -9,9 +9,8 @@ local kube = import 'kube.libsonnet';
 
     [if createIssuer then 'localrootcacert']: kube._Object('cert-manager.io/v1', 'Certificate', localIssuer) {
       metadata+: {
-        name: localIssuer,
         namespace: namespace,
-        labels: labels,
+        labels+: labels,
       },
       spec+: {
         commonName: localIssuer,
@@ -30,10 +29,9 @@ local kube = import 'kube.libsonnet';
     },
   
     [if createIssuer then 'localcertissuer']: kube._Object('cert-manager.io/v1', 'Issuer', localIssuer) {
-      metadata: {
-        name: localIssuer,
+      metadata+: {
         namespace: namespace,
-        labels: labels,
+        labels+: labels,
       },
       spec: {
         ca: {
@@ -44,11 +42,10 @@ local kube = import 'kube.libsonnet';
   
     assert std.length(dnsNames) > 0: 'server certificate needs at least one dnsNames list entry',
   
-    'localservercert': kube._Object('cert-manager.io/v1', 'Certificate', std.strReplace(dnsNames[0], '.', '-')) {
+    localservercert: kube._Object('cert-manager.io/v1', 'Certificate', '%s-server-cert' % [name]) {
       metadata+: {
-        name: dnsNames[0],
         namespace: namespace,
-        labels: labels,
+        labels+: labels,
       },
       spec+: {
         commonName: dnsNames[0],
@@ -67,7 +64,7 @@ local kube = import 'kube.libsonnet';
           size: keySize,
         },
         renewBefore: renewBefore,
-        secretName: '%s-cert' % [std.strReplace(dnsNames[0], '.', '-')],
+        secretName: '%s-server-cert' % [name],
         secretTemplate: {
           annotations: {},
           labels: {},

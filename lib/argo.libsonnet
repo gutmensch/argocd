@@ -22,7 +22,7 @@ local kube = import 'kube.libsonnet';
   },
 
   Application(tenant, app): kube._Object("argoproj.io/v1alpha1", "Application", app.name) {
-    local full_name = if tenant == 'lts' then '%s-%s' % [app.project, app.name] else '%s-%s-%s' % [app.project, app.name, tenant],
+    local full_name = '%s-%s-%s' % [app.project, app.name, tenant],
     metadata: {
       namespace: 'argo-cd-system',
       name: full_name,

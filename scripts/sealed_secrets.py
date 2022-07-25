@@ -96,6 +96,7 @@ def sealed_secret(name, namespace, kv):
     res = { 'apiVersion': 'v1', 'kind': 'Secret', 'metadata': { 'name': name, 'namespace': namespace, 'creationTimestamp': None }, 'stringData': kv }
 
     kubeseal = ['kubeseal', '--controller-namespace', 'sealed-secrets-system', '--controller-name', 'sealed-secrets', '--format', 'json']
+    log.debug('printing secret {}\n{}'.format(name, yaml.safe_dump(res)))
     gen = run(kubeseal, stderr=PIPE, stdout=PIPE, input=yaml.safe_dump(res).encode('utf-8'))
     if gen.returncode != 0:
         log.error(gen.stderr.decode('utf-8'))

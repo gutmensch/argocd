@@ -4,6 +4,15 @@ local helper = import '../../../lib/helper.libsonnet';
   ldapBase:: error 'need to provide ldap base',
   ldapMailDomains:: [],
 
+  _00root: {
+    local t = std.split($.ldapBase, ','),
+    dn: $.ldapBase,
+    objectClass1: 'dcObject',
+    objectClass2: 'organization',
+    dc: std.split(t[1], '=')[1],
+    o: std.split(t[0], '=')[1],
+  },
+
   _01mailOU: {
     dn: 'ou=Mail,%s' % [$.ldapBase],
     ou: 'Mail',
@@ -12,18 +21,40 @@ local helper = import '../../../lib/helper.libsonnet';
   },
 
   _02mailDomainOU: {
-    dn: 'ou=Domains,ou=Mail,%s' % [$.ldapBase],
-    ou: 'Domains',
+    dn: 'ou=Domain,ou=Mail,%s' % [$.ldapBase],
+    ou: 'Domain',
     description: 'Mail domains',
     objectClass: 'organizationalUnit',
   },
 
-  _03mailDomains: [
+  _03mailDomain: [
     {
-      dn: 'dc=%s,ou=Domains,ou=Mail,%s' % [vdomain, $.ldapBase],
+      dn: 'dc=%s,ou=Domain,ou=Mail,%s' % [vdomain, $.ldapBase],
       dc: '%s' % [vdomain],
       objectClass: 'dNSDomain',
     }
     for vdomain in $.ldapMailDomains
   ],
+
+  _04serviceAccount: {
+    dn: 'ou=ServiceAccounts,%s' % [$.ldapBase],
+    ou: 'ServiceAccount',
+    description: 'Service accounts',
+    objectClass: 'organizationalUnit',
+  },
+
+  _05People: {
+    dn: 'ou=People,%s' % [$.ldapBase],
+    ou: 'People',
+    description: 'Users in Directory, manageable in Keycloak',
+    objectClass: 'organizationalUnit',
+  },
+
+  _06Groups: {
+    dn: 'ou=Group,%s' % [$.ldapBase],
+    ou: 'Group',
+    description: 'Groups in Directory, manageable in Keycloak',
+    objectClass: 'organizationalUnit',
+  },
+
 }

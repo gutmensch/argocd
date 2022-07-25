@@ -1,184 +1,152 @@
+local kube = import '../../../lib/kube.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+
 {
-  'configmap-63a43': {
-    apiVersion: 'v1',
-    data: {
-      PHPLDAPADMIN_HTTPS: 'false',
-      PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
-      PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{ 'ldap.default'  : [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=admin,dc=dc=ldap,dc=local'  }]}]}]",
-      PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
+  generate(
+    name,
+    namespace,
+    registry='registry.lan:5000',
+    version='0.9.0',
+    ingress='',
+    base='dc=ldap,dc=local',
+  ):: {
+
+    assert base != '': error 'base DN needed for setup',
+
+    _name:: '%s-admin' % [name],
+
+    local this = self,
+
+    local defaultLabels = {
+      'app.kubernetes.io/name': this._name,
+      'app.kubernetes.io/version': version,
+      'app.kubernetes.io/component': 'phpldapadmin',
+      'app.kubernetes.io/managed-by': 'ArgoCD',
     },
-    kind: 'ConfigMap',
-    metadata: {
-      labels: {
-        app: 'phpldapadmin',
-        chart: 'phpldapadmin-0.1.2',
-        heritage: 'Helm',
-        release: 'ldap',
+
+    configmap: kube.ConfigMap(self._name) {
+      metadata+: {
+        namespace: namespace,
+        labels+: defaultLabels,
       },
-      name: 'ldap-phpldapadmin',
-    },
-  },
-  'deployment-2bb28': {
-    apiVersion: 'apps/v1',
-    kind: 'Deployment',
-    metadata: {
-      labels: {
-        app: 'phpldapadmin',
-        chart: 'phpldapadmin-0.1.2',
-        heritage: 'Helm',
-        release: 'ldap',
+      data: {
+        PHPLDAPADMIN_HTTPS: 'false',
+        PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
+        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{ 'ldap.default'  : [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=configadmin,%s' }]}]}]" % [base],
+        PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
       },
-      name: 'ldap-phpldapadmin',
     },
-    spec: {
-      replicas: 1,
-      selector: {
-        matchLabels: {
-          app: 'phpldapadmin',
-          release: 'ldap',
+
+    deployment: kube.Deployment(self._name) {
+      metadata+: {
+        namespace: namespace,
+        labels+: defaultLabels,
+      },
+      spec: {
+        replicas: 1,
+        selector: {
+          matchLabels: helper.removeVersion(defaultLabels),
         },
-      },
-      template: {
-        metadata: {
-          labels: {
-            app: 'phpldapadmin',
-            release: 'ldap',
+        template: {
+          metadata+: {
+            labels+: defaultLabels,
           },
-        },
-        spec: {
-          containers: [
-            {
-              envFrom: [
-                {
-                  configMapRef: {
-                    name: 'ldap-phpldapadmin',
-                  },
-                },
-              ],
-              image: 'osixia/phpldapadmin:0.9.0',
-              imagePullPolicy: 'IfNotPresent',
-              livenessProbe: {
-                httpGet: {
-                  path: '/',
-                  port: 'http',
-                },
-              },
-              name: 'phpldapadmin',
-              ports: [
-                {
-                  containerPort: 80,
-                  name: 'http',
-                  protocol: 'TCP',
-                },
-              ],
-              readinessProbe: {
-                httpGet: {
-                  path: '/',
-                  port: 'http',
-                },
-              },
-              resources: {},
-            },
-          ],
-        },
-      },
-    },
-  },
-  'service-86239': {
-    apiVersion: 'v1',
-    kind: 'Service',
-    metadata: {
-      labels: {
-        app: 'phpldapadmin',
-        chart: 'phpldapadmin-0.1.2',
-        heritage: 'Helm',
-        release: 'ldap',
-      },
-      name: 'ldap-phpldapadmin',
-    },
-    spec: {
-      ports: [
-        {
-          name: 'http',
-          port: 80,
-          protocol: 'TCP',
-          targetPort: 'http',
-        },
-      ],
-      selector: {
-        app: 'phpldapadmin',
-        release: 'ldap',
-      },
-      type: 'ClusterIP',
-    },
-  },
-  'ingress-41748': {
-    apiVersion: 'networking.k8s.io/v1',
-    kind: 'Ingress',
-    metadata: {
-      annotations: {
-
-// TODO
-//   Create htpasswd file¶
-//   
-//   $ htpasswd -c auth foo
-//   New password: <bar>
-//   New password:
-//   Re-type new password:
-//   Adding password for user foo
-//   Convert htpasswd into a secret¶
-//   
-//   $ kubectl create secret generic basic-auth --from-file=auth
-//   secret "basic-auth" created
-//   Examine secret¶
-//   
-//   $ kubectl get secret basic-auth -o yaml
-//   apiVersion: v1
-//   data:
-//     auth: Zm9vOiRhcHIxJE9GRzNYeWJwJGNrTDBGSERBa29YWUlsSDkuY3lzVDAK
-//   kind: Secret
-//   metadata:
-//     name: basic-auth
-//     namespace: default
-//   type: Opaque
-
-        // type of authentication
-        'nginx.ingress.kubernetes.io/auth-type': 'basic',
-        // name of the secret that contains the user/password definitions
-        'nginx.ingress.kubernetes.io/auth-secret': 'basic-auth',
-        // message to display with an appropriate context why the authentication is required
-        'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required - foo',
-      },
-      labels: {
-        app: 'phpldapadmin',
-        chart: 'phpldapadmin-0.1.2',
-        heritage: 'Helm',
-        release: 'ldap',
-      },
-      name: 'ldap-phpldapadmin',
-    },
-    spec: {
-      rules: [
-        {
-          host: 'phpldapadmin.kubectl.me',
-          http: {
-            paths: [
+          spec: {
+            containers: [
               {
-                backend: {
-                  service: {
-                    name: 'ldap-phpldapadmin',
-                    port: {
-                      name: 'http',
+                envFrom: [
+                  {
+                    configMapRef: {
+                      name: 'ldap-phpldapadmin',
                     },
                   },
+                ],
+                // version 0.9.0 is from docker image with =phpLDAPadmin 1.2.5
+                local upstream = 'osixia/phpldapadmin:%s' % [version],
+                image: if registry != '' then std.join('/', [registry, upstream]) else upstream,
+                imagePullPolicy: 'IfNotPresent',
+                livenessProbe: {
+                  httpGet: {
+                    path: '/',
+                    port: 'http',
+                  },
                 },
-                path: '/',
-                pathType: 'Prefix',
+                name: 'phpldapadmin',
+                ports: [
+                  {
+                    containerPort: 80,
+                    name: 'http',
+                    protocol: 'TCP',
+                  },
+                ],
+                readinessProbe: {
+                  httpGet: {
+                    path: '/',
+                    port: 'http',
+                  },
+                },
+                resources: {},
               },
             ],
           },
         },
-      ],
+      },
+    },
+
+    service: kube.Service(self._name) {
+      metadata+: {
+        namespace: namespace,
+        labels+: defaultLabels,
+      },
+      spec: {
+        ports: [
+          {
+            name: 'http',
+            port: 80,
+            protocol: 'TCP',
+            targetPort: 'http',
+          },
+        ],
+        selector: helper.removeVersion(defaultLabels),
+        type: 'ClusterIP',
+      },
+    },
+
+    [if ingress != '' then 'ingress']: kube.Ingress(self._name) {
+      local this = self,
+      metadata+: {
+        namespace: namespace,
+        annotations+: {
+          'nginx.ingress.kubernetes.io/auth-type': 'basic',
+	  // resource defined in sealedSecrets
+          'nginx.ingress.kubernetes.io/auth-secret': 'phpldapadmin-basic-auth',
+          'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+        },
+        labels+: defaultLabels,
+      },
+      spec: {
+        rules: [
+          {
+            host: ingress,
+            http: {
+              paths: [
+                {
+                  backend: {
+                    service: {
+                      name: this.metadata.name,
+                      port: {
+                        name: 'http',
+                      },
+                    },
+                  },
+                  path: '/',
+                  pathType: 'Prefix',
+                },
+              ],
+            },
+          },
+        ],
+      },
     },
   },
 }
