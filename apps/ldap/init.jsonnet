@@ -17,6 +17,9 @@ function(name, namespace, project, tenant, region)
       name,
       namespace,
       ingress='ldapadmin.kubectl.me',
+      ldapBase='o=auth,dc=local',
+      ldapAdmin='configadmin',
+      ldapSvc='%s.%s.svc.cluster.local' % [name, namespace],
     ) +
     secrets[tenant]
   );

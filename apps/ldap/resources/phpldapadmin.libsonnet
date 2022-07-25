@@ -8,10 +8,12 @@ local helper = import '../../../lib/helper.libsonnet';
     registry='registry.lan:5000',
     version='0.9.0',
     ingress='',
-    base='dc=ldap,dc=local',
+    ldapSvc='',
+    ldapAdmin='',
+    ldapBase='',
   ):: {
 
-    assert base != '': error 'base DN needed for setup',
+    assert ldapSvc != '': error 'ldap service address needed for setup',
 
     _name:: '%s-admin' % [name],
 
@@ -32,7 +34,7 @@ local helper = import '../../../lib/helper.libsonnet';
       data: {
         PHPLDAPADMIN_HTTPS: 'false',
         PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
-        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{ 'ldap.default'  : [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=configadmin,%s' }]}]}]" % [base],
+        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [ldapSvc, ldapAdmin, ldapBase],
         PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
       },
     },
