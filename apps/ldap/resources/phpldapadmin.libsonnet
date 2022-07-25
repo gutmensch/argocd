@@ -130,7 +130,7 @@ local helper = import '../../../lib/helper.libsonnet';
         tls: [ {
             hosts: [
               ingress,
-            ] },
+            ], secretName: 'ldap-admin' },
         ],
         rules: [
           {
