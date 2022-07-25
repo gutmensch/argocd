@@ -118,7 +118,7 @@ local helper = import '../../../lib/helper.libsonnet';
       metadata+: {
         namespace: namespace,
         annotations+: {
-          'cert-manager.io/cluster-issuer': 'letsencrypt-prod',
+          'cert-manager.io/cluster-issuer': 'letsencrypt-staging',
           'kubernetes.io/ingress.class': 'nginx',
           'nginx.ingress.kubernetes.io/auth-type': 'basic',
           'nginx.ingress.kubernetes.io/auth-secret': 'phpldapadmin-basic-auth',
@@ -130,7 +130,7 @@ local helper = import '../../../lib/helper.libsonnet';
         tls: [ {
             hosts: [
               ingress,
-            ], secretName: 'ldap-admin' },
+            ], secretName: 'ldap-admin-cert' },
         ],
         rules: [
           {
