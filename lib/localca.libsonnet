@@ -5,7 +5,7 @@ local kube = import 'kube.libsonnet';
   local selfSignedIssuer = 'selfsigned',
   local localIssuer = 'local-root-ca',
 
-  serverCert(name, namespace, createIssuer, dnsNames, labels, ipAddresses=[], keySize=2048, duration='2160h', renewBefore='360h'): {
+  serverCert(name, namespace, createIssuer, dnsNames, labels, ipAddresses=[], keySize=2048, duration='2160h0m0s', renewBefore='360h0m0s'): {
 
     [if createIssuer then 'localrootcacert']: kube._Object('cert-manager.io/v1', 'Certificate', localIssuer) {
       metadata+: {
@@ -52,7 +52,6 @@ local kube = import 'kube.libsonnet';
         dnsNames: dnsNames,
         duration: duration,
         ipAddresses: ipAddresses,
-        isCA: false,
         issuerRef: {
           group: 'cert-manager.io',
           kind: 'Issuer',
