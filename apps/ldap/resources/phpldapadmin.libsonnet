@@ -129,6 +129,11 @@ local helper = import '../../../lib/helper.libsonnet';
         labels+: defaultLabels,
       },
       spec: {
+        tls: [ {
+            hosts: [
+              ingress,
+            ] },
+        ],
         rules: [
           {
             host: ingress,
