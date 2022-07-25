@@ -66,11 +66,11 @@ local kube = import 'kube.libsonnet';
 	  allowEmpty: true,
 	},
 	retry: {
-	  limit: 10,
+	  limit: 5,
 	  backoff: {
 	    duration: '5s',
             factor: 2,
-            maxDuration: '10m',
+            maxDuration: '5m',
 	  },
 	},
         syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background', 'PruneLast=true'],
