@@ -40,7 +40,7 @@ local helper = import '../../../lib/helper.libsonnet';
     },
 
     deployment: kube.Deployment(self._name) {
-      local this = self,
+      local depl = self,
       metadata+: {
         namespace: namespace,
         labels+: defaultLabels,
@@ -53,6 +53,9 @@ local helper = import '../../../lib/helper.libsonnet';
         template: {
           metadata+: {
             labels+: defaultLabels,
+            annotations+: {
+              'checksum/configmapenv': std.md5(std.toString(this.configmap)),
+            }
           },
           spec: {
             containers: [
@@ -60,7 +63,7 @@ local helper = import '../../../lib/helper.libsonnet';
                 envFrom: [
                   {
                     configMapRef: {
-                      name: this.metadata.name,
+                      name: depl.metadata.name,
                     },
                   },
                 ],
