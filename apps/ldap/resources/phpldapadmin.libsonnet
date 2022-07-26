@@ -10,7 +10,7 @@ local helper = import '../../../lib/helper.libsonnet';
     ingress='',
     ldapSvc='',
     ldapAdmin='',
-    ldapBase='',
+    ldapRoot='',
   ):: {
 
     assert ldapSvc != '': error 'ldap service address needed for setup',
@@ -34,7 +34,7 @@ local helper = import '../../../lib/helper.libsonnet';
       data: {
         PHPLDAPADMIN_HTTPS: 'false',
         PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
-        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [ldapSvc, ldapAdmin, ldapBase],
+        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [ldapSvc, ldapAdmin, ldapRoot],
         PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
       },
     },

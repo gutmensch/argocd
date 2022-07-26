@@ -5,11 +5,12 @@ local phpldapadmin = import 'resources/phpldapadmin.libsonnet';
 local secrets = import 'resources/sealedSecrets.libsonnet';
 
 function(name, namespace, project, tenant, region)
+  local ldapRoot = 'o=auth,dc=local';
   local resources = std.prune(
     base.generate(
       name,
       namespace,
-      base='o=auth,dc=local',
+      root=ldapRoot,
       schemas=['virtualmail', 'nextcloud'],
       mailDomains=['bln.space', 'schumann.link', 'n-os.org', 'robattix.com', 'kubectl.me'],
     ) +
@@ -17,8 +18,8 @@ function(name, namespace, project, tenant, region)
       name,
       namespace,
       ingress='ldapadmin.kubectl.me',
-      ldapBase='o=auth,dc=local',
-      ldapAdmin='configadmin',
+      ldapRoot=ldapRoot,
+      ldapAdmin='admin',
       ldapSvc='%s.%s.svc.cluster.local' % [name, namespace],
     ) +
     secrets[tenant]

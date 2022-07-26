@@ -9,13 +9,15 @@ local helper = import '../../../lib/helper.libsonnet';
     name,
     namespace,
     version='2.6.2',
-    base='o=auth,dc=local',
+    root='',
     schemas=[],
     mailDomains=[],
     storageClass='fast',
     defaultSchemas=['cosine', 'inetorgperson', 'nis'],
   ):: {
-    
+
+    assert root != '': error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
+
     local res = self,
 
     local defaultLabels = {
@@ -26,7 +28,7 @@ local helper = import '../../../lib/helper.libsonnet';
     },
 
     local ldapModifications = ldifDefinitions {
-      ldapBase: base,
+      ldapBase: root,
       ldapMailDomains: mailDomains,
     },
 
@@ -50,12 +52,11 @@ local helper = import '../../../lib/helper.libsonnet';
       data: {
         LDAP_ADD_SCHEMAS: 'yes',
         LDAP_ADMIN_PASSWORD_FILE: '',
-        LDAP_ALLOW_ANON_BINDING: 'yes',
+        LDAP_ALLOW_ANON_BINDING: 'no',
         LDAP_CONFIG_ADMIN_ENABLED: 'yes',
         LDAP_CONFIG_ADMIN_PASSWORD_FILE: '',
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
         LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
-        LDAP_DOMAIN: base,
         LDAP_ENABLE_TLS: 'yes',
         LDAP_EXTRA_SCHEMAS: std.join(',', defaultSchemas + schemas),
         LDAP_GROUP: 'Readers',
@@ -63,7 +64,7 @@ local helper = import '../../../lib/helper.libsonnet';
         LDAP_LOGLEVEL: '64',
         LDAP_PASSWORDS: '',
         LDAP_PORT_NUMBER: '1389',
-        LDAP_ROOT: 'dc=ldap,dc=local',
+        LDAP_ROOT: root,
 	// init.ldif defined ourselves in ldif/definitions
         LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_ULIMIT_NOFILES: '1024',
