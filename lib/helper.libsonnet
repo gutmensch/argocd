@@ -7,7 +7,7 @@
   ),
 
   // ldif allows duplicate entries for certain attributes
-  cleanLdifKey(key)::
+  ldifKeySanitize(key)::
     local dupEntryAttributes = ['objectClass'];
     local res = std.prune([
       if std.startsWith(key, a) && std.length(key) > std.length(a) then
@@ -19,17 +19,22 @@
     else
       key,
 
+  ldifKeySort(line)::
+    if std.startsWith(line, 'dn:') then 1 else
+      if std.startsWith(line, 'description:') then 2 else
+        if std.startsWith(line, 'objectClass:') then 4 else 3,
+
   manifestLdif(ldifs)::
     local body_lines(body) = std.join([], [
       local entry = body[i];
       if std.isArray(entry) then
         local entries = [
-          ['%s: %s' % [self.cleanLdifKey(k), e[k]] for k in std.objectFields(e)] + ['']
+          std.sort(['%s: %s' % [self.ldifKeySanitize(k), e[k]] for k in std.objectFields(e)], self.ldifKeySort) + ['']
           for e in entry
         ];
         std.flattenArrays(entries)
       else
-        ['%s: %s' % [self.cleanLdifKey(j), entry[j]] for j in std.objectFields(entry)] + ['']
+        std.sort(['%s: %s' % [self.ldifKeySanitize(j), entry[j]] for j in std.objectFields(entry)], self.ldifKeySort) + ['']
       for i in std.objectFields(body)
     ]);
     std.join('\n', body_lines(ldifs) + ['']),
