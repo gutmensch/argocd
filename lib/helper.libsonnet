@@ -10,14 +10,10 @@
   ldifKeySanitize(key)::
     local dupEntryAttributes = ['objectClass'];
     local res = std.prune([
-      if std.startsWith(key, a) && std.length(key) > std.length(a) then
-        a
+      if std.startsWith(key, a) && std.length(key) > std.length(a) then a
       for a in dupEntryAttributes
     ]);
-    if std.length(res) > 0 then
-      res[0]
-    else
-      key,
+    if std.length(res) > 0 then res[0] else key,
 
   ldifKeySort(line)::
     if std.startsWith(line, 'dn:') then 1 else

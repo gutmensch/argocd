@@ -37,7 +37,7 @@ local helper = import '../../../lib/helper.libsonnet';
   ],
 
   _04serviceAccount: {
-    dn: 'ou=ServiceAccounts,%s' % [$.ldapBase],
+    dn: 'ou=ServiceAccount,%s' % [$.ldapBase],
     ou: 'ServiceAccount',
     description: 'Service accounts',
     objectClass: 'organizationalUnit',
