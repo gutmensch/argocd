@@ -7,8 +7,7 @@ local helper = import '../../../lib/helper.libsonnet';
   _00root: {
     local t = std.split($.ldapBase, ','),
     dn: $.ldapBase,
-    objectClass1: 'dcObject',
-    objectClass2: 'organization',
+    objectClass: ['dcObject', 'organization'],
     dc: std.split(t[1], '=')[1],
     o: std.split(t[0], '=')[1],
   },

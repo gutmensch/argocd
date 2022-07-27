@@ -8,7 +8,7 @@ local helper = import '../../../lib/helper.libsonnet';
   generate(
     name,
     namespace,
-    version='2.6.2',
+    version='2.6.3',
     root='',
     schemas=[],
     mailDomains=[],
