@@ -16,6 +16,7 @@ local helper = import '../../../lib/helper.libsonnet';
     providedSchemas=['cosine', 'inetorgperson'],
     initMailDomains=[],
     storageClass='fast',
+    replicas=1,
   ):: {
 
     assert root != '': error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
@@ -138,7 +139,7 @@ local helper = import '../../../lib/helper.libsonnet';
         namespace: namespace,
       },
       spec: {
-        replicas: 0,
+        replicas: replicas,
         selector: {
           matchLabels: helper.removeVersion(defaultLabels),
         },
