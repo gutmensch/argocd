@@ -317,7 +317,7 @@ local helper = import '../../../lib/helper.libsonnet';
               {
                 configMap: {
                   name: '%s-config-ldif' % [name],
-		  defaultMode: '0755',
+		  defaultMode: "0755",
                 },
                 name: '%s-config-ldif' % [name],
               },
