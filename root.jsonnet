@@ -31,8 +31,7 @@ local projectList = [
 ];
 
 local appList = [
-//  withAppDef({ name: 'internal-root-ca', project: 'base', path: 'internal-root-ca', tenant: ['lts'] }),
-  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'] }),
+//  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'] }),
 //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', ingressRoot: 'bln.space', ingressDomain: 'auth' }),
 //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
 //  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),
