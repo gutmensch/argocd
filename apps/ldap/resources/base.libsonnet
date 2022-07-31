@@ -272,17 +272,17 @@ local helper = import '../../../lib/helper.libsonnet';
                   },
                   {
                     mountPath: '/config/add.ldif',
-                    name: '%s-config' % [name],
+                    name: '%s-config-ldif' % [name],
                     subPath: 'add.ldif',
                   },
                   {
                     mountPath: '/config/mod.ldif',
-                    name: '%s-config' % [name],
+                    name: '%s-config-ldif' % [name],
                     subPath: 'mod.ldif',
                   },
                   {
                     mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
-                    name: '%s-config' % [name],
+                    name: '%s-config-ldif' % [name],
                     subPath: 'config-apply.sh',
                   },
                   {
@@ -316,10 +316,10 @@ local helper = import '../../../lib/helper.libsonnet';
               },
               {
                 configMap: {
-                  name: '%s-config' % [name],
+                  name: '%s-config-ldif' % [name],
 		  defaultMode: 755,
                 },
-                name: '%s-config' % [name],
+                name: '%s-config-ldif' % [name],
               },
               {
                 configMap: {
