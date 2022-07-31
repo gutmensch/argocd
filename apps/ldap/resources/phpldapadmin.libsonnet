@@ -114,7 +114,7 @@ local helper = import '../../../lib/helper.libsonnet';
 		volumeMounts: [
                   {
                     mountPath: '/var/www/phpldapadmin/templates/creation/clouduser.xml',
-                    name: '%s-templates' % [name],
+                    name: '%s-templates' % [depl.metadata.name],
                     subPath: 'clouduser.xml',
                   },
                 ],
