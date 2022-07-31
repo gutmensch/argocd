@@ -42,18 +42,47 @@ local helper = import '../../../lib/helper.libsonnet';
     objectClass: 'organizationalUnit',
   },
 
-  _05People: {
+  _05people: {
     dn: 'ou=People,%s' % [$.ldapBase],
     ou: 'People',
     description: 'Users in Directory, manageable in Keycloak',
     objectClass: 'organizationalUnit',
   },
 
-  _06Groups: {
+  _06group: {
     dn: 'ou=Group,%s' % [$.ldapBase],
     ou: 'Group',
-    description: 'Groups in Directory, manageable in Keycloak',
+    description: 'Groups for People in Directory',
     objectClass: 'organizationalUnit',
   },
 
+  // XXX: finish this after testing
+  //
+  // _07nextcloudAdminGroup: {
+  //   dn: 'cn=Nextcloud Admin,ou=Group,%s' % [$.ldapBase],
+  //   description: 'Nextcloud Admin Group',
+  //   gidNumber: 2501,
+  //   objectClass: ['top', 'groupOfNames', 'posixGroup', 'nextcloudGroup'],
+  // },
+
+  // _08nextcloudUserGroup: {
+  //   dn: 'cn=Nextcloud User,ou=Group,%s' % [$.ldapBase],
+  //   description: 'Nextcloud User Group',
+  //   gidNumber: 2502,
+  //   objectClass: ['top', 'posixGroup', 'nextcloudGroup'],
+  // },
+
+  // _09nextcloudViewerGroup: {
+  //   dn: 'cn=Nextcloud Viewer,ou=Group,%s' % [$.ldapBase],
+  //   description: 'Nextcloud Viewer Group',
+  //   gidNumber: 2503,
+  //   objectClass: ['top', 'posixGroup', 'nextcloudGroup'],
+  // },
+
+  // _10KeycloakRole: {
+  //   dn: 'ou=Role,%s' % [$.ldapBase],
+  //   ou: 'Role',
+  //   description: 'Role assignable by Keycloak mapper',
+  //   objectClass: 'organizationalUnit',
+  // },
 }

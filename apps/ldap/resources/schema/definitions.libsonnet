@@ -1,4 +1,8 @@
 {
+  rfc2307bis: {
+    file: 'rfc2307bis.ldif',
+    content: importstr 'rfc2307bis.ldif',
+  },
   virtualmail: {
     file: 'virtualmail.ldif',
     content: importstr 'virtualmail.ldif',

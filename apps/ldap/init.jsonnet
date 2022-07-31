@@ -5,14 +5,15 @@ local phpldapadmin = import 'resources/phpldapadmin.libsonnet';
 local secrets = import 'resources/sealedSecrets.libsonnet';
 
 function(name, namespace, project, tenant, region)
+
   local ldapRoot = 'o=auth,dc=local';
+
   local resources = std.prune(
     base.generate(
       name,
       namespace,
       root=ldapRoot,
-      schemas=['virtualmail', 'nextcloud'],
-      mailDomains=['bln.space', 'schumann.link', 'n-os.org', 'robattix.com', 'kubectl.me'],
+      initMailDomains=['bln.space', 'schumann.link', 'n-os.org', 'robattix.com', 'kubectl.me'],
     ) +
     phpldapadmin.generate(
       name,

@@ -1,7 +1,8 @@
 local kube = import '../../../lib/kube.libsonnet';
 local ca = import '../../../lib/localca.libsonnet';
 local schemaDefinitions = import 'schema/definitions.libsonnet';
-local ldifDefinitions = import 'ldif/definitions.libsonnet';
+local configDefinitions = import 'ldif/config.libsonnet';
+local initDefinitions = import 'ldif/init.libsonnet';
 local helper = import '../../../lib/helper.libsonnet';
 
 {
@@ -10,10 +11,11 @@ local helper = import '../../../lib/helper.libsonnet';
     namespace,
     version='2.6.3',
     root='',
-    schemas=[],
-    mailDomains=[],
+    initModules=['memberof'],
+    initSchemas=['rfc2307bis', 'virtualmail', 'nextcloud'],
+    providedSchemas=['cosine', 'inetorgperson'],
+    initMailDomains=[],
     storageClass='fast',
-    defaultSchemas=['cosine', 'inetorgperson', 'nis'],
   ):: {
 
     assert root != '': error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
@@ -27,9 +29,13 @@ local helper = import '../../../lib/helper.libsonnet';
       'app.kubernetes.io/managed-by': 'ArgoCD',
     },
 
-    local ldapModifications = ldifDefinitions {
+    local ldapConfig = configDefinitions {
+      ldapModules: initModules,
+    },
+
+    local ldapBootstrap = initDefinitions {
       ldapBase: root,
-      ldapMailDomains: mailDomains,
+      ldapMailDomains: initMailDomains,
     },
 
     local certCRDs = ca.serverCert(
@@ -55,18 +61,19 @@ local helper = import '../../../lib/helper.libsonnet';
         LDAP_ALLOW_ANON_BINDING: 'no',
         LDAP_CONFIG_ADMIN_ENABLED: 'yes',
         LDAP_CONFIG_ADMIN_PASSWORD_FILE: '',
+	// skip default tree, use our provided /ldifs/init.ldif
+        LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
+	// unused, we mount schemas in directory and ref as extra
         LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
         LDAP_ENABLE_TLS: 'yes',
-        LDAP_EXTRA_SCHEMAS: std.join(',', defaultSchemas + schemas),
+        LDAP_EXTRA_SCHEMAS: std.join(',', providedSchemas + initSchemas),
         LDAP_GROUP: 'Readers',
         LDAP_LDAPS_PORT_NUMBER: '1636',
         LDAP_LOGLEVEL: '64',
         LDAP_PASSWORDS: '',
         LDAP_PORT_NUMBER: '1389',
         LDAP_ROOT: root,
-	// init.ldif defined ourselves in ldif/definitions
-        LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_ULIMIT_NOFILES: '1024',
         LDAP_USERS: '',
         LDAP_USER_DC: 'Users',
@@ -264,6 +271,21 @@ local helper = import '../../../lib/helper.libsonnet';
                     subPath: 'ca.crt',
                   },
                   {
+                    mountPath: '/config/add.ldif',
+                    name: '%s-config' % [name],
+                    subPath: 'add.ldif',
+                  },
+                  {
+                    mountPath: '/config/mod.ldif',
+                    name: '%s-config' % [name],
+                    subPath: 'mod.ldif',
+                  },
+                  {
+                    mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
+                    name: '%s-config' % [name],
+                    subPath: 'config-apply.sh',
+                  },
+                  {
                     mountPath: '/ldifs/init.ldif',
                     name: '%s-init-ldif' % [name],
                     subPath: 'init.ldif',
@@ -271,10 +293,10 @@ local helper = import '../../../lib/helper.libsonnet';
 		  ] + [
                   {
                     mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
-                    name: '%s-schema' % [schema],
+                    name: 'ldap-schema-%s' % [schema],
                     subPath: '%s.ldif' % [schema],
                   },
-		  for schema in schemas
+		  for schema in initSchemas
                  ],
               },
             ],
@@ -294,18 +316,25 @@ local helper = import '../../../lib/helper.libsonnet';
               },
               {
                 configMap: {
+                  name: '%s-config' % [name],
+		  defaultMode: '0755',
+                },
+                name: '%s-config' % [name],
+              },
+              {
+                configMap: {
                   name: '%s-init-ldif' % [name],
                 },
                 name: '%s-init-ldif' % [name],
-              }
+              },
 	      ] + [
                 {
 		  configMap: {
-		    name: '%s-schema' % [schema],
+		    name: 'ldap-schema-%s' % [schema],
 		  },
-		  name: '%s-schema' % [schema],
+		  name: 'ldap-schema-%s' % [schema],
 		}
-                for schema in schemas
+                for schema in initSchemas
 	      ],
           },
         },
@@ -334,13 +363,30 @@ local helper = import '../../../lib/helper.libsonnet';
       },
     },
 
+    configmapconfig: kube.ConfigMap('%s-config-ldif' % [name]) {
+      metadata+: {
+        namespace: namespace,
+        labels: defaultLabels,
+      },
+      data: {
+        'add.ldif': helper.manifestLdif(ldapConfig.add),
+        'mod.ldif': helper.manifestLdif(ldapConfig.modify),
+        'config-apply.sh': |||
+	  #!/bin/bash
+	  export LDAPTLS_REQCERT=never
+	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
+	  ldapmodify -Y EXTERNAL -H ldapi:/// -f /config/mod.ldif
+	|||,
+      },
+    },
+
     configmapldapinit: kube.ConfigMap('%s-init-ldif' % [name]) {
       metadata+: {
         namespace: namespace,
         labels: defaultLabels,
       },
       data: {
-        'init.ldif': helper.manifestLdif(ldapModifications),
+        'init.ldif': helper.manifestLdif(ldapBootstrap),
       },
     }
   } + {
@@ -354,7 +400,7 @@ local helper = import '../../../lib/helper.libsonnet';
     'app.kubernetes.io/managed-by': 'ArgoCD',
   },
 
-  ['%s-schema' % [schema]]: kube.ConfigMap('%s-schema' % [schema]) {
+  ['ldap-schema-%s' % [schema]]: kube.ConfigMap('ldap-schema-%s' % [schema]) {
     metadata+: {
       namespace: namespace,
       labels: defaultLabels,
@@ -363,6 +409,6 @@ local helper = import '../../../lib/helper.libsonnet';
       [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
     },
   }
-  for schema in schemas
+  for schema in initSchemas
   }
 }

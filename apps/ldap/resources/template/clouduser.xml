@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE template SYSTEM "template.dtd">
+
+<template>
+  <askcontainer>1</askcontainer>
+  <description>New Cloud User Entry for Authentication, Mail and Nextcloud</description>
+  <icon>ldap-user.png</icon>
+  <invalid>0</invalid>
+  <rdn>uid</rdn>
+  <regexp>^ou=People,o=.*,</regexp>
+  <title>Generic: Cloud User Entry</title>
+  <visible>1</visible>
+
+  <objectClasses>
+    <objectClass id="top"></objectClass>
+    <objectClass id="posixAccount"></objectClass>
+    <objectClass id="shadowAccount"></objectClass>
+    <objectClass id="inetOrgPerson"></objectClass>
+    <objectClass id="mailUser"></objectClass>
+    <objectClass id="nextcloudUser"></objectClass>
+  </objectClasses>
+
+  <attributes>
+    <attribute id="givenName">
+            <display>First name</display>
+            <icon>ldap-uid.png</icon>
+            <onchange>=autoFill(cn;%givenName% %sn%)</onchange>
+	    <onchange>=autoFill(mailDrop;%givenName|0-1/l%%sn|0-1/l%@bln.space)</onchange>
+	    <onchange>=autoFill(uid;%givenName|0-1/l%%sn|0-1/l%)</onchange>
+	    <onchange>=autoFill(homeDirectory;/home/%givenName|0-1/l%%sn|0-1/l%)</onchange>
+            <order>1</order>
+            <page>1</page>
+    </attribute>
+    <attribute id="sn">
+            <display>Last name</display>
+            <onchange>=autoFill(cn;%givenName% %sn%)</onchange>
+	    <onchange>=autoFill(mailDrop;%givenName|0-1/l%%sn|0-1/l%@bln.space)</onchange>
+	    <onchange>=autoFill(uid;%givenName|0-1/l%%sn|0-1/l%)</onchange>
+	    <onchange>=autoFill(homeDirectory;/home/%givenName|0-1/l%%sn|0-1/l%)</onchange>
+            <order>2</order>
+            <page>1</page>
+    </attribute>
+    <attribute id="cn">
+            <display>Common Name</display>
+            <order>3</order>
+            <page>1</page>
+            <spacer>1</spacer>
+    </attribute>
+    <!--
+    <attribute id="jpegPhoto">
+            <display>Photo</display>
+            <order>3</order>
+            <spacer>1</spacer>
+    </attribute>
+    <attribute id="o">
+            <display>Organisation</display>
+            <order>4</order>
+            <page>1</page>
+    </attribute>
+    //-->
+    <attribute id="street">
+            <cols>50</cols>
+            <display>Street</display>
+            <icon>mail.png</icon>
+            <order>4</order>
+            <page>1</page>
+            <rows>4</rows>
+            <type>textarea</type>
+    </attribute>
+    <attribute id="l">
+            <display>City</display>
+            <order>5</order>
+            <page>1</page>
+    </attribute>
+    <!--
+    <attribute id="st">
+            <display>State</display>
+            <order>6</order>
+            <page>1</page>
+    </attribute>
+    //-->
+    <attribute id="postalCode">
+            <display>Postal code</display>
+            <order>6</order>
+            <page>1</page>
+            <spacer>1</spacer>
+    </attribute>
+    <!--
+    <attribute id="telephoneNumber">
+            <display>Work phone</display>
+            <icon>phone.png</icon>
+            <order>8</order>
+            <page>1</page>
+    </attribute>
+    <attribute id="facsimileTelephoneNumber">
+            <display>Fax</display>
+            <order>9</order>
+            <page>1</page>
+    </attribute>
+    //-->
+    <attribute id="mobile">
+            <display>Mobile phone</display>
+            <order>7</order>
+            <page>1</page>
+    </attribute>
+
+    <attribute id="mail">
+            <display>E-Mail</display>
+            <order>8</order>
+            <icon>mail.png</icon>
+            <page>1</page>
+    </attribute>
+
+    <attribute id="userPassword">
+          <display>Password</display>
+          <!-- <helper>
+                  <display>Encryption</display>
+                  <id>enc</id>
+                  <value>=php.PasswordEncryptionTypes()</value>
+          </helper> -->
+          <icon>lock.png</icon>
+          <order>9</order>
+          <page>1</page>
+          <post>=php.PasswordEncrypt(%enc%;%userPassword%)</post>
+          <spacer>1</spacer>
+          <verify>1</verify>
+    </attribute>
+
+    <attribute id="loginShell">
+       <display>Login shell</display>
+       <icon>terminal.png</icon>
+       <order>10</order>
+       <page>1</page>
+       <type>select</type>
+       <!-- <value><![CDATA[=php.PickList(/;(&(objectClass=posixAccount));loginShell;%loginShell%)]]></value> -->
+       <value id="/bin/sh">/bin/sh</value>
+       <value id="/bin/bash">/bin/bash</value>
+       <value id="/bin/zsh">/bin/zsh</value>
+    </attribute>
+
+    <attribute id="nextcloudEnabled">
+	    <display>Nextcloud Access</display>
+	    <type>select</type>
+         <value id="TRUE">TRUE</value>
+         <value id="FALSE">FALSE</value>
+          <icon>server.png</icon>
+          <order>11</order>
+          <page>1</page>
+    </attribute>
+
+    <attribute id="nextcloudQuota">
+	    <display>Nextcloud Quota</display>
+	    <value id="200G">200G</value>
+          <icon>save.png</icon>
+          <order>12</order>
+          <page>1</page>
+  </attribute>
+
+    <attribute id="mailEnabled">
+	    <display>Mail Access</display>
+	    <type>select</type>
+         <value id="TRUE">FALSE</value>
+         <value id="FALSE">FALSE</value>
+          <icon>mail.png</icon>
+          <order>13</order>
+          <page>1</page>
+  </attribute>
+
+    <attribute id="mailDrop">
+	  <display>Mail Address</display>
+          <icon>mail.png</icon>
+          <order>14</order>
+          <page>1</page>
+    </attribute>
+
+    <attribute id="mailAlias">
+	  <display>Mail Alias(es)</display>
+          <icon>mail.png</icon>
+          <order>15</order>
+          <page>1</page>
+    </attribute>
+
+  <attribute id="mailQuota">
+          <display>Mail Quota</display>
+	    <value id="20G">20G</value>
+          <icon>save.png</icon>
+          <order>16</order>
+          <page>1</page>
+  </attribute>
+
+  <attribute id="mailUidNumber">
+          <display>Mail UID Number</display>
+	    <value id="5000">5000</value>
+          <order>17</order>
+          <page>1</page>
+  </attribute>
+
+  <attribute id="mailGidNumber">
+          <display>Mail GID Number</display>
+	    <value id="5000">5000</value>
+          <order>18</order>
+          <page>1</page>
+  </attribute>
+
+  </attributes>
+
+</template>
