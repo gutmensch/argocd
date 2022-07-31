@@ -40,7 +40,7 @@ local helper = import '../../../lib/helper.libsonnet';
     },
 
     // custom template for user creation
-    configmaptemplate: kube.ConfigMap(self._name) {
+    configmaptemplate: kube.ConfigMap('%s-templates' % [self._name]) {
       metadata+: {
         namespace: namespace,
         labels+: defaultLabels,
@@ -70,6 +70,14 @@ local helper = import '../../../lib/helper.libsonnet';
             }
           },
           spec: {
+            volumes: [
+              {
+                configMap: {
+                  name: '%s-templates' % [depl.metadata.name],
+                },
+                name: '%s-templates' % [depl.metadata.name],
+              },
+	    ],
             containers: [
               {
                 envFrom: [
@@ -103,6 +111,13 @@ local helper = import '../../../lib/helper.libsonnet';
                     port: 'http',
                   },
                 },
+		volumeMounts: [
+                  {
+                    mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
+                    name: '%s-config' % [name],
+                    subPath: 'config-apply.sh',
+                  },
+                ],
                 resources: {},
               },
             ],
