@@ -113,9 +113,9 @@ local helper = import '../../../lib/helper.libsonnet';
                 },
 		volumeMounts: [
                   {
-                    mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
-                    name: '%s-config' % [name],
-                    subPath: 'config-apply.sh',
+                    mountPath: '/var/www/phpldapadmin/templates/creation/clouduser.xml',
+                    name: '%s-templates' % [name],
+                    subPath: 'clouduser.xml',
                   },
                 ],
                 resources: {},
