@@ -375,8 +375,8 @@ local helper = import '../../../lib/helper.libsonnet';
         'config-apply.sh': |||
 	  #!/bin/bash
 	  export LDAPTLS_REQCERT=never
-	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
-	  ldapmodify -Y EXTERNAL -H ldapi:/// -f /config/mod.ldif
+	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif || true
+	  ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif || true
 	|||,
       },
     },
