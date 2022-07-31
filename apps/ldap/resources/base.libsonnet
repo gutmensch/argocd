@@ -138,7 +138,7 @@ local helper = import '../../../lib/helper.libsonnet';
         namespace: namespace,
       },
       spec: {
-        replicas: 1,
+        replicas: 0,
         selector: {
           matchLabels: helper.removeVersion(defaultLabels),
         },
