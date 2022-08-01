@@ -40,7 +40,7 @@ local helper = import '../../../lib/helper.libsonnet';
     _04indexMailDrop: {
       dn: 'olcDatabase={2}mdb,cn=config',
       add: 'olcdbindex',
-      olcdbindex: 'mailAlias eq,sub',
+      olcdbindex: 'mailDrop eq,sub',
     },
 
     _05indexVirtualDomains: {
