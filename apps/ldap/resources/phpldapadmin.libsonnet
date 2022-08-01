@@ -7,7 +7,7 @@ local helper = import '../../../lib/helper.libsonnet';
     namespace,
     registry='registry.lan:5000',
     image='gutmensch/phpldapadmin',
-    version='1.2.6.3',
+    version='1.2.6.3-1',
     // image='osixia/phpldapadmin',
     // version 0.9.0 contains =phpLDAPadmin 1.2.5
     // version='0.9.0',
