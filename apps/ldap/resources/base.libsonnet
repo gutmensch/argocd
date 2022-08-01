@@ -16,7 +16,7 @@ local helper = import '../../../lib/helper.libsonnet';
     providedSchemas=['cosine', 'inetorgperson'],
     initMailDomains=[],
     storageClass='fast',
-    replicas=0,
+    replicas=1,
   ):: {
 
     assert root != '': error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
@@ -379,8 +379,9 @@ local helper = import '../../../lib/helper.libsonnet';
 	  source /opt/bitnami/scripts/libopenldap.sh
 	  ldap_start_bg
 	  sleep 5
-	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
-	  ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif
+	  #ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
+	  #ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif
+	  ldap_stop
 	|||,
       },
     },
