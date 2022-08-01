@@ -6,12 +6,16 @@ local helper = import '../../../lib/helper.libsonnet';
     name,
     namespace,
     registry='registry.lan:5000',
-    version='0.9.0',
+    image='gutmensch/phpldapadmin',
+    version='1.2.6.3',
+    // image='osixia/phpldapadmin',
+    // version 0.9.0 contains =phpLDAPadmin 1.2.5
+    // version='0.9.0',
     ingress='',
     ldapSvc='',
     ldapAdmin='',
     ldapRoot='',
-    replicas=0,
+    replicas=1,
   ):: {
 
     assert ldapSvc != '': error 'ldap service address needed for setup',
@@ -69,9 +73,7 @@ local helper = import '../../../lib/helper.libsonnet';
                     },
                   },
                 ],
-                // version 0.9.0 is from docker image with =phpLDAPadmin 1.2.5
-                local upstream = 'osixia/phpldapadmin:%s' % [version],
-                image: if registry != '' then std.join('/', [registry, upstream]) else upstream,
+                image: '%s:%s' % [if registry != '' then std.join('/', [registry, image]) else '', version],
                 imagePullPolicy: 'IfNotPresent',
                 livenessProbe: {
                   httpGet: {
