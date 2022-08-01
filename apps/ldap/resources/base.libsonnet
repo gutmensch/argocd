@@ -376,8 +376,12 @@ local helper = import '../../../lib/helper.libsonnet';
         'config-apply.sh': |||
 	  #!/bin/bash
 	  export LDAPTLS_REQCERT=never
+	  source /opt/bitnami/scripts/libopenldap.sh
+	  ldap_start_bg
+	  sleep 10
 	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif || true
 	  ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif || true
+	  ldap_stop
 	|||,
       },
     },
