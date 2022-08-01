@@ -40,17 +40,6 @@ local helper = import '../../../lib/helper.libsonnet';
       },
     },
 
-    // custom template for user creation
-    configmaptemplate: kube.ConfigMap('%s-templates' % [self._name]) {
-      metadata+: {
-        namespace: namespace,
-        labels+: defaultLabels,
-      },
-      data: {
-        'clouduser.xml': importstr 'template/clouduser.xml',
-      },
-    },
-
     deployment: kube.Deployment(self._name) {
       local depl = self,
       metadata+: {
@@ -67,18 +56,10 @@ local helper = import '../../../lib/helper.libsonnet';
             labels+: defaultLabels,
             annotations+: {
               'checksum/configmapenv': std.md5(std.toString(this.configmap)),
-              'checksum/configmaptemplate': std.md5(std.toString(this.configmaptemplate)),
             }
           },
           spec: {
-            volumes: [
-              {
-                configMap: {
-                  name: '%s-templates' % [depl.metadata.name],
-                },
-                name: '%s-templates' % [depl.metadata.name],
-              },
-	    ],
+            volumes: [],
             containers: [
               {
                 envFrom: [
@@ -112,13 +93,7 @@ local helper = import '../../../lib/helper.libsonnet';
                     port: 'http',
                   },
                 },
-		volumeMounts: [
-                  {
-                    mountPath: '/var/www/phpldapadmin/templates/creation/clouduser.xml',
-                    name: '%s-templates' % [depl.metadata.name],
-                    subPath: 'clouduser.xml',
-                  },
-                ],
+		volumeMounts: [],
                 resources: {},
               },
             ],
