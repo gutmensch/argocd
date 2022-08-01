@@ -11,6 +11,7 @@ local helper = import '../../../lib/helper.libsonnet';
     ldapSvc='',
     ldapAdmin='',
     ldapRoot='',
+    replicas=0,
   ):: {
 
     assert ldapSvc != '': error 'ldap service address needed for setup',
@@ -57,7 +58,7 @@ local helper = import '../../../lib/helper.libsonnet';
         labels+: defaultLabels,
       },
       spec: {
-        replicas: 1,
+        replicas: replicas,
         selector: {
           matchLabels: helper.removeVersion(defaultLabels),
         },
