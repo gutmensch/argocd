@@ -95,7 +95,7 @@ def jsonnet(data):
 
 # hacky function to modify object key to object key + function call
 def convert(data):
-    lines = []
+    lines = ["local kube = import 'kube.libsonnet';"]
     for line in data.splitlines():
         if ': kube.' in line:
             lines.append(line.replace('"',''))
