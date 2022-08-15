@@ -50,10 +50,10 @@ local kube = import 'kube.libsonnet';
               { code: false, name: 'tenant', value: tenant },
               { code: false, name: 'region', value: app.region },
               if app.ingressPrefix != null && app.ingressRoot != null then
-                { code: true, name: 'ingress', value: [
+                { code: true, name: 'ingress', value: std.toString([
                   helper.getIngress(tenant, prefix, app.ingressRoot)
                   for prefix in app.ingressPrefix
-                ] }
+                ]) }
               else null,
             ]),
             extVars:: [],
