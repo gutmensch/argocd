@@ -1,14 +1,20 @@
+local helper = import '../../../lib/helper.libsonnet';
 local kube = import '../../../lib/kube.libsonnet';
 local ca = import '../../../lib/localca.libsonnet';
-local schemaDefinitions = import 'schema/definitions.libsonnet';
 local configDefinitions = import 'ldif/config.libsonnet';
 local initDefinitions = import 'ldif/init.libsonnet';
-local helper = import '../../../lib/helper.libsonnet';
+local schemaDefinitions = import 'schema/definitions.libsonnet';
+local secrets = import 'secrets.libsonnet';
 
 {
+  _openldapLabels:: {
+    'app.kubernetes.io/component': 'openldap',
+  },
+
   generate(
     name,
     namespace,
+    tenant,
     version='2.6.3',
     root='',
     initModules=['memberof'],
@@ -17,18 +23,14 @@ local helper = import '../../../lib/helper.libsonnet';
     initMailDomains=[],
     storageClass='fast',
     replicas=1,
+    labels={},
   ):: {
 
-    assert root != '': error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
+    assert root != '' : error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
 
-    local res = self,
+    local this = self,
 
-    local defaultLabels = {
-      'app.kubernetes.io/name': name,
-      'app.kubernetes.io/version': version,
-      'app.kubernetes.io/component': 'openldap',
-      'app.kubernetes.io/managed-by': 'ArgoCD',
-    },
+    local openldapLabels = labels + $._openldapLabels,
 
     local ldapConfig = configDefinitions {
       ldapModules: initModules,
@@ -44,17 +46,17 @@ local helper = import '../../../lib/helper.libsonnet';
       namespace=namespace,
       createIssuer=true,
       dnsNames=['%s.%s.svc.cluster.local' % [name, namespace]],
-      labels=defaultLabels,
+      labels=openldapLabels,
     ),
-    localrootcacert: certCRDs['localrootcacert'],
-    localcertissuer: certCRDs['localcertissuer'],
-    servercert: certCRDs['localservercert'],
+    localrootcacert: certCRDs.localrootcacert,
+    localcertissuer: certCRDs.localcertissuer,
+    servercert: certCRDs.localservercert,
 
     configmapenv: kube.ConfigMap(name) {
       metadata+: {
         name: '%s-env' % [name],
         namespace: namespace,
-	labels+: defaultLabels,
+        labels+: openldapLabels,
       },
       data: {
         LDAP_ADD_SCHEMAS: 'yes',
@@ -62,10 +64,10 @@ local helper = import '../../../lib/helper.libsonnet';
         LDAP_ALLOW_ANON_BINDING: 'no',
         LDAP_CONFIG_ADMIN_ENABLED: 'yes',
         LDAP_CONFIG_ADMIN_PASSWORD_FILE: '',
-	// skip default tree, use our provided /ldifs/init.ldif
+        // skip default tree, use our provided /ldifs/init.ldif
         LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
-	// unused, we mount schemas in directory and ref as extra
+        // unused, we mount schemas in directory and ref as extra
         LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
         LDAP_ENABLE_TLS: 'yes',
         LDAP_EXTRA_SCHEMAS: std.join(',', providedSchemas + initSchemas),
@@ -80,12 +82,12 @@ local helper = import '../../../lib/helper.libsonnet';
         LDAP_USER_DC: 'Users',
       },
     },
-  
+
     servicecluster: kube.Service(name) {
       metadata+: {
         name: name,
         namespace: namespace,
-	labels+: defaultLabels,
+        labels+: openldapLabels,
       },
       spec: {
         ports: [
@@ -104,19 +106,19 @@ local helper = import '../../../lib/helper.libsonnet';
             targetPort: 'ldaps-port',
           },
         ],
-	selector: helper.removeVersion(defaultLabels),
+        selector: helper.removeVersion(openldapLabels),
         sessionAffinity: 'None',
         type: 'ClusterIP',
       },
     },
-  
+
     serviceheadless: kube.Service('%s-headless' % [name]) {
       apiVersion: 'v1',
       kind: 'Service',
       metadata: {
         name: '%s-headless' % [name],
         namespace: namespace,
-	labels+: defaultLabels,
+        labels+: openldapLabels,
       },
       spec: {
         clusterIP: 'None',
@@ -127,12 +129,12 @@ local helper = import '../../../lib/helper.libsonnet';
             targetPort: 'ldap-port',
           },
         ],
-	selector: helper.removeVersion(defaultLabels),
+        selector: helper.removeVersion(openldapLabels),
         sessionAffinity: 'None',
         type: 'ClusterIP',
       },
     },
-  
+
     statefulset: kube.StatefulSet(name) {
       metadata+: {
         name: name,
@@ -141,15 +143,15 @@ local helper = import '../../../lib/helper.libsonnet';
       spec: {
         replicas: replicas,
         selector: {
-          matchLabels: helper.removeVersion(defaultLabels),
+          matchLabels: helper.removeVersion(openldapLabels),
         },
         serviceName: '%s-headless' % [name],
         template: {
           metadata+: {
             annotations+: {
-              'checksum/configmapenv': std.md5(std.toString(res.configmapenv)),
+              'checksum/configmapenv': std.md5(std.toString(this.configmapenv)),
             },
-            labels: defaultLabels,
+            labels: openldapLabels,
           },
           spec: {
             affinity: {
@@ -160,7 +162,7 @@ local helper = import '../../../lib/helper.libsonnet';
                   {
                     podAffinityTerm: {
                       labelSelector: {
-                        matchLabels: helper.removeVersion(defaultLabels),
+                        matchLabels: helper.removeVersion(openldapLabels),
                       },
                       namespaces: [
                         namespace,
@@ -291,14 +293,14 @@ local helper = import '../../../lib/helper.libsonnet';
                     name: '%s-init-ldif' % [name],
                     subPath: 'init.ldif',
                   },
-		  ] + [
+                ] + [
                   {
                     mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
                     name: 'ldap-schema-%s' % [schema],
                     subPath: '%s.ldif' % [schema],
-                  },
-		  for schema in initSchemas
-                 ],
+                  }
+                  for schema in initSchemas
+                ],
               },
             ],
             initContainers: null,
@@ -318,8 +320,8 @@ local helper = import '../../../lib/helper.libsonnet';
               {
                 configMap: {
                   name: '%s-config-ldif' % [name],
-		  // =0755
-		  defaultMode: 493,
+                  // =0755
+                  defaultMode: 493,
                 },
                 name: '%s-config-ldif' % [name],
               },
@@ -329,15 +331,15 @@ local helper = import '../../../lib/helper.libsonnet';
                 },
                 name: '%s-init-ldif' % [name],
               },
-	      ] + [
-                {
-		  configMap: {
-		    name: 'ldap-schema-%s' % [schema],
-		  },
-		  name: 'ldap-schema-%s' % [schema],
-		}
-                for schema in initSchemas
-	      ],
+            ] + [
+              {
+                configMap: {
+                  name: 'ldap-schema-%s' % [schema],
+                },
+                name: 'ldap-schema-%s' % [schema],
+              }
+              for schema in initSchemas
+            ],
           },
         },
         updateStrategy: {
@@ -368,55 +370,51 @@ local helper = import '../../../lib/helper.libsonnet';
     configmapconfig: kube.ConfigMap('%s-config-ldif' % [name]) {
       metadata+: {
         namespace: namespace,
-        labels: defaultLabels,
+        labels: openldapLabels,
       },
       data: {
         'add.ldif': helper.manifestLdif(ldapConfig.add),
         'mod.ldif': helper.manifestLdif(ldapConfig.modify),
         'config-apply.sh': |||
-	  #!/bin/bash
-	  export LDAPTLS_REQCERT=never
-	  source /opt/bitnami/scripts/libopenldap.sh
-	  ldap_start_bg
-	  sleep 5
-	  ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
-	  sleep 2
-	  ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif
-	  sleep 5
-	  ldap_stop
-	|||,
+          #!/bin/bash
+          export LDAPTLS_REQCERT=never
+          source /opt/bitnami/scripts/libopenldap.sh
+          ldap_start_bg
+          sleep 5
+          ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
+          sleep 2
+          ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif
+          sleep 5
+          ldap_stop
+        |||,
       },
     },
 
     configmapldapinit: kube.ConfigMap('%s-init-ldif' % [name]) {
       metadata+: {
         namespace: namespace,
-        labels: defaultLabels,
+        labels: openldapLabels,
       },
       data: {
         'init.ldif': helper.manifestLdif(ldapBootstrap),
       },
-    }
+    },
+
   } + {
-
-  local res = self,
-
-  local defaultLabels = {
-    'app.kubernetes.io/name': name,
-    'app.kubernetes.io/version': version,
-    'app.kubernetes.io/component': 'auth',
-    'app.kubernetes.io/managed-by': 'ArgoCD',
-  },
-
-  ['ldap-schema-%s' % [schema]]: kube.ConfigMap('ldap-schema-%s' % [schema]) {
-    metadata+: {
-      namespace: namespace,
-      labels: defaultLabels,
+    local openldapLabels = labels {
+      'app.kubernetes.io/component': 'openldap',
     },
-    data: {
-      [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
-    },
-  }
-  for schema in initSchemas
-  }
+
+    ['ldap-schema-%s' % [schema]]: kube.ConfigMap('ldap-schema-%s' % [schema]) {
+      metadata+: {
+        namespace: namespace,
+        labels: openldapLabels,
+      },
+      data: {
+        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
+      },
+    }
+    for schema in initSchemas
+
+  } + secrets.generate(labels + $._openldapLabels)[tenant],
 }

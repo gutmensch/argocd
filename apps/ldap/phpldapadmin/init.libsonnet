@@ -1,40 +1,38 @@
-local kube = import '../../../lib/kube.libsonnet';
 local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
+local secrets = import 'secrets.libsonnet';
 
 {
+  _adminLabels:: {
+    'app.kubernetes.io/component': 'phpldapadmin',
+  },
+
   generate(
     name,
     namespace,
+    tenant,
     registry='registry.lan:5000',
+    // origin: osixia/phpldapadmin, version 0.9.0 contains =phpLDAPadmin 1.2.5
     image='gutmensch/phpldapadmin',
     version='1.2.6.3-4',
-    // image='osixia/phpldapadmin',
-    // version 0.9.0 contains =phpLDAPadmin 1.2.5
-    // version='0.9.0',
     ingress='',
     ldapSvc='',
     ldapAdmin='',
     ldapRoot='',
     replicas=1,
+    labels={},
   ):: {
 
-    assert ldapSvc != '': error 'ldap service address needed for setup',
-
-    _name:: '%s-admin' % [name],
+    assert ldapSvc != '' : error 'ldap service address needed for setup',
 
     local this = self,
+    local adminName = '%s-admin' % [name],
+    local adminLabels = labels + $._adminLabels,
 
-    local defaultLabels = {
-      'app.kubernetes.io/name': this._name,
-      'app.kubernetes.io/version': version,
-      'app.kubernetes.io/component': 'phpldapadmin',
-      'app.kubernetes.io/managed-by': 'ArgoCD',
-    },
-
-    configmap: kube.ConfigMap(self._name) {
+    configmap: kube.ConfigMap(adminName) {
       metadata+: {
         namespace: namespace,
-        labels+: defaultLabels,
+        labels+: adminLabels,
       },
       data: {
         PHPLDAPADMIN_HTTPS: 'false',
@@ -44,23 +42,23 @@ local helper = import '../../../lib/helper.libsonnet';
       },
     },
 
-    deployment: kube.Deployment(self._name) {
+    deployment: kube.Deployment(adminName) {
       local depl = self,
       metadata+: {
         namespace: namespace,
-        labels+: defaultLabels,
+        labels+: adminLabels,
       },
       spec: {
         replicas: replicas,
         selector: {
-          matchLabels: helper.removeVersion(defaultLabels),
+          matchLabels: helper.removeVersion(adminLabels),
         },
         template: {
           metadata+: {
-            labels+: defaultLabels,
+            labels+: adminLabels,
             annotations+: {
               'checksum/configmapenv': std.md5(std.toString(this.configmap)),
-            }
+            },
           },
           spec: {
             volumes: [],
@@ -95,7 +93,7 @@ local helper = import '../../../lib/helper.libsonnet';
                     port: 'http',
                   },
                 },
-		volumeMounts: [],
+                volumeMounts: [],
                 resources: {},
               },
             ],
@@ -104,10 +102,10 @@ local helper = import '../../../lib/helper.libsonnet';
       },
     },
 
-    service: kube.Service(self._name) {
+    service: kube.Service(adminName) {
       metadata+: {
         namespace: namespace,
-        labels+: defaultLabels,
+        labels+: adminLabels,
       },
       spec: {
         ports: [
@@ -118,13 +116,13 @@ local helper = import '../../../lib/helper.libsonnet';
             targetPort: 'http',
           },
         ],
-        selector: helper.removeVersion(defaultLabels),
+        selector: helper.removeVersion(adminLabels),
         type: 'ClusterIP',
       },
     },
 
-    [if ingress != '' then 'ingress']: kube.Ingress(self._name) {
-      local this = self,
+    [if ingress != '' then 'ingress']: kube.Ingress(adminName) {
+      local ing = self,
       metadata+: {
         namespace: namespace,
         annotations+: {
@@ -134,16 +132,16 @@ local helper = import '../../../lib/helper.libsonnet';
           'nginx.ingress.kubernetes.io/auth-secret': 'phpldapadmin-basic-auth',
           'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
         },
-        labels+: defaultLabels,
+        labels+: adminLabels,
       },
       spec: {
         tls: [
-	  {
+          {
             hosts: [
               ingress,
             ],
-	    secretName: 'ldap-admin-cert',
-	  },
+            secretName: 'ldap-admin-cert',
+          },
         ],
         rules: [
           {
@@ -153,7 +151,7 @@ local helper = import '../../../lib/helper.libsonnet';
                 {
                   backend: {
                     service: {
-                      name: this.metadata.name,
+                      name: ing.metadata.name,
                       port: {
                         name: 'http',
                       },
@@ -168,5 +166,12 @@ local helper = import '../../../lib/helper.libsonnet';
         ],
       },
     },
-  },
+  } + secrets.generate(labels + $._adminLabels)[tenant],
+
+  //  {
+  //    local adminLabels = labels {
+  //      'app.kubernetes.io/component': 'phpldapadmin',
+  //    },
+  //    labels: adminLabels,
+  //  },
 }

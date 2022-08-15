@@ -8,7 +8,7 @@ local defaults = {
     region: 'helsinki',
     directory: 'apps',
     ingressRoot: null,
-    ingressDomain: null,
+    ingressPrefix: null,
   },
   project: {
     clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
@@ -31,11 +31,12 @@ local projectList = [
 ];
 
 local appList = [
-  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'] }),
-//  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', ingressRoot: 'bln.space', ingressDomain: 'auth' }),
-//  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
-//  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),
-//  withAppDef({ name: 'foobar', project: 'base', path: 'foobar', ingressRoot: 'schumann.link' }),
+  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'], ingressRoot: 'kubectl.me', ingressPrefix: ['ldapadmin'] }),
+  //  withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
+  //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
+  //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
+  //  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),
+  //  withAppDef({ name: 'foobar', project: 'base', path: 'foobar', ingressRoot: 'schumann.link' }),
 ];
 
 
@@ -44,11 +45,14 @@ local appList = [
 //
 local projects = [
   argo.Project(proj.name,
-    ['%s-%s-%s' % [proj.name, app.name, tenant]
-    for app in appList
-    for tenant in app.tenant
-    for proj in projectList
-  ], proj.desc, proj.clusterResourceAllowList)
+               [
+                 '%s-%s-%s' % [proj.name, app.name, tenant]
+                 for app in appList
+                 for tenant in app.tenant
+                 for proj in projectList
+               ],
+               proj.desc,
+               proj.clusterResourceAllowList)
   for proj in projectList
 ];
 
