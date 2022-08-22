@@ -123,7 +123,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
     serviceheadless: kube.Service('%s-headless' % [componentName]) {
       apiVersion: 'v1',
       kind: 'Service',
-      metadata: {
+      metadata+: {
         namespace: namespace,
         labels+: config.labels,
       },
