@@ -6,9 +6,7 @@ local defaults = {
     targetRevision: 'HEAD',
     tenant: ['staging', 'lts'],
     region: 'helsinki',
-    directory: 'apps',
-    ingressRoot: null,
-    ingressPrefix: null,
+    directory: 'app',
   },
   project: {
     clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
@@ -31,8 +29,8 @@ local projectList = [
 ];
 
 local appList = [
-  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'], ingressRoot: 'kubectl.me', ingressPrefix: ['ldapadmin'] }),
-  //  withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
+  withAppDef({ name: 'ldap', project: 'base', path: 'ldap', tenant: ['lts'] }),
+  //  withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'], ingressRoot: 'bln.space', ingressPrefix: ['mx', 'dmarc'] }),
   //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
   //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
   //  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),

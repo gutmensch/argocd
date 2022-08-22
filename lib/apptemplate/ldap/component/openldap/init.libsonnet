@@ -1,62 +1,71 @@
-local helper = import '../../../lib/helper.libsonnet';
-local kube = import '../../../lib/kube.libsonnet';
-local ca = import '../../../lib/localca.libsonnet';
+local helper = import '../../../../helper.libsonnet';
+local kube = import '../../../../kube.libsonnet';
+local ca = import '../../../../localca.libsonnet';
 local configDefinitions = import 'ldif/config.libsonnet';
 local initDefinitions = import 'ldif/init.libsonnet';
 local schemaDefinitions = import 'schema/definitions.libsonnet';
-local secrets = import 'secrets.libsonnet';
 
 {
-  _openldapLabels:: {
-    'app.kubernetes.io/component': 'openldap',
-  },
-
   generate(
     name,
     namespace,
+    region,
     tenant,
-    version='2.6.3',
-    root='',
-    initModules=['memberof'],
-    initSchemas=['rfc2307bis', 'virtualmail', 'nextcloud'],
-    providedSchemas=['cosine', 'inetorgperson'],
-    initMailDomains=[],
-    storageClass='fast',
-    replicas=1,
-    labels={},
-  ):: {
-
-    assert root != '' : error 'parameter root needs to be set, e.g. root="o=auth,dc=local"',
+    appConfig,
+    // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
+    // directories app instantiation and configuration and pass as appConfig parameter above
+    defaultConfig={
+      imageRegistry: '',
+      imageRef: 'bitnami/openldap',
+      imageVersion: '2.6.3',
+      replicas: 1,
+      storageClass: 'standard',
+      ldapRoot: 'o=auth,dc=local',
+      ldapInitModules: ['memberof'],
+      ldapInitMailDomains: [],
+      ldapIncludeProvidedSchemas: ['cosine', 'inetorgperson'],
+      ldapIncludeManagedSchemas: ['rfc2307bis', 'virtualmail', 'nextcloud'],
+      // example secrets (errors out if unchanged)
+      ldapAdminUsername: 'admin',
+      ldapAdminPassword: 'changeme',
+      ldapConfigAdminUsername: 'configadmin',
+      ldapConfigAdminPassword: 'changeme',
+    }
+  ):: helper.uniquify({
 
     local this = self,
 
-    local openldapLabels = labels + $._openldapLabels,
+    local config = std.mergePatch(defaultConfig, appConfig),
+
+    assert config.ldapAdminPassword != 'changeme' && config.ldapConfigAdminPassword != 'changeme' : error '"changeme" is an invalid password',
+
+    local appName = name,
+    local componentName = 'openldap',
 
     local ldapConfig = configDefinitions {
-      ldapModules: initModules,
+      ldapModules: std.get(config, 'ldapInitModules', []),
     },
 
     local ldapBootstrap = initDefinitions {
-      ldapBase: root,
-      ldapMailDomains: initMailDomains,
+      ldapBase: config.ldapRoot,
+      ldapMailDomains: std.get(config, 'ldapInitMailDomains', []),
     },
 
     local certCRDs = ca.serverCert(
-      name=name,
+      name=componentName,
       namespace=namespace,
       createIssuer=true,
       dnsNames=['%s.%s.svc.cluster.local' % [name, namespace]],
-      labels=openldapLabels,
+      labels=config.labels,
     ),
     localrootcacert: certCRDs.localrootcacert,
     localcertissuer: certCRDs.localcertissuer,
     servercert: certCRDs.localservercert,
 
-    configmapenv: kube.ConfigMap(name) {
+    configmap: kube.ConfigMap(componentName) {
       metadata+: {
-        name: '%s-env' % [name],
         namespace: namespace,
-        labels+: openldapLabels,
+        labels+: config.labels,
       },
       data: {
         LDAP_ADD_SCHEMAS: 'yes',
@@ -67,27 +76,26 @@ local secrets = import 'secrets.libsonnet';
         // skip default tree, use our provided /ldifs/init.ldif
         LDAP_SKIP_DEFAULT_TREE: 'yes',
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
-        // unused, we mount schemas in directory and ref as extra
-        LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
         LDAP_ENABLE_TLS: 'yes',
-        LDAP_EXTRA_SCHEMAS: std.join(',', providedSchemas + initSchemas),
-        LDAP_GROUP: 'Readers',
+        LDAP_EXTRA_SCHEMAS: std.join(',', config.ldapIncludeProvidedSchemas + config.ldapIncludeManagedSchemas),
         LDAP_LDAPS_PORT_NUMBER: '1636',
         LDAP_LOGLEVEL: '64',
-        LDAP_PASSWORDS: '',
         LDAP_PORT_NUMBER: '1389',
-        LDAP_ROOT: root,
+        LDAP_ROOT: config.ldapRoot,
         LDAP_ULIMIT_NOFILES: '1024',
-        LDAP_USERS: '',
+        // unused, we skip default tree and mount schemas in directory and ref as extra
+        LDAP_GROUP: 'Readers',
         LDAP_USER_DC: 'Users',
+        LDAP_USERS: '',
+        LDAP_PASSWORDS: '',
+        LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
       },
     },
 
-    servicecluster: kube.Service(name) {
+    servicecluster: kube.Service(componentName) {
       metadata+: {
-        name: name,
         namespace: namespace,
-        labels+: openldapLabels,
+        labels+: config.labels,
       },
       spec: {
         ports: [
@@ -106,19 +114,18 @@ local secrets = import 'secrets.libsonnet';
             targetPort: 'ldaps-port',
           },
         ],
-        selector: helper.removeVersion(openldapLabels),
+        selector: config.labels,
         sessionAffinity: 'None',
         type: 'ClusterIP',
       },
     },
 
-    serviceheadless: kube.Service('%s-headless' % [name]) {
+    serviceheadless: kube.Service('%s-headless' % [componentName]) {
       apiVersion: 'v1',
       kind: 'Service',
       metadata: {
-        name: '%s-headless' % [name],
         namespace: namespace,
-        labels+: openldapLabels,
+        labels+: config.labels,
       },
       spec: {
         clusterIP: 'None',
@@ -129,29 +136,30 @@ local secrets = import 'secrets.libsonnet';
             targetPort: 'ldap-port',
           },
         ],
-        selector: helper.removeVersion(openldapLabels),
+        selector: config.labels,
         sessionAffinity: 'None',
         type: 'ClusterIP',
       },
     },
 
-    statefulset: kube.StatefulSet(name) {
+    statefulset: kube.StatefulSet(componentName) {
       metadata+: {
-        name: name,
         namespace: namespace,
+        labels+: config.labels,
       },
       spec: {
-        replicas: replicas,
+        replicas: config.replicas,
         selector: {
-          matchLabels: helper.removeVersion(openldapLabels),
+          matchLabels: config.labels,
         },
-        serviceName: '%s-headless' % [name],
+        serviceName: '%s-headless' % [componentName],
         template: {
           metadata+: {
             annotations+: {
-              'checksum/configmapenv': std.md5(std.toString(this.configmapenv)),
+              'checksum/env': std.md5(std.toString(this.configmap)),
+              'checksum/credentials': std.md5(std.toString(this.secret)),
             },
-            labels: openldapLabels,
+            labels: config.labels,
           },
           spec: {
             affinity: {
@@ -162,7 +170,7 @@ local secrets = import 'secrets.libsonnet';
                   {
                     podAffinityTerm: {
                       labelSelector: {
-                        matchLabels: helper.removeVersion(openldapLabels),
+                        matchLabels: config.labels,
                       },
                       namespaces: [
                         namespace,
@@ -203,16 +211,16 @@ local secrets = import 'secrets.libsonnet';
                 envFrom: [
                   {
                     configMapRef: {
-                      name: 'ldap-env',
+                      name: componentName,
                     },
                   },
                   {
                     secretRef: {
-                      name: 'ldap',
+                      name: componentName,
                     },
                   },
                 ],
-                image: 'registry.lan:5000/bitnami/openldap:%s' % [version],
+                image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,
@@ -224,7 +232,7 @@ local secrets = import 'secrets.libsonnet';
                   },
                   timeoutSeconds: 1,
                 },
-                name: 'openldap-stack-ha',
+                name: componentName,
                 ports: [
                   {
                     containerPort: 1389,
@@ -299,13 +307,13 @@ local secrets = import 'secrets.libsonnet';
                     name: 'ldap-schema-%s' % [schema],
                     subPath: '%s.ldif' % [schema],
                   }
-                  for schema in initSchemas
+                  for schema in config.ldapIncludeManagedSchemas
                 ],
               },
             ],
             initContainers: null,
             nodeSelector: {
-              'topology.kubernetes.io/region': 'helsinki',
+              'topology.kubernetes.io/region': region,
             },
             securityContext: {
               fsGroup: 1001,
@@ -319,26 +327,25 @@ local secrets = import 'secrets.libsonnet';
               },
               {
                 configMap: {
-                  name: '%s-config-ldif' % [name],
-                  // =0755
-                  defaultMode: 493,
+                  name: '%s-config-ldif' % [componentName],
+                  defaultMode: std.parseOctal('0755'),
                 },
-                name: '%s-config-ldif' % [name],
+                name: '%s-config-ldif' % [componentName],
               },
               {
                 configMap: {
-                  name: '%s-init-ldif' % [name],
+                  name: '%s-init-ldif' % [componentName],
                 },
-                name: '%s-init-ldif' % [name],
+                name: '%s-init-ldif' % [componentName],
               },
             ] + [
               {
                 configMap: {
-                  name: 'ldap-schema-%s' % [schema],
+                  name: '%s-schema-%s' % [componentName, schema],
                 },
-                name: 'ldap-schema-%s' % [schema],
+                name: '%s-schema-%s' % [componentName, schema],
               }
-              for schema in initSchemas
+              for schema in config.ldapIncludeManagedSchemas
             ],
           },
         },
@@ -360,17 +367,17 @@ local secrets = import 'secrets.libsonnet';
                   storage: '8Gi',
                 },
               },
-              storageClassName: storageClass,
+              storageClassName: config.storageClass,
             },
           },
         ],
       },
     },
 
-    configmapconfig: kube.ConfigMap('%s-config-ldif' % [name]) {
+    configmapconfig: kube.ConfigMap('%s-config-ldif' % [componentName]) {
       metadata+: {
         namespace: namespace,
-        labels: openldapLabels,
+        labels: config.labels,
       },
       data: {
         'add.ldif': helper.manifestLdif(ldapConfig.add),
@@ -390,31 +397,40 @@ local secrets = import 'secrets.libsonnet';
       },
     },
 
-    configmapldapinit: kube.ConfigMap('%s-init-ldif' % [name]) {
+    configmapldapinit: kube.ConfigMap('%s-init-ldif' % [componentName]) {
       metadata+: {
         namespace: namespace,
-        labels: openldapLabels,
+        labels: config.labels,
       },
       data: {
         'init.ldif': helper.manifestLdif(ldapBootstrap),
       },
     },
 
-  } + {
-    local openldapLabels = labels {
-      'app.kubernetes.io/component': 'openldap',
-    },
-
-    ['ldap-schema-%s' % [schema]]: kube.ConfigMap('ldap-schema-%s' % [schema]) {
+    secret: kube.Secret(componentName) {
       metadata+: {
         namespace: namespace,
-        labels: openldapLabels,
+        labels: config.labels,
+      },
+      stringData: {
+        LDAP_ADMIN_PASSWORD: config.ldapAdminPassword,
+        LDAP_ADMIN_USERNAME: config.ldapAdminUsername,
+        LDAP_CONFIG_ADMIN_PASSWORD: config.ldapConfigAdminPassword,
+        LDAP_CONFIG_ADMIN_USERNAME: config.ldapConfigAdminUsername,
+      },
+    },
+
+  } + {
+    local componentName = 'openldap',
+    ['ldap-schema-%s' % [schema]]: kube.ConfigMap('%s-schema-%s' % [componentName, schema]) {
+      metadata+: {
+        namespace: namespace,
+        labels: std.mergePatch(defaultConfig, appConfig).labels,
       },
       data: {
         [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
       },
     }
-    for schema in initSchemas
-
-  } + secrets.generate(labels + $._openldapLabels)[tenant],
+    for schema in std.mergePatch(defaultConfig, appConfig).ldapIncludeManagedSchemas
+  }),
 }
