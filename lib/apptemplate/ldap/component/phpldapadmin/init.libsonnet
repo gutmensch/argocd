@@ -41,9 +41,13 @@ local kube = import '../../../../kube.libsonnet';
     },
 
     deployment: argo.SimpleRollout(componentName, null, 80, '/', config) {
-      metadata+: {
-        annotations+: {
-          'checksum/env': std.md5(std.toString(this.configmap)),
+      spec+: {
+        template+: {
+          metadata+: {
+            annotations+: {
+              'checksum/env': std.md5(std.toString(this.configmap)),
+            },
+          },
         },
       },
     },
