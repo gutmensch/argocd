@@ -283,28 +283,28 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                   },
                   {
                     mountPath: '/config/add.ldif',
-                    name: '%s-config-ldif' % [name],
+                    name: '%s-config-ldif' % [componentName],
                     subPath: 'add.ldif',
                   },
                   {
                     mountPath: '/config/mod.ldif',
-                    name: '%s-config-ldif' % [name],
+                    name: '%s-config-ldif' % [componentName],
                     subPath: 'mod.ldif',
                   },
                   {
                     mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
-                    name: '%s-config-ldif' % [name],
+                    name: '%s-config-ldif' % [componentName],
                     subPath: 'config-apply.sh',
                   },
                   {
                     mountPath: '/ldifs/init.ldif',
-                    name: '%s-init-ldif' % [name],
+                    name: '%s-init-ldif' % [componentName],
                     subPath: 'init.ldif',
                   },
                 ] + [
                   {
                     mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
-                    name: 'ldap-schema-%s' % [schema],
+                    name: '%s-schema-%s' % [componentName, schema],
                     subPath: '%s.ldif' % [schema],
                   }
                   for schema in config.ldapIncludeManagedSchemas
