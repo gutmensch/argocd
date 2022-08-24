@@ -322,7 +322,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
               {
                 name: 'certificate',
                 secret: {
-                  secretName: 'ldap-server-cert',
+                  secretName: '%s-server-cert' % [componentName],
                 },
               },
               {
