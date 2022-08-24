@@ -1,6 +1,6 @@
-local argo = import '../../../../argo.libsonnet';
-local helper = import '../../../../helper.libsonnet';
-local kube = import '../../../../kube.libsonnet';
+local argo = import '../../argo.libsonnet';
+local helper = import '../../helper.libsonnet';
+local kube = import '../../kube.libsonnet';
 
 {
   generate(

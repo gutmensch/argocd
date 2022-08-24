@@ -1,6 +1,6 @@
-local helper = import '../../../../helper.libsonnet';
-local kube = import '../../../../kube.libsonnet';
-local ca = import '../../../../localca.libsonnet';
+local helper = import '../../helper.libsonnet';
+local kube = import '../../kube.libsonnet';
+local ca = import '../../localca.libsonnet';
 local configDefinitions = import 'ldif/config.libsonnet';
 local initDefinitions = import 'ldif/init.libsonnet';
 local schemaDefinitions = import 'schema/definitions.libsonnet';
