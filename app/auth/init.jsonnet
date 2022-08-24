@@ -1,5 +1,5 @@
-local openldap = import '../../lib/apptemplate/ldap/component/openldap/init.libsonnet';
-local phpldapadmin = import '../../lib/apptemplate/ldap/component/phpldapadmin/init.libsonnet';
+local openldap = import '../../lib/component/openldap/init.libsonnet';
+local phpldapadmin = import '../../lib/component/phpldapadmin/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
 local kube = import '../../lib/kube.libsonnet';
 

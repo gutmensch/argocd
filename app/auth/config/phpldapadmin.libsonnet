@@ -4,7 +4,7 @@
     imageRef: 'gutmensch/phpldapadmin',
     imageVersion: '1.2.6.3-4',
     ldapAdmin: 'admin',
-    ldapSvc: 'openldap.base-ldap-lts.svc.cluster.local',
+    ldapSvc: 'openldap.base-auth-lts.svc.cluster.local',
     ldapRoot: 'o=auth,dc=local',
     certIssuer: 'letsencrypt-prod',
   },

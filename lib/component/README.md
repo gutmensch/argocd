@@ -1,3 +1,3 @@
-# templates for applications
+# templates for application components
 
-choose to spawn an app from templates here and create the app in app/ directory
+one app can have multiple components from here, depending on logic

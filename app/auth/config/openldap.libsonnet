@@ -10,6 +10,6 @@
   },
 
   lts: {
-    ldapInitMailDomains: ['bln.space', 'schumann.link', 'n-os.org', 'robattix.com', 'kubectl.me'],
+    ldapInitMailDomains: ['bln.space', 'id.bln.space', 'schumann.link', 'n-os.org', 'robattix.com', 'robattix.gmbh', 'kubectl.me', 'remembrance.de'],
   },
 }
