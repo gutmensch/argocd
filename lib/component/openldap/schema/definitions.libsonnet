@@ -7,7 +7,7 @@
     file: 'opendkim.ldif',
     content: importstr 'opendkim.ldif',
   },
-  opensshlpk: {
+  'openssh-lpk': {
     file: 'openssh-lpk.ldif',
     content: importstr 'openssh-lpk.ldif',
   },
