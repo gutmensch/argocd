@@ -72,7 +72,7 @@ local kube = import 'kube.libsonnet';
             maxDuration: '5m',
           },
         },
-        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background', 'PruneLast=true'],
+        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=foreground', 'PruneLast=true'],
       },
     },
   },
