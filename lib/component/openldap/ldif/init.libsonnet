@@ -35,44 +35,50 @@ local helper = import '../../../lib/helper.libsonnet';
     for vdomain in $.ldapMailDomains
   ],
 
-  _04serviceAccount: {
+  _04mailDkimOU: {
+    dn: 'ou=DKIM,ou=Mail,%s' % [$.ldapBase],
+    ou: 'DKIM',
+    description: 'DKIM related data',
+    objectClass: 'organizationalUnit',
+  },
+
+  _05serviceAccount: {
     dn: 'ou=ServiceAccount,%s' % [$.ldapBase],
     ou: 'ServiceAccount',
     description: 'Service accounts',
     objectClass: 'organizationalUnit',
   },
 
-  _05people: {
+  _06people: {
     dn: 'ou=People,%s' % [$.ldapBase],
     ou: 'People',
     description: 'Users in Directory, manageable in Keycloak',
     objectClass: 'organizationalUnit',
   },
 
-  _06group: {
+  _07group: {
     dn: 'ou=Group,%s' % [$.ldapBase],
     ou: 'Group',
     description: 'Groups for People in Directory',
     objectClass: 'organizationalUnit',
   },
 
-  // XXX: finish this after testing
-  //
-  // _07nextcloudAdminGroup: {
+  // XXX: groupOfnames need members but they don't exist yet
+  // _08nextcloudAdminGroup: {
   //   dn: 'cn=Nextcloud Admin,ou=Group,%s' % [$.ldapBase],
   //   description: 'Nextcloud Admin Group',
   //   gidNumber: 2501,
   //   objectClass: ['top', 'groupOfNames', 'posixGroup', 'nextcloudGroup'],
   // },
 
-  // _08nextcloudUserGroup: {
+  // _09nextcloudUserGroup: {
   //   dn: 'cn=Nextcloud User,ou=Group,%s' % [$.ldapBase],
   //   description: 'Nextcloud User Group',
   //   gidNumber: 2502,
   //   objectClass: ['top', 'posixGroup', 'nextcloudGroup'],
   // },
 
-  // _09nextcloudViewerGroup: {
+  // _10nextcloudViewerGroup: {
   //   dn: 'cn=Nextcloud Viewer,ou=Group,%s' % [$.ldapBase],
   //   description: 'Nextcloud Viewer Group',
   //   gidNumber: 2503,

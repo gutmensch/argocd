@@ -24,7 +24,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       ldapInitModules: ['memberof'],
       ldapInitMailDomains: [],
       ldapIncludeProvidedSchemas: ['cosine', 'inetorgperson'],
-      ldapIncludeManagedSchemas: ['rfc2307bis', 'virtualmail', 'nextcloud'],
+      ldapIncludeManagedSchemas: ['rfc2307bis', 'virtualmail', 'nextcloud', 'opendkim', 'opensshlpk'],
       // example secrets (errors out if unchanged)
       ldapAdminUsername: 'admin',
       ldapAdminPassword: 'changeme',
