@@ -20,6 +20,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       imageVersion: '2.6.3',
       replicas: 1,
       storageClass: 'standard',
+      storageSize: '8Gi',
       ldapRoot: 'o=auth,dc=local',
       ldapInitModules: ['memberof'],
       ldapInitMailDomains: [],
@@ -364,7 +365,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
               ],
               resources: {
                 requests: {
-                  storage: '8Gi',
+                  storage: config.storageSize,
                 },
               },
               storageClassName: config.storageClass,

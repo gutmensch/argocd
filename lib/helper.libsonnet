@@ -5,6 +5,9 @@
       for v in std.objectValues(obj)
     },
 
+  boolToInt(val)::
+    if val == true then 1 else 0,
+
   configMerge(name, component, project, tenant, secrets, config, shared, cd)::
     local global = import '../config/global.libsonnet';
     std.mergePatch(
