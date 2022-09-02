@@ -157,6 +157,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         template: {
           metadata+: {
             annotations+: {
+	      // configmaps ldap init and schemas only used at bootstrap, so not added here
               'checksum/env': std.md5(std.toString(this.configmap)),
               'checksum/credentials': std.md5(std.toString(this.secret)),
             },
@@ -284,28 +285,28 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                   },
                   {
                     mountPath: '/config/add.ldif',
-                    name: '%s-config-ldif' % [componentName],
+                    name: '%s-config-init' % [componentName],
                     subPath: 'add.ldif',
                   },
                   {
                     mountPath: '/config/mod.ldif',
-                    name: '%s-config-ldif' % [componentName],
+                    name: '%s-config-init' % [componentName],
                     subPath: 'mod.ldif',
                   },
                   {
                     mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
-                    name: '%s-config-ldif' % [componentName],
+                    name: '%s-config-init' % [componentName],
                     subPath: 'config-apply.sh',
                   },
                   {
                     mountPath: '/ldifs/init.ldif',
-                    name: '%s-init-ldif' % [componentName],
+                    name: '%s-config-init' % [componentName],
                     subPath: 'init.ldif',
                   },
                 ] + [
                   {
                     mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
-                    name: '%s-schema-%s' % [componentName, schema],
+                    name: '%s-schemas' % [componentName],
                     subPath: '%s.ldif' % [schema],
                   }
                   for schema in config.ldapIncludeManagedSchemas
@@ -328,25 +329,17 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
               },
               {
                 configMap: {
-                  name: '%s-config-ldif' % [componentName],
+                  name: '%s-config-init' % [componentName],
                   defaultMode: std.parseOctal('0755'),
                 },
-                name: '%s-config-ldif' % [componentName],
+                name: '%s-config-init' % [componentName],
               },
               {
                 configMap: {
-                  name: '%s-init-ldif' % [componentName],
+                  name: '%s-schemas' % [componentName],
                 },
-                name: '%s-init-ldif' % [componentName],
+                name: '%s-schemas' % [componentName],
               },
-            ] + [
-              {
-                configMap: {
-                  name: '%s-schema-%s' % [componentName, schema],
-                },
-                name: '%s-schema-%s' % [componentName, schema],
-              }
-              for schema in config.ldapIncludeManagedSchemas
             ],
           },
         },
@@ -375,12 +368,13 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       },
     },
 
-    configmapconfig: kube.ConfigMap('%s-config-ldif' % [componentName]) {
+    configmapldapinit: kube.ConfigMap('%s-config-init' % [componentName]) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
       },
       data: {
+        'init.ldif': helper.manifestLdif(ldapBootstrap),
         'add.ldif': helper.manifestLdif(ldapConfig.add),
         'mod.ldif': helper.manifestLdif(ldapConfig.modify),
         'config-apply.sh': |||
@@ -398,15 +392,16 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       },
     },
 
-    configmapldapinit: kube.ConfigMap('%s-init-ldif' % [componentName]) {
+    configmapschemas: kube.ConfigMap('%s-schemas' % [componentName]) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
       },
       data: {
-        'init.ldif': helper.manifestLdif(ldapBootstrap),
+        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
+        for schema in config.ldapIncludeManagedSchemas
       },
-    },
+    }
 
     secret: kube.Secret(componentName) {
       metadata+: {
@@ -420,18 +415,5 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         LDAP_CONFIG_ADMIN_USERNAME: config.ldapConfigAdminUsername,
       },
     },
-
-  } + {
-    local componentName = 'openldap',
-    ['ldap-schema-%s' % [schema]]: kube.ConfigMap('%s-schema-%s' % [componentName, schema]) {
-      metadata+: {
-        namespace: namespace,
-        labels: std.mergePatch(defaultConfig, appConfig).labels,
-      },
-      data: {
-        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
-      },
-    }
-    for schema in std.mergePatch(defaultConfig, appConfig).ldapIncludeManagedSchemas
-  }),
+  ),
 }

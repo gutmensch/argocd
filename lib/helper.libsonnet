@@ -6,7 +6,7 @@
     },
 
   boolToInt(val)::
-    if val == true then 1 else 0,
+    if val == true then '1' else '0',
 
   configMerge(name, component, project, tenant, secrets, config, shared, cd)::
     local global = import '../config/global.libsonnet';
@@ -31,10 +31,6 @@
         ),
       ),
     ),
-
-  escapePerlEnd(str):: (
-    '"' + std.replace(str, '@', '\\@') + '";'
-  ),
 
   getIngress(tenant, name, ingressRoot):: (
     if tenant == 'staging' then
@@ -81,14 +77,10 @@
   manifestPostConf(obj)::
     local body_lines(body) = std.join([], [
       local entry = body[i];
-      local entries = [
-        local elem =
-          if std.isArray(entry[j]) then ['%s = %s' % [j, std.join(', ', entry[j])]]
-          else ['%s = %s' % [j, entry[j]]];
-        elem
-        for j in std.objectFields(entry)
-      ];
-      entries
+      local elem =
+        if std.isArray(entry) then ['%s = %s' % [i, std.join(', ', entry)]]
+        else ['%s = %s' % [i, entry]];
+      elem
       for i in std.objectFields(body)
     ]);
     std.join('\n', body_lines(obj) + ['']),
