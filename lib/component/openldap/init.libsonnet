@@ -157,7 +157,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         template: {
           metadata+: {
             annotations+: {
-	      // configmaps ldap init and schemas only used at bootstrap, so not added here
+              // configmaps ldap init and schemas only used at bootstrap, so not added here
               'checksum/env': std.md5(std.toString(this.configmap)),
               'checksum/credentials': std.md5(std.toString(this.secret)),
             },
@@ -398,10 +398,10 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         labels: config.labels,
       },
       data: {
-        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content,
+        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content
         for schema in config.ldapIncludeManagedSchemas
       },
-    }
+    },
 
     secret: kube.Secret(componentName) {
       metadata+: {
@@ -415,5 +415,5 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         LDAP_CONFIG_ADMIN_USERNAME: config.ldapConfigAdminUsername,
       },
     },
-  ),
+  }),
 }
