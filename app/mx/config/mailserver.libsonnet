@@ -13,5 +13,7 @@
     mailStorageSize: '150Gi',
     stateStorageSize: '5Gi',
     ldapEnable: true,
+    publicFQDN: 'mx.bln.space',
+    principalMailDomain: 'bln.space',
   },
 }

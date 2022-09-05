@@ -28,7 +28,7 @@ local componentName = 'mailserver';
       postgreyEnable: true,
       fail2banEnable: false,
       trustedPublicNetworks: [],
-      principalMailDomain: 'example.com',
+      principalMailDomain: '',
       ldapEnable: false,
       ldapHost: '',
       ldapBaseDN: '',
@@ -42,6 +42,8 @@ local componentName = 'mailserver';
 
     local config = std.mergePatch(defaultConfig, appConfig),
 
+    assert config.publicFQDN != '' : error 'publicFQDN must be provided',
+    assert config.principalMailDomain != '' : error 'principalMailDomain must be provided',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapServiceAccountPassword != 'changeme') : error '"changeme" is an invalid bind password when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapHost != '') : error 'ldap host cannot be empty when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapBaseDN != '') : error 'ldap base dn cannot be empty when ldap is enabled',
@@ -142,6 +144,7 @@ local componentName = 'mailserver';
         secretName: '%s-cert' % [componentName],
         issuerRef: {
           name: config.certIssuer,
+          kind: 'ClusterIssuer',
         },
         dnsNames: [
           config.publicFQDN,
