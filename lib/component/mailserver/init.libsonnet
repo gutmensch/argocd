@@ -273,11 +273,11 @@ local componentName = 'mailserver';
                 volumeMounts: [
                   {
                     mountPath: '/var/mail-state',
-                    name: 'mail-state-data',
+                    name: 'state',
                   },
                   {
                     mountPath: '/var/mail',
-                    name: 'mail-data',
+                    name: 'data',
                   },
                   {
                     mountPath: '/ssl/server.crt',
