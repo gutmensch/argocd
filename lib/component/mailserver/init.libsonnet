@@ -155,6 +155,7 @@ local componentName = 'mailserver';
         labels+: config.labels,
       },
       spec: {
+        serviceName: componentName,
         replicas: config.replicas,
         selector: {
           matchLabels: config.labels,
