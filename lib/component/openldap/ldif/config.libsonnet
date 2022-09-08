@@ -24,26 +24,34 @@ local helper = import '../../../lib/helper.libsonnet';
 
     [if std.member(this.ldapModules, 'memberof') then '_02memberOfOverlay']: {
       dn: 'olcOverlay=memberof,olcDatabase={2}mdb,cn=config',
-      objectClass: ['olcOverlayConfig', 'olcMemberOf'],
+      objectClass: ['olcConfig', 'olcOverlayConfig', 'olcMemberOf', 'top'],
       olcOverlay: 'memberof',
       olcMemberOfRefint: 'TRUE',
+    },
+
+    [if std.member(this.ldapModules, 'refint') then '_03refintOverlay']: {
+      dn: 'olcOverlay=refint,olcDatabase={2}mdb,cn=config',
+      objectClass: ['olcConfig', 'olcOverlayConfig', 'olcRefintConfig', 'top'],
+      olcOverlay: 'refint',
+      olcRefintAttribute: std.join(' ', ['memberof', 'member', 'manager', 'owner']),
+      olcRefintNothing: 'cn=config',
     },
   },
 
   modify: {
-    _03indexMailAlias: {
+    _04indexMailAlias: {
       dn: 'olcDatabase={2}mdb,cn=config',
       add: 'olcdbindex',
       olcdbindex: 'mailAlias eq,sub',
     },
 
-    _04indexMailDrop: {
+    _05indexMailDrop: {
       dn: 'olcDatabase={2}mdb,cn=config',
       add: 'olcdbindex',
       olcdbindex: 'mailDrop eq,sub',
     },
 
-    _05indexVirtualDomains: {
+    _06indexVirtualDomains: {
       dn: 'olcDatabase={2}mdb,cn=config',
       add: 'olcdbindex',
       olcdbindex: 'dc eq',

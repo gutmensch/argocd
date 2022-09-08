@@ -22,7 +22,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       storageClass: 'standard',
       storageSize: '8Gi',
       ldapRoot: 'o=auth,dc=local',
-      ldapInitModules: ['memberof'],
+      ldapInitModules: ['memberof', 'refint'],
       ldapInitMailDomains: [],
       ldapIncludeProvidedSchemas: ['cosine', 'inetorgperson'],
       ldapIncludeManagedSchemas: ['rfc2307bis', 'virtualmail', 'nextcloud', 'opendkim', 'openssh-lpk'],
