@@ -84,6 +84,9 @@ local componentName = 'mailserver';
         // <<< Postfix LDAP Integration
         // >>> Dovecot LDAP Integration
         // https://github.com/docker-mailserver/docker-mailserver/blob/efed7d9e447a64f67dee06decec087999b92ee07/target/scripts/startup/setup-stack.sh#L331
+        DOVECOT_DEFAULT_PASS_SCHEME: 'SHA512-CRYPT',
+        DOVECOT_TLS: 'yes',
+        DOVECOT_AUTH_BIND: 'yes',
         DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailDrop=%u))',
         DOVECOT_PASS_ATTRS: 'uid=user,userPassword=password',
         DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,uidNumber=%{ldap:mailUidNumber},gidNumber=%{ldap:mailGidNumber}',
