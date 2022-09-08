@@ -33,7 +33,7 @@ local helper = import '../../../lib/helper.libsonnet';
       dn: 'olcOverlay=refint,olcDatabase={2}mdb,cn=config',
       objectClass: ['olcConfig', 'olcOverlayConfig', 'olcRefintConfig', 'top'],
       olcOverlay: 'refint',
-      olcRefintAttribute: std.join(' ', ['memberof', 'member', 'manager', 'owner']),
+      olcRefintAttribute: ['memberof', 'member', 'manager', 'owner'],
       olcRefintNothing: 'cn=config',
     },
   },
