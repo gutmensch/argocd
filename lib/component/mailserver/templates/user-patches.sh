@@ -12,3 +12,6 @@ echo "LDAPUseTLS true" >> /etc/opendkim.conf
 for h in $OPENDKIM_TRUSTED_HOSTS; do
   echo $h >> /etc/opendkim/TrustedHosts
 done
+
+# copy postscreen access file
+cp /tmp/docker-mailserver/postscreen-access.cidr /etc/postfix/postscreen-access.cidr
