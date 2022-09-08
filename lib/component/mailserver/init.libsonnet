@@ -86,7 +86,7 @@ local componentName = 'mailserver';
         // https://github.com/docker-mailserver/docker-mailserver/blob/efed7d9e447a64f67dee06decec087999b92ee07/target/scripts/startup/setup-stack.sh#L331
         DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailDrop=%u))',
         DOVECOT_PASS_ATTRS: 'uid=user,userPassword=password',
-        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,uidNumber=uid,gidNumber=gid',
+        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,uidNumber=mailUidNumber,gidNumber=mailGidNumber',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
         ENABLE_SASLAUTHD: helper.boolToStrInt(config.ldapEnable),
