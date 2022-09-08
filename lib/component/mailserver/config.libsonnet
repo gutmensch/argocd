@@ -118,7 +118,7 @@ local helper = import '../../helper.libsonnet';
       'check_policy_service inet:127.0.0.1:10023',
     ],
     postscreen_greet_action: 'enforce',
-    postscreen_access_list: ['permit_mynetworks', 'cidr:/etc/postfix/postscreen_access.cidr'],
+    postscreen_access_list: ['permit_mynetworks', 'cidr:/etc/postfix/postscreen-access.cidr'],
     postscreen_dnsbl_threshold: '3',
     postscreen_dnsbl_sites: [
       'zen.spamhaus.org*3',
