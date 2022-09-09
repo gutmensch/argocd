@@ -84,12 +84,17 @@ local componentName = 'mailserver';
         // <<< Postfix LDAP Integration
         // >>> Dovecot LDAP Integration
         // https://github.com/docker-mailserver/docker-mailserver/blob/efed7d9e447a64f67dee06decec087999b92ee07/target/scripts/startup/setup-stack.sh#L331
+        // ref: https://github.com/dovecot/core/blob/main/doc/example-config/dovecot-ldap.conf.ext
         DOVECOT_DEFAULT_PASS_SCHEME: 'SHA512-CRYPT',
         DOVECOT_TLS: 'yes',
         DOVECOT_AUTH_BIND: 'yes',
-        DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailDrop=%u))',
+        DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailDrop=%u))',
+        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailDrop=%u))',
         DOVECOT_PASS_ATTRS: 'uid=user,userPassword=password',
-        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,uidNumber=%{ldap:mailUidNumber},gidNumber=%{ldap:mailGidNumber}',
+        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,mailUidNumber=uid,mailGidNumber=gid',
+        DOVECOT_TLS_REQUIRE_CERT: 'never',
+        // set to -1 for verbose ldap output
+        DOVECOT_DEBUG_LEVEL: '0',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
         ENABLE_SASLAUTHD: helper.boolToStrInt(config.ldapEnable),
