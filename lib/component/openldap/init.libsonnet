@@ -56,7 +56,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       name=componentName,
       namespace=namespace,
       createIssuer=true,
-      dnsNames=['%s.%s.svc.cluster.local' % [name, namespace]],
+      dnsNames=['%s.%s.svc.cluster.local' % [componentName, namespace], '%s.%s.svc.cluster.local' % [name, namespace]],
       labels=config.labels,
     ),
     localrootcacert: certCRDs.localrootcacert,
