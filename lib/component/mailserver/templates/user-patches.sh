@@ -19,4 +19,4 @@ cp /tmp/docker-mailserver/postscreen-access.cidr /etc/postfix/postscreen-access.
 # add options to dovecot ldap
 echo "tls_require_cert = never" >> /etc/dovecot/dovecot-ldap.conf.ext
 # set to -1 for verbose ldap output
-echo "debug_level = 0" >> /etc/dovecot/dovecot-ldap.conf.ext
+echo "debug_level = ${DOVECOT_DEBUG_LEVEL}" >> /etc/dovecot/dovecot-ldap.conf.ext

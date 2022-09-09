@@ -89,9 +89,10 @@ local componentName = 'mailserver';
         DOVECOT_TLS: 'yes',
         DOVECOT_AUTH_BIND: 'yes',
         DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailDrop=%u))',
-        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailDrop=%u))',
+        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(uid=%u))',
         DOVECOT_PASS_ATTRS: 'uid=user,userPassword=password',
         DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,mailUidNumber=uid,mailGidNumber=gid',
+        DOVECOT_DEBUG_LEVEL: '-1',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
         ENABLE_SASLAUTHD: helper.boolToStrInt(config.ldapEnable),
