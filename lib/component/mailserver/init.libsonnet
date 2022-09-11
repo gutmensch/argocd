@@ -43,7 +43,7 @@ local componentName = 'mailserver';
     local config = std.mergePatch(defaultConfig, appConfig),
 
     assert config.publicFQDN != '' : error 'publicFQDN must be provided',
-    assert config.principalMailDomain != '' : error 'principalMailDomain must be provided',
+    // assert config.principalMailDomain != '' : error 'principalMailDomain must be provided',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapServiceAccountPassword != 'changeme') : error '"changeme" is an invalid bind password when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapHost != '') : error 'ldap host cannot be empty when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapBaseDN != '') : error 'ldap base dn cannot be empty when ldap is enabled',
@@ -76,7 +76,7 @@ local componentName = 'mailserver';
         LDAP_START_TLS: 'yes',
         LDAPTLS_REQCERT: 'never',
         LDAP_QUERY_FILTER_DOMAIN: '(&(ObjectClass=dNSDomain)(dc=%s))',
-        LDAP_QUERY_FILTER_USER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailDrop=%s))',
+        LDAP_QUERY_FILTER_USER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%s)(mailAlias=%s)))',
         LDAP_QUERY_FILTER_ALIAS: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailAlias=%s))',
         LDAP_QUERY_FILTER_GROUP: '(&(objectClass=mailUser)(mailEnabled=TRUE)(mailGroupMember=%s))',
         LDAP_QUERY_FILTER_SENDERS: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%s)(mailAlias=%s)))',
@@ -88,16 +88,17 @@ local componentName = 'mailserver';
         DOVECOT_DEFAULT_PASS_SCHEME: 'SHA512-CRYPT',
         DOVECOT_TLS: 'yes',
         DOVECOT_AUTH_BIND: 'yes',
-        DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(uid=%n))',
-        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(uid=%n))',
-        DOVECOT_PASS_ATTRS: 'uid=user,userPassword=password',
-        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,mailUidNumber=uid,mailGidNumber=gid',
+        DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%s)(mailAlias=%s)))',
+        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%s)(mailAlias=%s)))',
+        DOVECOT_PASS_ATTRS: '=user=%{ldap:uid},=password=%{ldap:userPassword}',
+        // 5000 is the docker image uid/gid, setting as fallback in case not recorded in LDAP
+        DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,=uid=%{ldap:mailUidNumber:5000},=gid=%{ldap:mailGidNumber:5000},=quota_rule=*:storage=%{ldap:mailQuota:10G}',
         DOVECOT_DEBUG_LEVEL: '-1',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
         ENABLE_SASLAUTHD: helper.boolToStrInt(config.ldapEnable),
         SASLAUTHD_MECHANISMS: 'ldap',
-        SASLAUTHD_LDAP_FILTER: '(&(mailEnabled=TRUE)(mailDrop=%U@' + config.principalMailDomain + ')(objectClass=inetOrgPerson))',
+        SASLAUTHD_LDAP_FILTER: '(&(mailEnabled=TRUE)(mailDrop=%U@' + config.principalMailDomain + ')(objectClass=mailUser))',
         // <<< SASL LDAP Authentication
         OPENDKIM_TRUSTED_HOSTS: std.join(' ', config.opendkimTrustedHosts),
         ONE_DIR: '1',
