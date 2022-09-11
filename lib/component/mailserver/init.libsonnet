@@ -27,8 +27,8 @@ local componentName = 'mailserver';
       spamAssassinEnable: true,
       postgreyEnable: true,
       fail2banEnable: false,
+      saslAuthdEnable: false,
       trustedPublicNetworks: [],
-      principalMailDomain: '',
       ldapEnable: false,
       ldapHost: '',
       ldapBaseDN: '',
@@ -43,7 +43,6 @@ local componentName = 'mailserver';
     local config = std.mergePatch(defaultConfig, appConfig),
 
     assert config.publicFQDN != '' : error 'publicFQDN must be provided',
-    // assert config.principalMailDomain != '' : error 'principalMailDomain must be provided',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapServiceAccountPassword != 'changeme') : error '"changeme" is an invalid bind password when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapHost != '') : error 'ldap host cannot be empty when ldap is enabled',
     assert (!config.ldapEnable) || (config.ldapEnable && config.ldapBaseDN != '') : error 'ldap base dn cannot be empty when ldap is enabled',
@@ -96,9 +95,9 @@ local componentName = 'mailserver';
         DOVECOT_DEBUG_LEVEL: '-1',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
-        ENABLE_SASLAUTHD: helper.boolToStrInt(config.ldapEnable),
+        ENABLE_SASLAUTHD: helper.boolToStrInt(config.saslAuthdEnable),
         SASLAUTHD_MECHANISMS: 'ldap',
-        SASLAUTHD_LDAP_FILTER: '(&(mailEnabled=TRUE)(mailDrop=%U@' + config.principalMailDomain + ')(objectClass=mailUser))',
+        SASLAUTHD_LDAP_FILTER: '(&(mailEnabled=TRUE)(mailDrop=%u)(objectClass=mailUser))',
         // <<< SASL LDAP Authentication
         OPENDKIM_TRUSTED_HOSTS: std.join(' ', config.opendkimTrustedHosts),
         ONE_DIR: '1',
