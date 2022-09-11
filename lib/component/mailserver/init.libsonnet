@@ -89,7 +89,7 @@ local componentName = 'mailserver';
         DOVECOT_TLS: 'yes',
         DOVECOT_AUTH_BIND: 'yes',
         DOVECOT_USER_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%u)(mailAlias=%u)))',
-        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(|(mailDrop=%u)(mailAlias=%u)))',
+        DOVECOT_PASS_FILTER: '(&(objectClass=mailUser)(mailEnabled=TRUE)(uid=%u))',
         DOVECOT_PASS_ATTRS: '=user=%{ldap:uid},=password=%{ldap:userPassword}',
         // 5000 is the docker image uid/gid, setting as fallback in case not recorded in LDAP
         DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,=uid=%{ldap:mailUidNumber:5000},=gid=%{ldap:mailGidNumber:5000},=quota_rule=*:storage=%{ldap:mailQuota:10G}',
