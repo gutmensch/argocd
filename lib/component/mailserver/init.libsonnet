@@ -92,7 +92,8 @@ local componentName = 'mailserver';
         DOVECOT_PASS_ATTRS: '=user=%{ldap:uid},=password=%{ldap:userPassword}',
         // 5000 is the docker image uid/gid, setting as fallback in case not recorded in LDAP
         DOVECOT_USER_ATTRS: '=home=/var/mail/%{ldap:uid},=mail=maildir:~/Maildir,=uid=%{ldap:mailUidNumber:5000},=gid=%{ldap:mailGidNumber:5000},=quota_rule=*:storage=%{ldap:mailQuota:10G}',
-        DOVECOT_DEBUG_LEVEL: '-1',
+        // set to -1 for verbose ldap output
+        DOVECOT_DEBUG_LEVEL: '0',
         // <<< Dovecot LDAP Integration
         // >>> SASL LDAP Authentication
         ENABLE_SASLAUTHD: helper.boolToStrInt(config.saslAuthdEnable),
