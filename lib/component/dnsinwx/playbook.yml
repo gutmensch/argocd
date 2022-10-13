@@ -6,7 +6,6 @@
     ansible_connection: local
   tasks:
     - name: manage_inwx_dns_records
-      delegate_to: localhost
       dns_inwx:
         username: "{{ lookup('env','INWX_USERNAME') }}"
         password: "{{ lookup('env','INWX_PASSWORD') }}"

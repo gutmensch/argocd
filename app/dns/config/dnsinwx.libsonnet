@@ -55,6 +55,7 @@
       //   { name: 'mail._domainkey', rtype: 'TXT', content: 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDzjUlYJUjanlp8azoHaXLmppSsjTdZqlRwld/zVMA2b48Drc0EwpygFaVSBCjuxl6srQ5RZInMWSQstRUcyCNEaxUh9c/Ta7sBYHjxd2yqeovnqkmtoXgo6pTJpJtWCdjXX7rfPHVZg1UjHr2e3xgSqQdqzL6SAfBhXSaGen+4QIDAQAB' },
       // ] + defaultRecords,
       'stairbud.com': [
+        { name: 'testname' },
         { name: 'project' },
         { name: 'mail._domainkey', rtype: 'TXT', content: 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDzjUlYJUjanlp8azoHaXLmppSsjTdZqlRwld/zVMA2b48Drc0EwpygFaVSBCjuxl6srQ5RZInMWSQstRUcyCNEaxUh9c/Ta7sBYHjxd2yqeovnqkmtoXgo6pTJpJtWCdjXX7rfPHVZg1UjHr2e3xgSqQdqzL6SAfBhXSaGen+4QIDAQAB' },
       ] + defaultRecords,
