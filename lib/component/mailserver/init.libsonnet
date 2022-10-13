@@ -35,6 +35,7 @@ local componentName = 'mailserver';
       ldapServiceAccountBindDN: 'uid=mx,ou=ServiceAccount,%s' % [this.ldapBaseDN],
       ldapServiceAccountPassword: 'changeme',
       opendkimTrustedHosts: ['127.0.0.1', 'localhost'],
+      extraAnnotations: {},
     }
   ):: helper.uniquify({
 
@@ -176,7 +177,7 @@ local componentName = 'mailserver';
               'checksum/env': std.md5(std.toString(this.configmap)),
               'checksum/files': std.md5(std.toString(this.configmapfiles)),
               'checksum/credentials': std.md5(std.toString(this.secret)),
-            },
+            } + config.extraAnnotations,
             labels: config.labels,
           },
           spec: {

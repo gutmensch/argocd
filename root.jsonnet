@@ -29,6 +29,7 @@ local projectList = [
 ];
 
 local appList = [
+  withAppDef({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
   withAppDef({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
   //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),

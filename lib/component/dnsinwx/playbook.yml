@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  vars_files:
+    - domainData.yml
+  tasks:
+    - name: manage_inwx_dns_records
+      dns_inwx:
+        username: "{{ lookup('env','INWX_USERNAME') }}"
+        password: "{{ lookup('env','INWX_PASSWORD') }}"
+        domain: "{{ item.domain }}"
+        name: "{{ item.name|default('') }}"
+        rtype: "{{ item.rtype|default('CNAME') }}"
+        content: "{{ item.content|default('stack.n-os.org') }}"
+        ttl: "{{ item.ttl|default('') }}"
+        prio: "{{ item.prio|default('') }}"
+        state: "{{ item.state|default('present') }}"
+      with_items: "{{ records }}"
