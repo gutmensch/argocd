@@ -2,6 +2,8 @@
 - hosts: localhost
   vars_files:
     - domainData.yml
+  vars:
+    ansible_connection: local
   tasks:
     - name: manage_inwx_dns_records
       delegate_to: localhost
