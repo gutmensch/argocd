@@ -18,12 +18,12 @@
       local defaultRecords = [
         { rtype: 'A', content: '176.9.37.138' },
         { rtype: 'AAAA', content: '2a01:4f8:161:3442::1' },
-        { rtype: 'MX', prio: 10, content: 'mail.schumann.link' },
+        { rtype: 'MX', prio: 10, content: 'mx.bln.space' },
         { rtype: 'TXT', content: 'v=spf1 mx -all' },
-        { name: '_dmarc', rtype: 'TXT', content: 'v=DMARC1; p=quarantine; fo=1; rua=mailto:dmarc@schumann.link; ruf=mailto:dmarc@schumann.link; adkim=s; aspf=s;' },
+        { name: '_dmarc', rtype: 'TXT', content: 'v=DMARC1; p=quarantine; fo=1; rua=mailto:dmarc@bln.space; ruf=mailto:dmarc@bln.space; adkim=s; aspf=s;' },
         { rtype: 'CAA', content: '0 issue "letsencrypt.org"' },
         { rtype: 'CAA', content: '0 issuewild ";"' },
-        { rtype: 'CAA', content: '0 iodef "mailto:letsencrypt@n-os.org"' },
+        { rtype: 'CAA', content: '0 iodef "mailto:letsencrypt@bln.space"' },
         { name: 'rsa2022._domainkey', rtype: 'TXT', content: dkimKeys.rsa2022 },
       ],
       // 'bln.space': [

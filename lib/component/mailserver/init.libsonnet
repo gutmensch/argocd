@@ -15,21 +15,22 @@ local componentName = 'mailserver';
       local this = self,
       imageRegistry: '',
       imageRef: 'mailserver/docker-mailserver',
-      imageVersion: '11.1.0',
+      imageVersion: '11.2.0',
       replicas: 1,
       storageClass: 'standard',
       mailStorageSize: '5Gi',
       stateStorageSize: '1Gi',
       certIssuer: 'letsencrypt-prod',
       publicFQDN: '',
+      publicHostnames: [],
+      trustedPublicNetworks: [],
       postmasterAddress: '',
       clamavEnable: true,
       spamAssassinEnable: true,
       postgreyEnable: true,
       fail2banEnable: false,
       saslAuthdEnable: false,
-      trustedPublicNetworks: [],
-      ldapEnable: false,
+      accountProvisioner: 'FILE',
       ldapHost: '',
       ldapBaseDN: '',
       ldapServiceAccountBindDN: 'uid=mx,ou=ServiceAccount,%s' % [this.ldapBaseDN],
@@ -44,9 +45,9 @@ local componentName = 'mailserver';
     local config = std.mergePatch(defaultConfig, appConfig),
 
     assert config.publicFQDN != '' : error 'publicFQDN must be provided',
-    assert (!config.ldapEnable) || (config.ldapEnable && config.ldapServiceAccountPassword != 'changeme') : error '"changeme" is an invalid bind password when ldap is enabled',
-    assert (!config.ldapEnable) || (config.ldapEnable && config.ldapHost != '') : error 'ldap host cannot be empty when ldap is enabled',
-    assert (!config.ldapEnable) || (config.ldapEnable && config.ldapBaseDN != '') : error 'ldap base dn cannot be empty when ldap is enabled',
+    assert (config.accountProvisioner == 'FILE') || (config.accountProvisioner == 'LDAP' && config.ldapServiceAccountPassword != 'changeme') : error '"changeme" is an invalid bind password when ldap is enabled',
+    assert (config.accountProvisioner == 'FILE') || (config.accountProvisioner == 'LDAP' && config.ldapHost != '') : error 'ldap host cannot be empty when ldap is enabled',
+    assert (config.accountProvisioner == 'FILE') || (config.accountProvisioner == 'LDAP' && config.ldapBaseDN != '') : error 'ldap base dn cannot be empty when ldap is enabled',
 
     local appName = name,
 
@@ -65,10 +66,9 @@ local componentName = 'mailserver';
         ENABLE_CLAMAV: helper.boolToStrInt(config.clamavEnable),
         ENABLE_FAIL2BAN: helper.boolToStrInt(config.fail2banEnable),
         ENABLE_POSTGREY: helper.boolToStrInt(config.postgreyEnable),
-        ENABLE_LDAP: helper.boolToStrInt(config.ldapEnable),
         // XXX: OIDC could be later option
         // >>> Postfix LDAP Integration
-        ACCOUNT_PROVISIONER: if config.ldapEnable then 'LDAP' else 'FILE',
+        ACCOUNT_PROVISIONER: config.accountProvisioner,
         // https://github.com/docker-mailserver/docker-mailserver/blob/efed7d9e447a64f67dee06decec087999b92ee07/target/scripts/startup/setup-stack.sh#L319
         LDAP_SERVER_HOST: std.get(config, 'ldapHost'),
         // XXX: search base is not configurable per filter, so we need to use the root here
@@ -156,7 +156,7 @@ local componentName = 'mailserver';
         },
         dnsNames: [
           config.publicFQDN,
-        ],
+        ] + config.publicHostnames,
       },
     },
 
@@ -239,7 +239,7 @@ local componentName = 'mailserver';
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,
-                  initialDelaySeconds: 20,
+                  initialDelaySeconds: 60,
                   periodSeconds: 10,
                   successThreshold: 1,
                   tcpSocket: {
@@ -264,13 +264,13 @@ local componentName = 'mailserver';
                 ],
                 readinessProbe: {
                   failureThreshold: 10,
-                  initialDelaySeconds: 20,
+                  initialDelaySeconds: 60,
                   periodSeconds: 10,
                   successThreshold: 1,
                   tcpSocket: {
                     port: 'smtp-port',
                   },
-                  timeoutSeconds: 1,
+                  timeoutSeconds: 2,
                 },
                 resources: {
                   limits: {},
@@ -311,25 +311,6 @@ local componentName = 'mailserver';
               },
             ],
             initContainers: [],
-            //  {
-            //    name: 'prepare-mailserver-config',
-            //    image: 'busybox:1.28',
-            //    command: ['wget', '-O', '/work-dir/index.html', 'http://info.cern.ch'],
-            //    volumeMounts: [
-            //      {
-            //        mountPath: '/config',
-            //        name: 'config-dir',
-            //      },
-            //    ] + [
-            //      {
-            //        mountPath: '/tmp/config/%s' % [mailserverConfigFile],
-            //        name: '%s-%s' % [componentName, std.strReplace(mailserverConfigFile, '.', '-')],
-            //        subPath: '%s' % [mailserverConfigFile],
-            //      }
-            //      for mailserverConfigFile in std.objectFields(mailserverConfig)
-            //    ],
-            //  },
-            //],
             nodeSelector: {
               'topology.kubernetes.io/region': region,
             },

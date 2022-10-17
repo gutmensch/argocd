@@ -36,6 +36,9 @@ local helper = import '../../helper.libsonnet';
     'amazon.de',
     'amazonses.com',
     'aol.com',
+    'artifacthub.io',
+    'authy.com',
+    'bitwarden.com',
     'booking.com',
     'cloudfiltering.com',
     'cloudflare.com',
@@ -73,8 +76,11 @@ local helper = import '../../helper.libsonnet';
     'pinterest.com',
     'reddit.com',
     'serverfault.com',
+    'shareworks.com',
+    'share-now.com',
     'stackoverflow.com',
     'steampowered.com',
+    'telekom.de',
     't-online.de',
     'traderepublic.com',
     'tumblr.com',
@@ -141,7 +147,8 @@ local helper = import '../../helper.libsonnet';
     ],
   }),
 
-  'whitelist_clients.local': std.join('\n', this.postgreyWhitelistClients),
+  // used as input for whitelist_clients.local generation in user-patches
+  'postgrey_whitelist_domains.txt': std.join('\n', this.postgreyWhitelistClients),
 
   'postscreen-access.cidr': std.join('\n', [
     '%s reject' % item

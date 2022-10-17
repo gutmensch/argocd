@@ -20,3 +20,42 @@ cp /tmp/docker-mailserver/postscreen-access.cidr /etc/postfix/postscreen-access.
 echo "tls_require_cert = never" >> /etc/dovecot/dovecot-ldap.conf.ext
 # set to -1 for verbose ldap output
 echo "debug_level = ${DOVECOT_DEBUG_LEVEL}" >> /etc/dovecot/dovecot-ldap.conf.ext
+
+# generate IP based whitelist for postgrey based on spf records
+domain_list=/tmp/docker-mailserver/postgrey_whitelist_domains.txt
+spf_results=$(mktemp -t spfresult.XXX)
+postgrey_whitelist_clients=/etc/postgrey/whitelist_clients.local
+
+spf_lookup() {
+        for e in $(dig TXT +short $1 | grep -i v=spf); do
+                if [[ $e =~ ^include: ]]; then
+                        spf_lookup ${e#*:} $2
+                elif [[ $e =~ ^ip(4|6): ]]; then
+                        echo ${e#*:} >> $2
+                elif [[ $e =~ ^a$ ]]; then
+                        for record in a aaaa; do
+                                dig $record $1 +short
+                        done >> $2
+                elif [[ $e =~ ^mx$ ]]; then
+                        for h in $(dig mx $1 +short | awk '{print $NF}'); do
+                                dig a $h +short
+                                dig aaaa $h +short
+                        done >> $2
+                fi
+        done
+}
+
+# parallelize lookup to save time
+for domain in $(cat $domain_list); do
+        spf_lookup $domain $spf_results &
+done
+wait
+# XXX: fix for occasional incomplete entries with quotes (:shrug:)
+sed -i '/"/d' $spf_results
+
+# v4
+cat $spf_results | grep '\.' | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n | uniq > $postgrey_whitelist_clients
+# v6
+cat $spf_results | grep '\:' | sort -t : -k 1,1 -k 2,2 -k 3,3 -k 4,4 | uniq >> $postgrey_whitelist_clients
+
+rm -v $spf_results
