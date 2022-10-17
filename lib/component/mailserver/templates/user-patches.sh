@@ -22,6 +22,7 @@ echo "tls_require_cert = never" >> /etc/dovecot/dovecot-ldap.conf.ext
 echo "debug_level = ${DOVECOT_DEBUG_LEVEL}" >> /etc/dovecot/dovecot-ldap.conf.ext
 
 # generate IP based whitelist for postgrey based on spf records
+apt update && apt install -y dnsutils
 domain_list=/tmp/docker-mailserver/postgrey_whitelist_domains.txt
 spf_results=$(mktemp -t spfresult.XXX)
 postgrey_whitelist_clients=/etc/postgrey/whitelist_clients.local
@@ -59,3 +60,4 @@ cat $spf_results | grep '\.' | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n | uniq 
 cat $spf_results | grep '\:' | sort -t : -k 1,1 -k 2,2 -k 3,3 -k 4,4 | uniq >> $postgrey_whitelist_clients
 
 rm -v $spf_results
+apt autoremove -y dnsutils
