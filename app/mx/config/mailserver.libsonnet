@@ -13,7 +13,7 @@
     accountProvisioner: 'LDAP',
     publicFQDN: 'mx.bln.space',
     publicHostnames: ['imap.bln.space', 'smtp.bln.space'],
-    trustedPublicNetworks: ['65.108.70.42/32', '65.108.70.29/32', '46.4.71.17/32', '2a01:4f9:6b:4629::/64', '2a01:4f8:140:31da::/64'],
+    trustedPublicNetworks: ['65.108.70.42/32', '65.108.70.29/32', '46.4.71.17/32', '[2a01:4f9:6b:4629::]/64', '[2a01:4f8:140:31da::]/64'],
     extraAnnotations: {
       'bln.space/podnat': std.manifestJsonMinified({
         entries: [
