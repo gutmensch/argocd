@@ -112,7 +112,6 @@ local helper = import '../../helper.libsonnet';
 
   'postfix-main.cf': helper.manifestPostConf({
     smtpd_banner: '$myhostname ESMTP $mail_name ($mail_version)',
-    myhostname: this.mailerConfig.publicFQDN,
     mynetworks: this.mynetworks.private + this.mynetworks.public,
     lmtp_host_lookup: 'native',
     smtp_host_lookup: 'native',

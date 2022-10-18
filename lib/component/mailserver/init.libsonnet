@@ -74,6 +74,7 @@ local componentName = 'mailserver';
       data: std.prune({
         LOG_LEVEL: 'info',
         POSTMASTER_ADDRESS: config.postmasterAddress,
+        OVERRIDE_HOSTNAME: config.publicFQDN,
         ENABLE_AMAVIS: '1',
         ENABLE_MANAGESIEVE: '1',
         ENABLE_SPAMASSASSIN: helper.boolToStrInt(config.spamAssassinEnable),
