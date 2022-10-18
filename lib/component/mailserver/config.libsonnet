@@ -42,6 +42,7 @@ local helper = import '../../helper.libsonnet';
     'booking.com',
     'cloudfiltering.com',
     'cloudflare.com',
+    'codeberg.org',
     'deutschepost.de',
     'dhl.de',
     'dkb.de',
@@ -90,6 +91,12 @@ local helper = import '../../helper.libsonnet';
     'web.de',
     'zendesk.com',
   ],
+
+  confidential:: ['fetchmail.cf'],
+
+  //
+  // below real file entries, above is only helpers and config
+  //
 
   'amavis.cf': std.strReplace(
     std.strReplace(importstr 'templates/amavis.cf', '__AMAVIS_MYNETWORKS__', std.join(' ', this.mynetworks.private + this.mynetworks.public)),
@@ -212,4 +219,8 @@ local helper = import '../../helper.libsonnet';
     result_attribute: 'mailDrop',
   }),
 
+  'fetchmail.cf': std.join('\n', [
+    'poll %s proto %s interval %d user "%s" password "%s" is "%s" here options %s ssl' % [m.server, m.proto, m.interval, m.user, m.password, m.is, if m.keep then 'keep' else 'nokeep']
+    for m in this.mailerConfig.fetchmailAccounts
+  ]),
 }

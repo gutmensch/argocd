@@ -20,6 +20,8 @@ local componentName = 'mailserver';
       storageClass: 'standard',
       mailStorageSize: '5Gi',
       stateStorageSize: '1Gi',
+      messageSizeLimitMB: 100,
+      mailboxSizeLimitMB: 25000,
       certIssuer: 'letsencrypt-prod',
       publicFQDN: '',
       publicHostnames: [],
@@ -27,6 +29,12 @@ local componentName = 'mailserver';
       postmasterAddress: '',
       clamavEnable: true,
       spamAssassinEnable: true,
+      spamAssassinSpamSubject: '[SPAM] ',
+      spamAssassinTag: '-100000.0',
+      spamAssassinTag2: '4.5',
+      spamAssassinKill: '100000.0',
+      spamAssassinSpamToInbox: '1',
+      moveSpamToJunk: '1',
       postgreyEnable: true,
       fail2banEnable: false,
       saslAuthdEnable: false,
@@ -37,6 +45,8 @@ local componentName = 'mailserver';
       ldapServiceAccountPassword: 'changeme',
       opendkimTrustedHosts: ['127.0.0.1', 'localhost'],
       extraAnnotations: {},
+      fetchmailAccounts: [],
+      reportEnable: false,
     }
   ):: helper.uniquify({
 
@@ -61,11 +71,27 @@ local componentName = 'mailserver';
         labels+: config.labels,
       },
       data: std.prune({
+        LOG_LEVEL: 'info',
+        POSTMASTER_ADDRESS: config.postmasterAddress,
         ENABLE_AMAVIS: '1',
+        ENABLE_MANAGESIEVE: '1',
         ENABLE_SPAMASSASSIN: helper.boolToStrInt(config.spamAssassinEnable),
+        SA_SPAM_SUBJECT: config.spamAssassinSpamSubject,
+        SA_TAG: config.spamAssassinTag,
+        SA_TAG2: config.spamAssassinTag2,
+        SA_KILL: config.spamAssassinKill,
+        SPAMASSASSIN_SPAM_TO_INBOX: config.spamAssassinSpamToInbox,
+        MOVE_SPAM_TO_JUNK: config.moveSpamToJunk,
         ENABLE_CLAMAV: helper.boolToStrInt(config.clamavEnable),
         ENABLE_FAIL2BAN: helper.boolToStrInt(config.fail2banEnable),
         ENABLE_POSTGREY: helper.boolToStrInt(config.postgreyEnable),
+        POSTGREY_AUTO_WHITELIST_CLIENTS: '3',
+        ENABLE_QUOTAS: '1',
+        POSTFIX_MESSAGE_SIZE_LIMIT: '%d' % [config.messageSizeLimitMB * 1000 * 1000],
+        POSTFIX_MAILBOX_SIZE_LIMIT: '%d' % [config.mailboxSizeLimitMB * 1000 * 1000],
+        ENABLE_FETCHMAIL: if std.length(config.fetchmailAccounts) > 0 then '1' else '0',
+        FETCHMAIL_POLL: '300',
+        FETCHMAIL_PARALLEL: '1',
         // XXX: OIDC could be later option
         // >>> Postfix LDAP Integration
         ACCOUNT_PROVISIONER: config.accountProvisioner,
@@ -105,6 +131,8 @@ local componentName = 'mailserver';
         ONE_DIR: '1',
         SSL_TYPE: 'manual',
         PERMIT_DOCKER: 'none',
+        [if config.reportEnable then 'PFLOGSUMM_TRIGGER']: 'daily_cron',
+        [if config.reportEnable then 'LOGWATCH_INTERVAL']: 'daily',
       }),
     },
 
@@ -176,6 +204,7 @@ local componentName = 'mailserver';
             annotations+: {
               'checksum/env': std.md5(std.toString(this.configmap)),
               'checksum/files': std.md5(std.toString(this.configmapfiles)),
+              'checksum/secretfiles': std.md5(std.toString(this.secretfiles)),
               'checksum/credentials': std.md5(std.toString(this.secret)),
             } + config.extraAnnotations,
             labels: config.labels,
@@ -303,10 +332,17 @@ local componentName = 'mailserver';
                 ] + [
                   {
                     mountPath: '/tmp/docker-mailserver/%s' % [mailserverConfigFile],
-                    name: '%s-cfg' % [componentName],
+                    name: 'config',
                     subPath: '%s' % [mailserverConfigFile],
                   }
-                  for mailserverConfigFile in std.objectFields(mailserverConfig)
+                  for mailserverConfigFile in std.filter(function(key) !std.member(mailserverConfig.confidential, key), std.objectFields(mailserverConfig))
+                ] + [
+                  {
+                    mountPath: '/tmp/docker-mailserver/%s' % [mailserverConfigFile],
+                    name: 'confidential',
+                    subPath: '%s' % [mailserverConfigFile],
+                  }
+                  for mailserverConfigFile in std.filter(function(key) std.member(mailserverConfig.confidential, key), std.objectFields(mailserverConfig))
                 ],
               },
             ],
@@ -325,10 +361,16 @@ local componentName = 'mailserver';
                 },
               },
               {
+                name: 'confidential',
+                secret: {
+                  secretName: '%s-files' % [componentName],
+                },
+              },
+              {
+                name: 'config',
                 configMap: {
                   name: '%s-cfg' % [componentName],
                 },
-                name: '%s-cfg' % [componentName],
               },
             ],
           },
@@ -387,13 +429,24 @@ local componentName = 'mailserver';
       },
     },
 
+    secretfiles: kube.Secret('%s-files' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels: config.labels,
+      },
+      stringData: {
+        [if std.member(mailerConfigFileDefinitions.confidential, cfg) then cfg]: mailerConfigFileDefinitions { mailerConfig+: config }[cfg]
+        for cfg in std.objectFields(mailerConfigFileDefinitions { mailerConfig+: config })
+      },
+    },
+
     configmapfiles: kube.ConfigMap('%s-cfg' % [componentName]) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
       },
       data: {
-        [cfg]: mailerConfigFileDefinitions { mailerConfig+: config }[cfg]
+        [if !std.member(mailerConfigFileDefinitions.confidential, cfg) then cfg]: mailerConfigFileDefinitions { mailerConfig+: config }[cfg]
         for cfg in std.objectFields(mailerConfigFileDefinitions { mailerConfig+: config })
       },
     },
