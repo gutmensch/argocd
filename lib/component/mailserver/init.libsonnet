@@ -270,9 +270,9 @@ local componentName = 'mailserver';
                 image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
                 imagePullPolicy: 'Always',
                 livenessProbe: {
-                  failureThreshold: 10,
+                  failureThreshold: 4,
                   initialDelaySeconds: 60,
-                  periodSeconds: 10,
+                  periodSeconds: 20,
                   successThreshold: 1,
                   tcpSocket: {
                     port: 'smtp-port',
@@ -295,9 +295,9 @@ local componentName = 'mailserver';
                   },
                 ],
                 readinessProbe: {
-                  failureThreshold: 10,
+                  failureThreshold: 4,
                   initialDelaySeconds: 60,
-                  periodSeconds: 10,
+                  periodSeconds: 20,
                   successThreshold: 1,
                   tcpSocket: {
                     port: 'smtp-port',
