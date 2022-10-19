@@ -14,7 +14,7 @@ for h in $OPENDKIM_TRUSTED_HOSTS; do
 done
 
 # copy postscreen access file
-cp /tmp/docker-mailserver/postscreen-access.cidr /etc/postfix/postscreen-access.cidr
+cp /tmp/docker-mailserver/postscreen_access.cidr /etc/postfix/postscreen_access.cidr
 
 # add options to dovecot ldap
 echo "tls_require_cert = never" >> /etc/dovecot/dovecot-ldap.conf.ext
