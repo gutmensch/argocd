@@ -20,6 +20,8 @@ local helper = import '../../helper.libsonnet';
 
   postscreenAccess:: {
     reject: [
+      '45.125.65.0/24',  // teleasia hk
+      '45.125.66.0/24',  // teleasia hk
       '46.173.211.0/24',  // gpi ru
       '62.173.128.0/19',  // spacenet ru
       '93.189.40.0/21',  // ntcom ru
