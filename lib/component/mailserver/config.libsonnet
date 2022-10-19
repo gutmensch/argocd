@@ -25,6 +25,7 @@ local helper = import '../../helper.libsonnet';
       '93.189.40.0/21',  // ntcom ru
       '5.188.206.0/24',  // fastvps / hk /ru
       '141.98.10.0/24',  // hostbaltic lt
+      '141.98.11.0/24',  // hostbaltic lt
       '77.247.110.0/24',  // PEENQ.NL
       '106.75.0.0/16',  // ucloud shanghai china
     ],
@@ -131,7 +132,9 @@ local helper = import '../../helper.libsonnet';
       'check_policy_service inet:127.0.0.1:10023',
     ],
     postscreen_greet_action: 'enforce',
-    postscreen_access_list: ['permit_mynetworks', 'cidr:/etc/postfix/postscreen-access.cidr'],
+    postscreen_access_list: ['permit_mynetworks', 'cidr:/etc/postfix/postscreen_access.cidr'],
+    // XXX: in 3.6 renamed to postscreen_denylist_action, current image has postfix 3.5
+    postscreen_blacklist_action: 'drop',
     postscreen_dnsbl_threshold: '3',
     postscreen_dnsbl_sites: [
       'zen.spamhaus.org*3',
@@ -156,7 +159,7 @@ local helper = import '../../helper.libsonnet';
   // used as input for whitelist_clients.local generation in user-patches
   'postgrey_whitelist_domains.txt': std.join('\n', this.postgreyWhitelistClients),
 
-  'postscreen-access.cidr': std.join('\n', [
+  'postscreen_access.cidr': std.join('\n', [
     '%s reject' % item
     for item in this.postscreenAccess.reject
   ] + [
