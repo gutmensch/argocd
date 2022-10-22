@@ -80,7 +80,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         LDAP_ENABLE_TLS: 'yes',
         LDAP_EXTRA_SCHEMAS: std.join(',', config.ldapIncludeProvidedSchemas + config.ldapIncludeManagedSchemas),
         LDAP_LDAPS_PORT_NUMBER: '1636',
-        LDAP_LOGLEVEL: '64',
+        LDAP_LOGLEVEL: '256',
         LDAP_PORT_NUMBER: '1389',
         LDAP_ROOT: config.ldapRoot,
         LDAP_ULIMIT_NOFILES: '1024',
