@@ -83,8 +83,8 @@ local kube = import 'kube.libsonnet';
       name: '%s-crds' % [app.name],
       finalizers: ['resources-finalizer.argocd.argoproj.io'],
       labels: {
-        'app.kubernetes.io/name': app.name,
-        'app.kubernetes.io/instance': app.name,
+        'app.kubernetes.io/name': '%s-crds' % [app.name],
+        'app.kubernetes.io/instance': '%s-crds' % [app.name],
         'app.kubernetes.io/managed-by': 'ArgoCD',
       },
     },
