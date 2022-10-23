@@ -8,11 +8,18 @@ local defaults = {
     region: 'helsinki',
     directory: 'app',
   },
+  crd: {
+    repoURL: 'https://github.com/gutmensch/argocd.git',
+    targetRevision: 'HEAD',
+    directory: 'lib/crds',
+  },
   project: {
     clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
   },
 };
+
 local withAppDef(map) = defaults.app + map;
+local withCrdDef(map) = defaults.crd + map;
 local withProjDef(map) = defaults.project + map;
 
 //
@@ -28,10 +35,22 @@ local projectList = [
   }),
 ];
 
+// manage CRDs seperately from apps, comment dependency only
+local crdList = [
+  withCrdDef({
+    name: 'default',
+    crds: [
+      // app: mysql
+      'mysql-operator_20221023.yaml',
+    ],
+  }),
+];
+
 local appList = [
   withAppDef({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
   withAppDef({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
+  // withAppDef({ name: 'mysql', project: 'base', path: 'mysql', tenant: ['lts'] }),
   //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
   //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
   //  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),
@@ -55,10 +74,15 @@ local projects = [
   for proj in projectList
 ];
 
+local crds = [
+  argo.CRDApplication(crdColl)
+  for crdColl in crdList
+];
+
 local apps = [
   argo.Application(tenant, app)
   for app in appList
   for tenant in app.tenant
 ];
 
-projects + apps
+projects + crds + apps

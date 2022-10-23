@@ -77,6 +77,50 @@ local kube = import 'kube.libsonnet';
     },
   },
 
+  CRDApplication(app): kube._Object('argoproj.io/v1alpha1', 'Application', '%s-crds' % [app.name]) {
+    metadata: {
+      namespace: 'argo-cd-system',
+      finalizers: ['resources-finalizer.argocd.argoproj.io'],
+      labels: {
+        'app.kubernetes.io/name': app.name,
+        'app.kubernetes.io/instance': app.name,
+        'app.kubernetes.io/managed-by': 'ArgoCD',
+      },
+    },
+    spec: {
+      project: 'default',
+      source: {
+        repoURL: app.repoURL,
+        targetRevision: app.targetRevision,
+        path: app.directory,
+        directory: {
+          recurse: false,
+          include: '{%s}' % [std.join(',', app.crds)],
+        },
+      },
+      destination: {
+        server: 'https://kubernetes.default.svc',
+        namespace: 'default',
+      },
+      syncPolicy: {
+        automated: {
+          prune: true,
+          selfHeal: true,
+          allowEmpty: true,
+        },
+        retry: {
+          limit: 5,
+          backoff: {
+            duration: '5s',
+            factor: 2,
+            maxDuration: '5m',
+          },
+        },
+        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=foreground', 'PruneLast=true'],
+      },
+    },
+  },
+
   SimpleRollout(name, secret, httpPort, httpPath, config): kube._Object('argoproj.io/v1alpha1', 'Rollout', name) {
     local c = config,
     metadata: {
