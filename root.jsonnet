@@ -1,32 +1,9 @@
+local def = import 'defaults.libsonnet';
 local argo = import 'lib/argo.libsonnet';
 
-local defaults = {
-  app: {
-    repoURL: 'https://github.com/gutmensch/argocd.git',
-    targetRevision: 'HEAD',
-    tenant: ['staging', 'lts'],
-    region: 'helsinki',
-    directory: 'app',
-  },
-  crd: {
-    repoURL: 'https://github.com/gutmensch/argocd.git',
-    targetRevision: 'HEAD',
-    directory: 'lib/crds',
-  },
-  project: {
-    clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
-  },
-};
-
-local withAppDef(map) = defaults.app + map;
-local withCrdDef(map) = defaults.crd + map;
-local withProjDef(map) = defaults.project + map;
-
-//
-// --- root projects and apps definitions - app of app pattern
-//
+// --- app of app pattern, define all projects and apps
 local projectList = [
-  withProjDef({
+  def.withProject({
     name: 'base',
     desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.',
     clusterResourceAllowList: [
@@ -35,9 +12,9 @@ local projectList = [
   }),
 ];
 
-// manage CRDs seperately from apps, comment dependency only
+// --- manage CRDs seperately from apps, comment dependency only
 local crdList = [
-  withCrdDef({
+  def.withCRD({
     name: 'default',
     crds: [
       // app: mysql
@@ -47,9 +24,9 @@ local crdList = [
 ];
 
 local appList = [
-  withAppDef({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
-  withAppDef({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
-  withAppDef({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
+  def.withApp({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
+  def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
+  def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
   // withAppDef({ name: 'mysql', project: 'base', path: 'mysql', tenant: ['lts'] }),
   //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
   //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
@@ -58,9 +35,7 @@ local appList = [
 ];
 
 
-//
 // --- generate resources for ArgoCD
-//
 local projects = [
   argo.Project(proj.name,
                [
