@@ -80,6 +80,7 @@ local kube = import 'kube.libsonnet';
   CRDApplication(app): kube._Object('argoproj.io/v1alpha1', 'Application', '%s-crds' % [app.name]) {
     metadata: {
       namespace: 'argo-cd-system',
+      name: '%s-crds' % [app.name],
       finalizers: ['resources-finalizer.argocd.argoproj.io'],
       labels: {
         'app.kubernetes.io/name': app.name,
