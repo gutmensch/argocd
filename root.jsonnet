@@ -10,13 +10,13 @@ local projectList = [
       { group: '', kind: 'Namespace' },
     ],
   }),
-  def.withProject({
-    name: 'team-xyz',
-    desc: 'Team XYZ applications',
-    clusterResourceAllowList: [
-      { group: '', kind: 'Namespace' },
-    ],
-  }),
+  // def.withProject({
+  //   name: 'team-xyz',
+  //   desc: 'Team XYZ applications',
+  //   clusterResourceAllowList: [
+  //     { group: '', kind: 'Namespace' },
+  //   ],
+  // }),
 ];
 
 // --- manage CRDs seperately from apps, comment dependency only
@@ -35,12 +35,7 @@ local appList = [
   def.withApp({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
   def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
-  def.withApp({ name: 'test', project: 'team-xyz', path: 'test', tenant: ['staging', 'lts'] }),
-  // withAppDef({ name: 'mysql', project: 'base', path: 'mysql', tenant: ['lts'] }),
-  //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
-  //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
-  //  withAppDef({ name: 'guestbook', project: 'base', path: 'guestbook', ingressRoot 'schumann.link' }),
-  //  withAppDef({ name: 'foobar', project: 'base', path: 'foobar', ingressRoot: 'schumann.link' }),
+  //def.withApp({ name: 'test', project: 'team-xyz', path: 'test', tenant: ['staging', 'lts'] }),
 ];
 
 
