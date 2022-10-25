@@ -125,6 +125,78 @@ local kube = import 'kube.libsonnet';
     },
   },
 
+  CanaryRollout(name, secret, httpPort, httpPath, config): kube._Object('argoproj.io/v1alpha1', 'Rollout', name) {
+    local c = config,
+    metadata: {
+      name: name,
+      labels: c.labels,
+    },
+    spec: {
+      replicas: std.get(c, 'replicas', default=1),
+      revisionHistoryLimit: 5,
+      selector: {
+        matchLabels: c.labels,
+      },
+      template: {
+        metadata: {
+          labels: c.labels + c.containerImageLabels,
+        },
+        spec: {
+          containers: [
+            {
+              name: name,
+              image: '%s:%s' % [if std.get(c, 'imageRegistry') != null then std.join('/', [c.imageRegistry, c.imageRef]) else c.imageRef, c.imageVersion],
+              imagePullPolicy: 'Always',
+              envFrom: [
+                {
+                  configMapRef: {
+                    name: name,
+                  },
+                },
+              ] + if secret != null then [
+                {
+                  secretRef: {
+                    name: secret,
+                  },
+                },
+              ] else [],
+              livenessProbe: {
+                httpGet: {
+                  path: httpPath,
+                  port: 'http',
+                },
+              },
+              ports: [
+                {
+                  containerPort: httpPort,
+                  name: 'http',
+                  protocol: 'TCP',
+                },
+              ],
+              readinessProbe: {
+                httpGet: {
+                  path: httpPath,
+                  port: 'http',
+                },
+              },
+            },
+          ],
+        },
+      },
+      strategy: {
+        canary: {
+          canaryService: '%s-canary' % [name],
+          stableService: name,
+          trafficRouting: {
+            nginx: {
+              stableIngress: name,
+            },
+          },
+        },
+      },
+    },
+  },
+
   SimpleRollout(name, secret, httpPort, httpPath, config): kube._Object('argoproj.io/v1alpha1', 'Rollout', name) {
     local c = config,
     metadata: {

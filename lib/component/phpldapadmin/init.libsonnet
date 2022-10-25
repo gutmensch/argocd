@@ -40,7 +40,7 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    deployment: argo.SimpleRollout(componentName, null, 80, '/', config) {
+    deployment: argo.CanaryRollout(componentName, null, 80, '/', config) {
       spec+: {
         template+: {
           metadata+: {
@@ -53,6 +53,25 @@ local kube = import '../../kube.libsonnet';
     },
 
     service: kube.Service(componentName) {
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      spec: {
+        ports: [
+          {
+            name: 'http',
+            port: 80,
+            protocol: 'TCP',
+            targetPort: 'http',
+          },
+        ],
+        selector: config.labels,
+        type: 'ClusterIP',
+      },
+    },
+
+    canaryservice: kube.Service('%s-canary' % componentName) {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,
