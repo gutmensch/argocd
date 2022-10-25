@@ -12,10 +12,10 @@
     local global = import '../config/global.libsonnet';
     std.mergePatch(
       std.get(global, tenant, default={}), std.mergePatch(
-        std.get(secrets, tenant, default={}), std.mergePatch(
-          std.get(config, 'default', default={}), std.mergePatch(
-            std.get(shared, tenant, default={}), std.mergePatch(
-              std.get(config, tenant, default={}), std.mergePatch(
+        std.get(config, 'default', default={}), std.mergePatch(
+          std.get(shared, tenant, default={}), std.mergePatch(
+            std.get(config, tenant, default={}), std.mergePatch(
+              std.get(secrets, tenant, default={}), std.mergePatch(
                 std.get(cd, tenant, default={}), { labels+: {
                   'app.kubernetes.io/name': name,
                   'app.kubernetes.io/project': project,

@@ -34,8 +34,11 @@ def sanitize_obj(doc):
             str.lower(kind), doc['metadata']['name'].replace('-', '_'),
             kind, doc['metadata']['name'])
     doc['metadata'].pop('name', None)
-    doc['metadata']['labels'].pop('chart', None)
-    doc['metadata']['labels'].pop('heritage', None)
+    try:
+        doc['metadata']['labels'].pop('chart', None)
+        doc['metadata']['labels'].pop('heritage', None)
+    except KeyError:
+        pass
 
     try:
         if doc['spec']['template']['metadata']['labels']:

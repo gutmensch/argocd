@@ -5,7 +5,14 @@ local argo = import 'lib/argo.libsonnet';
 local projectList = [
   def.withProject({
     name: 'base',
-    desc: 'This project hosts base applications like Jenkins, Backstage, MX, roundcube, dmarc frontend, Nextcloud, etc.',
+    desc: 'Base applications like Backstage, MX, roundcube, Nextcloud, etc.',
+    clusterResourceAllowList: [
+      { group: '', kind: 'Namespace' },
+    ],
+  }),
+  def.withProject({
+    name: 'team-xyz',
+    desc: 'Team XYZ applications',
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
     ],
@@ -16,6 +23,7 @@ local projectList = [
 local crdList = [
   def.withCRD({
     name: 'default',
+    path: 'lib/crds',
     crds: [
       // app: mysql
       'mysql-operator_20221023.yaml',
@@ -27,6 +35,7 @@ local appList = [
   def.withApp({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
   def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
+  def.withApp({ name: 'test', project: 'team-xyz', path: 'test', tenant: ['staging', 'lts'] }),
   // withAppDef({ name: 'mysql', project: 'base', path: 'mysql', tenant: ['lts'] }),
   //  withAppDef({ name: 'keycloak', project: 'base', path: 'keycloak', tenant: ['lts'] ingressRoot: 'bln.space', ingressPrefix: 'auth' }),
   //  withAppDef({ name: 'jenkins', project: 'base', path: 'jenkins', ingressRoot: 'bln.space' }),
