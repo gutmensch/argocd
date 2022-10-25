@@ -47,12 +47,11 @@ local appList = [
 // --- generate resources for ArgoCD
 local projects = [
   argo.Project(proj.name,
-               [
-                 '%s-%s-%s' % [proj.name, app.name, tenant]
+               std.prune([
+                 if app.project == proj.name then '%s-%s-%s' % [proj.name, app.name, tenant] else null
                  for app in appList
                  for tenant in app.tenant
-                 for proj in projectList
-               ],
+               ]),
                proj.desc,
                proj.clusterResourceAllowList)
   for proj in projectList
