@@ -192,10 +192,56 @@ local kube = import 'kube.libsonnet';
               stableIngress: name,
             },
           },
+          steps: [
+            { setWeight: 20 },
+            { pause: { duration: '1m' } },
+            { setWeight: 40 },
+            { pause: { duration: '1m' } },
+            { setWeight: 60 },
+            { pause: { duration: '1m' } },
+            { setWeight: 80 },
+            { pause: { duration: '1m' } },
+          ],
+
+          // analysis: {
+          //   templates: [
+          //     { templateName: success-rate }
+          //   ],
+          //   startingStep: 2 # delay starting analysis run until setWeight: 40%
+          //   args: [
+          //     {
+          //       name: service-name,
+          //       value: guestbook-svc.default.svc.cluster.local,
+          //     }
+          //   ],
+          // }
         },
       },
     },
   },
+
+  // apiVersion: argoproj.io/v1alpha1
+  // kind: AnalysisTemplate
+  // metadata:
+  //   name: success-rate
+  // spec:
+  //   args:
+  //   - name: service-name
+  //   - name: prometheus-port
+  //     value: 9090
+  //   metrics:
+  //   - name: success-rate
+  //     successCondition: result[0] >= 0.95
+  //     provider:
+  //       prometheus:
+  //         address: "http://prometheus.example.com:{{args.prometheus-port}}"
+  //         query: |
+  //           sum(irate(
+  //             istio_requests_total{reporter="source",destination_service=~"{{args.service-name}}",response_code!~"5.*"}[5m]
+  //           )) /
+  //           sum(irate(
+  //             istio_requests_total{reporter="source",destination_service=~"{{args.service-name}}"}[5m]
+  //           ))
 
   SimpleRollout(name, secret, httpPort, httpPath, config): kube._Object('argoproj.io/v1alpha1', 'Rollout', name) {
     local c = config,
