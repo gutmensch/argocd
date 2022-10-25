@@ -1,7 +1,7 @@
 {
   default: {
     imageRegistry: 'registry.lan:5000',
-    ldapAdmin: 'admin',
+    ldapAdmin: 'robert',
     ldapSvc: 'openldap.base-auth-lts.svc.cluster.local',
     ldapRoot: 'o=auth,dc=local',
   },
