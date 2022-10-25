@@ -14,6 +14,9 @@ local kube = import 'kube.libsonnet';
     spec: {
       description: description,
       sourceRepos: ['*'],
+      orphanedResources: {
+        warn: true,
+      },
       destinations: [
         { namespace: ns, server: 'https://kubernetes.default.svc' }
         for ns in namespaces
