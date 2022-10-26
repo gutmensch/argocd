@@ -10,13 +10,13 @@ local projectList = [
       { group: '', kind: 'Namespace' },
     ],
   }),
-  def.withProject({
-    name: 'team-xyz',
-    desc: 'Team XYZ applications',
-    clusterResourceAllowList: [
-      { group: '', kind: 'Namespace' },
-    ],
-  }),
+  // def.withProject({
+  //   name: 'team-xyz',
+  //   desc: 'Team XYZ applications',
+  //   clusterResourceAllowList: [
+  //     { group: '', kind: 'Namespace' },
+  //   ],
+  // }),
 ];
 
 // --- manage CRDs seperately from apps, comment dependency only
@@ -35,7 +35,7 @@ local appList = [
   def.withApp({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
   def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
-  def.withApp({ name: 'test', project: 'team-xyz', path: 'test', tenant: ['staging', 'lts'] }),
+  // def.withApp({ name: 'test', project: 'team-xyz', path: 'test', tenant: ['staging', 'lts'] }),
 ];
 
 
