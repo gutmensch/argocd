@@ -78,18 +78,18 @@ local kube = import '../../kube.libsonnet';
                 image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
                 imagePullPolicy: 'IfNotPresent',
                 name: componentName,
-                resources: {},
-                serviceAccountName: componentName,
-                volumes: [
-                  {
-                    emptyDir: {},
-                    name: 'mysqlsh-home',
-                  },
-                  {
-                    emptyDir: {},
-                    name: 'tmpdir',
-                  },
-                ],
+              },
+            ],
+            resources: {},
+            serviceAccountName: componentName,
+            volumes: [
+              {
+                emptyDir: {},
+                name: 'mysqlsh-home',
+              },
+              {
+                emptyDir: {},
+                name: 'tmpdir',
               },
             ],
           },
