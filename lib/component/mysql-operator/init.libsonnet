@@ -493,7 +493,7 @@ local kube = import '../../kube.libsonnet';
     },
 
     clusterrolebinding: kube.ClusterRoleBinding(componentName) {
-      metadata: {
+      metadata+: {
         namespace: namespace,
         labels+: config.labels,
       },
