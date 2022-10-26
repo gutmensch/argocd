@@ -8,6 +8,10 @@ local projectList = [
     desc: 'Base applications like Backstage, MX, roundcube, Nextcloud, etc.',
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
+      // mysql-operator
+      { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole' },
+      { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
+      { group: 'zalando.org', kind: 'ClusterKopfPeering' },
     ],
   }),
 ];
