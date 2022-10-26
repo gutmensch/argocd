@@ -104,6 +104,7 @@ local kube = import '../../kube.libsonnet';
       },
       data: {
         MYSQLSH_USER_CONFIG_HOME: '/mysqlsh',
+        MYSQL_OPERATOR_DEFAULT_REPOSITORY: '%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, 'mysql']) else 'mysql'],
       },
     },
 
