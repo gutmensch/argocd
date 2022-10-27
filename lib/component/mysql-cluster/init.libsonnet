@@ -55,7 +55,7 @@ local kube = import '../../kube.libsonnet';
           instances: config.routers,
         },
         secretName: componentName,
-        imagePullPolicy: 'always',
+        imagePullPolicy: 'IfNotPresent',
         baseServerId: 1000,
         version: config.mysqlVersion,
         edition: 'community',
