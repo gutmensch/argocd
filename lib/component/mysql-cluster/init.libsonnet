@@ -50,7 +50,7 @@ local kube = import '../../kube.libsonnet';
       },
       spec+: {
         instances: config.replicas,
-        tlsUseSelfSigned: 'true',
+        tlsUseSelfSigned: true,
         router: {
           instances: config.routers,
         },
