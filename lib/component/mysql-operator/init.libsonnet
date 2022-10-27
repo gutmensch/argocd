@@ -509,6 +509,13 @@ local kube = import '../../kube.libsonnet';
           name: componentName,
           namespace: namespace,
         },
+      ] + [
+        {
+          kind: 'ServiceAccount',
+          name: config.clusterRoleNamespaceServiceAccounts[k],
+          namespace: k,
+        }
+        for k in std.objectFields(config.clusterRoleNamespaceServiceAccounts)
       ],
     },
 

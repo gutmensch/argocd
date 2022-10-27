@@ -7,5 +7,10 @@
   },
 
   lts: {
+    // allow kopf sidecars in other namespaces to assume
+    // clusterrole too
+    clusterRoleNamespaceServiceAccounts: {
+      'base-mysqldb-lts': 'mysql-cluster',
+    },
   },
 }
