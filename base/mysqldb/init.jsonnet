@@ -1,4 +1,5 @@
 local mysqlCluster = import '../../lib/component/mysql-cluster/init.libsonnet';
+local mysqlUser = import '../../lib/component/mysql-user/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
 local kube = import '../../lib/kube.libsonnet';
 
@@ -10,11 +11,22 @@ function(name, namespace, project, tenant, region)
       'mysql-cluster',
       project,
       tenant,
-      import 'secret/mysql-cluster.libsonnet',
+      import 'secret/shared.libsonnet',
       import 'config/mysql-cluster.libsonnet',
       {},
       {},
     ),
+    mysqlUser: helper.configMerge(
+      name,
+      'mysql-user',
+      project,
+      tenant,
+      import 'secret/mysql-user.libsonnet',
+      import 'config/mysql-user.libsonnet',
+      import 'secret/shared.libsonnet',
+      {},
+    ),
+
   };
 
   local resources = std.prune(
@@ -24,6 +36,13 @@ function(name, namespace, project, tenant, region)
       region,
       tenant,
       componentConfigs.mysqlCluster,
+    ) +
+    mysqlUser.generate(
+      name,
+      namespace,
+      region,
+      tenant,
+      componentConfigs.mysqlUser,
     )
   );
 

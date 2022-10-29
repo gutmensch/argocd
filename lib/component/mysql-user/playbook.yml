@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  vars_files:
+    - data.yaml
+  vars:
+    ansible_connection: local
+  tasks:
+    - name: manage database(s)
+      community.mysql.mysql_db:
+        name: "{{ item.database }}"
+        state: present
+        login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
+        login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
+        login_host: "{{ lookup('env','MYSQL_HOST') }}"
+      with_items: "{{ mysql_db_users }}"
+
+    - name: manage user(s)
+      community.mysql.mysql_user:
+        name: "{{ item.user }}"
+        password: "{{ item.password }}"
+        priv: "{{ item.database }}.*:{{ item.grants | default(['ALL']) | join(',') }}"
+        state: "{{ item.state }}"
+        login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
+        login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
+        login_host: "{{ lookup('env','MYSQL_HOST') }}"
+      with_items: "{{ mysql_db_users }}"
