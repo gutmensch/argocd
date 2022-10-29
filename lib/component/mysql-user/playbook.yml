@@ -21,6 +21,7 @@
         password: "{{ item.password }}"
         priv: "{{ item.database }}.*:{{ item.grants | default(['ALL']) | join(',') }}"
         state: "{{ item.state }}"
+        host: "{{ item.host | default('%') }}"
         login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
