@@ -67,9 +67,8 @@ local kube = import '../../kube.libsonnet';
                     subPath: 'playbook.yml',
                   },
                   {
-                    mountPath: '/ansible/data.yml',
+                    mountPath: '/vars',
                     name: '%s-data' % [componentName],
-                    subPath: 'data.yml',
                     readOnly: true,
                   },
                 ],
