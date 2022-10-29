@@ -45,9 +45,8 @@ local kube = import '../../kube.libsonnet';
             containers: [
               {
                 args: [
-                  'ansible-playbook',
-                  '-vv',
-                  'playbook.yml',
+                  '/bin/sh',
+                  '/ansible/run.sh',
                 ],
                 env: [],
                 envFrom: [
@@ -65,6 +64,11 @@ local kube = import '../../kube.libsonnet';
                     mountPath: '/ansible/playbook.yml',
                     name: '%s-config' % [componentName],
                     subPath: 'playbook.yml',
+                  },
+                  {
+                    mountPath: '/ansible/run.sh',
+                    name: '%s-config' % [componentName],
+                    subPath: 'run.sh',
                   },
                   {
                     mountPath: '/vars',
@@ -96,6 +100,7 @@ local kube = import '../../kube.libsonnet';
     configmap: kube.ConfigMap('%s-config' % [componentName]) {
       data: {
         'playbook.yml': importstr 'playbook.yml',
+        'run.sh': importstr 'run.sh',
       },
     },
 
