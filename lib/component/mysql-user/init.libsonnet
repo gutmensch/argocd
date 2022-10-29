@@ -118,7 +118,7 @@ local kube = import '../../kube.libsonnet';
         labels: config.labels,
       },
       stringData: {
-        'data.yaml': std.manifestYamlDoc({ mysql_db_users: config.mysqlUsers }),
+        'data.yml': std.manifestYamlDoc({ mysql_db_users: config.mysqlUsers }),
       },
     },
 

@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   vars_files:
-    - data.yaml
+    - data.yml
   vars:
     ansible_connection: local
   tasks:
