@@ -13,7 +13,7 @@ local kube = import '../../kube.libsonnet';
     defaultConfig={
       imageRegistry: '',
       imageRef: 'percona/percona-xtradb-cluster-operator',
-      imageVersion: '1.11.1',
+      imageVersion: '1.11.0',
       replicas: 1,
     }
   ):: helper.uniquify({
