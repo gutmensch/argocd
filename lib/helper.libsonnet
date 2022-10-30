@@ -32,12 +32,13 @@
       ),
     ),
 
-  getImage(registry, image, version)::
-    local ref = if registry != '' then std.join('/', [registry, image]) else image,
+  getImage(registry, image, version):: (
+    local ref = if registry != '' then std.join('/', [registry, image]) else image;
     if std.startsWith(version, 'sha256') then
       '%s@%s' % [ref, version]
     else
       '%s:%s' % [ref, version]
+  ),
 
   getIngress(tenant, name, ingressRoot):: (
     if tenant == 'staging' then

@@ -222,7 +222,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                     },
                   },
                 ],
-                image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
+                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,
