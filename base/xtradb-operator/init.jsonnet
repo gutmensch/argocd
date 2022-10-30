@@ -1,4 +1,4 @@
-local mysqlOperator = import '../../lib/component/xtradb-operator/init.libsonnet';
+local xtradbOperator = import '../../lib/component/xtradb-operator/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
 local kube = import '../../lib/kube.libsonnet';
 
