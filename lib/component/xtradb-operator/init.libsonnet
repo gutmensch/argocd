@@ -91,7 +91,7 @@ local kube = import '../../kube.libsonnet';
                     scheme: 'HTTP',
                   },
                 },
-                name: componentName,
+                name: 'percona-xtradb-cluster-operator',
                 ports: [
                   {
                     containerPort: 8080,
