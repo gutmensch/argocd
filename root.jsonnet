@@ -33,7 +33,7 @@ local appList = [
   def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
   def.withApp({ name: 'xtradb-operator', project: 'base', path: 'xtradb-operator', tenant: ['lts'] }),
-  //def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', tenant: ['lts'] }),
+  def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', tenant: ['lts'] }),
 ];
 
 
