@@ -6,6 +6,6 @@
   staging: {},
 
   lts: {
-    mysqlHost: 'mysql-cluster',
+    mysqlHost: 'mysql-cluster-haproxy',
   },
 }
