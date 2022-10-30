@@ -7,6 +7,16 @@ local kube = import '../../lib/kube.libsonnet';
 function(name, namespace, project, tenant, region)
 
   local componentConfigs = {
+    xtradbOperator: helper.configMerge(
+      name,
+      'xtradb-operator',
+      project,
+      tenant,
+      {},
+      import 'config/xtradb-operator.libsonnet',
+      {},
+      {},
+    ),
     mysqlCluster: helper.configMerge(
       name,
       'mysql-cluster',
@@ -31,6 +41,13 @@ function(name, namespace, project, tenant, region)
   };
 
   local resources = std.prune(
+    xtradbOperator.generate(
+      name,
+      namespace,
+      region,
+      tenant,
+      componentConfigs.xtradbOperator,
+    ) +
     mysqlCluster.generate(
       name,
       namespace,
