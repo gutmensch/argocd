@@ -115,7 +115,7 @@ local kube = import '../../kube.libsonnet';
         labels: config.labels,
       },
       data: {
-        OPERATOR_NAME: componentName,
+        OPERATOR_NAME: 'percona-xtradb-cluster-operator',
         DISABLE_TELEMETRY: 'false',
       },
     },
