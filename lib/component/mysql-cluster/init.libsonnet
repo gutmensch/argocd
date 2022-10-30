@@ -92,7 +92,7 @@ local kube = import '../../kube.libsonnet';
         backup: {
           image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-pxc8.0-backup' % [config.baseImageVersion]),
           pitr: {
-            enabled: true,
+            enabled: false,
             storageName: 'fs-pvc',
             timeBetweenUploads: 60,
           },
