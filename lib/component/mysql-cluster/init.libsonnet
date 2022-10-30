@@ -77,7 +77,7 @@ local kube = import '../../kube.libsonnet';
             schedule: '*/30 * * * *',
             deleteBackupData: true,
             backupProfile: {
-              dumpInstance: {
+              snapshot: {
                 storage: {
                   persistentVolumeClaim: {
                     // operator mounts at /mnt/storage into backup pod
