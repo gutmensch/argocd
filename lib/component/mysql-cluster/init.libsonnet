@@ -71,26 +71,21 @@ local kube = import '../../kube.libsonnet';
           },
         },
 
-        backupProfiles: [
-          {
-            name: '%s-backup' % [componentName],
-            snapshot: {
-              storage: {
-                persistentVolumeClaim: {
-                  // operator mounts at /mnt/storage into backup pod
-                  claimName: '%s-backup' % [componentName],
-                },
-              },
-            },
-          },
-        ],
-
         backupSchedules: [
           {
             name: 'schedule-ref',
-            schedule: '10 1 * * *',
+            schedule: '*/30 * * * *',
             deleteBackupData: true,
-            backupProfileName: '%s-backup' % [componentName],
+            backupProfile: {
+              snapshot: {
+                storage: {
+                  persistentVolumeClaim: {
+                    // operator mounts at /mnt/storage into backup pod
+                    claimName: '%s-backup' % [componentName],
+                  },
+                },
+              },
+            },
           },
         ],
       },
