@@ -9,16 +9,40 @@ local kube = import '../../kube.libsonnet';
     tenant,
     appConfig,
     defaultConfig={
-      mysqlVersion: '8.0.31',
+      crVersion: '1.11.0',
+      mysqlImageRef: 'percona/percona-xtradb-cluster',
+      mysqlImageVersion: '8.0.27-18.1',
+      baseImageRef: 'percona/percona-xtradb-cluster-operator',
+      baseImageVersion: self.crVersion,
+      pmmImageRef: 'percona/pmm-client',
+      pmmImageVersion: '2.28.0',
+
       replicas: 2,
-      routers: 1,
       storageClass: 'default',
       storageSize: '10Gi',
+
+      haproxyEnable: true,
+      haproxyReplicas: 1,
+
+      proxySqlEnable: false,
+      proxySqlReplicas: 0,
+      proxySqlStorageSize: '2Gi',
+
+      pmmEnable: false,
+      logcollectorEnable: false,
+
       backupStorageClass: 'default',
       backupStorageSize: '50Gi',
-      rootUser: 'root',
-      rootHost: '%',
+
+      // system user passwords
       rootPassword: 'changeme',
+      backupPassword: 'changeme',
+      monitorPassword: 'changeme',
+      clusterCheckPassword: 'changeme',
+      proxyAdminPassword: 'changeme',
+      pmmServerPassword: 'changeme',
+      operatorPassword: 'changeme',
+      replicationPassword: 'changeme',
     },
   ):: helper.uniquify({
 
@@ -31,77 +55,147 @@ local kube = import '../../kube.libsonnet';
 
     assert config.rootPassword != 'changeme' : error '"changeme" is an invalid password',
 
-    rootusersecret: kube.Secret(componentName) {
+    systemuserssecret: kube.Secret('%s-system-users' % [componentName]) {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,
       },
       stringData: {
-        rootUser: config.rootUser,
-        rootHost: config.rootHost,
-        rootPassword: config.rootPassword,
+        root: config.rootPassword,
+        xtrabackup: config.backupPassword,
+        monitor: config.monitorPassword,
+        clustercheck: config.clusterCheckPassword,
+        proxyadmin: config.proxyAdminPassword,
+        pmmserver: config.pmmServerPassword,
+        operator: config.operatorPassword,
+        replication: config.replicationPassword,
       },
     },
 
-    innodbcluster: kube._Object('mysql.oracle.com/v2', 'InnoDBCluster', componentName) {
+    // backuppvc: kube.PersistentVolumeClaim('%s-backup' % [componentName]) {
+    //   storage: config.backupStorageSize,
+    //   storageClass: config.backupStorageClass,
+    // },
+
+    xtradbcluster: kube._Object('pxc.percona.com/v1', 'PerconaXtraDBCluster', componentName) {
       metadata+: {
-        namespace: namespace,
+        finalizers: [
+          'delete-pxc-pods-in-order',
+        ],
         labels+: config.labels,
+        namespace: namespace,
       },
       spec+: {
-        instances: config.replicas,
-        tlsUseSelfSigned: true,
-        router: {
-          instances: config.routers,
-        },
-        secretName: componentName,
-        imagePullPolicy: 'IfNotPresent',
-        baseServerId: 1000,
-        version: config.mysqlVersion,
-        edition: 'community',
-        serviceAccountName: componentName,
-
-        datadirVolumeClaimTemplate: {
-          storageClassName: config.storageClass,
-          accessModes: ['ReadWriteOnce'],
-          resources: {
-            requests: {
-              storage: config.storageSize,
-            },
+        secretsName: '%s-system-users' % [componentName],
+        allowUnsafeConfigurations: false,
+        enableCRValidationWebhook: true,
+        backup: {
+          image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-pxc8.0-backup' % [config.baseImageVersion]),
+          pitr: {
+            enabled: true,
+            storageName: 'fs-pvc',
+            timeBetweenUploads: 60,
           },
-        },
-
-        backupSchedules: [
-          {
-            name: 'schedule-inline',
-            schedule: '*/30 * * * *',
-            deleteBackupData: true,
-            backupProfile: {
-              snapshot: {
-                storage: {
-                  persistentVolumeClaim: {
-                    // operator mounts at /mnt/storage into backup pod
-                    claimName: '%s-backup' % [componentName],
+          schedule: [
+            {
+              keep: 10,
+              name: 'daily-backup',
+              schedule: '0 1 * * *',
+              storageName: 'fs-pvc',
+            },
+          ],
+          storages: {
+            'fs-pvc': {
+              type: 'filesystem',
+              volume: {
+                persistentVolumeClaim: {
+                  storageClassName: config.backupStorageClass,
+                  accessModes: [
+                    'ReadWriteOnce',
+                  ],
+                  resources: {
+                    requests: {
+                      storage: config.backupStorageSize,
+                    },
                   },
                 },
               },
             },
           },
-        ],
+        },
+        crVersion: config.crVersion,
+        haproxy: {
+          affinity: {
+            antiAffinityTopologyKey: 'kubernetes.io/hostname',
+          },
+          enabled: config.haproxyEnable,
+          gracePeriod: 30,
+          image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-haproxy' % [config.baseImageVersion]),
+          podDisruptionBudget: {
+            maxUnavailable: 1,
+          },
+          size: config.haproxyReplicas,
+        },
+        logcollector: {
+          enabled: config.logcollectorEnable,
+          image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-logcollector' % [config.baseImageVersion]),
+        },
+        pmm: {
+          enabled: config.pmmEnable,
+          image: helper.getImage(config.imageRegistry, config.pmmImageRef, config.pmmImageVersion),
+          serverHost: 'monitoring-service',
+        },
+        proxysql: {
+          affinity: {
+            antiAffinityTopologyKey: 'kubernetes.io/hostname',
+          },
+          enabled: config.proxySqlEnable,
+          gracePeriod: 30,
+          image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-proxysql' % [config.baseImageVersion]),
+          podDisruptionBudget: {
+            maxUnavailable: 1,
+          },
+          size: config.proxySqlReplicas,
+          volumeSpec: {
+            persistentVolumeClaim: {
+              storageClassName: config.storageClass,
+              resources: {
+                requests: {
+                  storage: config.proxySqlStorageSize,
+                },
+              },
+            },
+          },
+        },
+        pxc: {
+          affinity: {
+            antiAffinityTopologyKey: 'kubernetes.io/hostname',
+          },
+          autoRecovery: true,
+          gracePeriod: 600,
+          image: helper.getImage(config.imageRegistry, config.mysqlImageRef, config.mysqlImageVersion),
+          podDisruptionBudget: {
+            maxUnavailable: 1,
+          },
+          size: config.replicas,
+          volumeSpec: {
+            persistentVolumeClaim: {
+              storageClassName: config.storageClass,
+              resources: {
+                requests: {
+                  storage: config.storageSize,
+                },
+              },
+            },
+          },
+        },
+        updateStrategy: 'SmartUpdate',
+        upgradeOptions: {
+          apply: 'disabled',
+          schedule: '0 4 * * *',
+          versionServiceEndpoint: 'https://check.percona.com',
+        },
       },
     },
-
-    backuppvc: kube.PersistentVolumeClaim('%s-backup' % [componentName]) {
-      storage: config.backupStorageSize,
-      storageClass: config.backupStorageClass,
-    },
-
-    serviceaccount: kube.ServiceAccount(componentName) {
-      metadata+: {
-        namespace: namespace,
-        labels: config.labels,
-      },
-    },
-
   }),
 }

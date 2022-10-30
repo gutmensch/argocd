@@ -12,10 +12,8 @@ local kube = import '../../kube.libsonnet';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       imageRegistry: '',
-      imageRef: 'perconalab/percona-xtradb-cluster-operator',
-      // imageVersion: 'main',
-      // 2022-10-28
-      imageVersion: 'sha256:80ec5a58332e3d427420cb0d65d44d2078cfbd93fb4e2ed8cf096a76e7c64a74',
+      imageRef: 'percona/percona-xtradb-cluster-operator',
+      imageVersion: '1.11.0',
       replicas: 1,
     }
   ):: helper.uniquify({
