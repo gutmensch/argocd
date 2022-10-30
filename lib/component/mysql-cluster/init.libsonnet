@@ -87,7 +87,7 @@ local kube = import '../../kube.libsonnet';
       },
       spec+: {
         secretsName: '%s-system-users' % [componentName],
-        allowUnsafeConfigurations: false,
+        allowUnsafeConfigurations: true,
         enableCRValidationWebhook: true,
         backup: {
           image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-pxc8.0-backup' % [config.baseImageVersion]),
