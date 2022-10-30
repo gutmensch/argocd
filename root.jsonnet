@@ -23,7 +23,7 @@ local crdList = [
     path: 'lib/crds',
     crds: [
       // app: mysql
-      // 'mysql-operator_20221023.yaml',
+      'percona-xtradb-cluster_20221030.yaml',
     ],
   }),
 ];
