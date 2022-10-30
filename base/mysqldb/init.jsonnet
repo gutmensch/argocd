@@ -1,5 +1,6 @@
 local mysqlCluster = import '../../lib/component/mysql-cluster/init.libsonnet';
 local mysqlUser = import '../../lib/component/mysql-user/init.libsonnet';
+local xtradbOperator = import '../../lib/component/xtradb-operator/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
 local kube = import '../../lib/kube.libsonnet';
 
