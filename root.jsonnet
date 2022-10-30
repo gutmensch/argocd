@@ -9,9 +9,9 @@ local projectList = [
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
       // mysql-operator
-      { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole' },
-      { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
-      { group: 'zalando.org', kind: 'ClusterKopfPeering' },
+      // { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole' },
+      // { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
+      // { group: 'zalando.org', kind: 'ClusterKopfPeering' },
     ],
   }),
 ];
@@ -23,7 +23,7 @@ local crdList = [
     path: 'lib/crds',
     crds: [
       // app: mysql
-      'mysql-operator_20221023.yaml',
+      // 'mysql-operator_20221023.yaml',
     ],
   }),
 ];
