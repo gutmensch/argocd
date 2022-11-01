@@ -48,8 +48,8 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       data: {
-        ROUNDCUBE_DEFAULT_HOST: config.imapHost,
-        ROUNDCUBE_SMTP_SERVER: config.smtpHost,
+        ROUNDCUBE_IMAP_HOST: config.imapHost,
+        ROUNDCUBE_SMTP_HOST: config.smtpHost,
         ROUNDCUBE_MANAGESIEVE_HOST: config.managesieveHost,
         MEMCACHED_SERVER: config.memcachedHost,
         ROUNDCUBE_SESSION_LIFETIME: config.sessionLifetime,
