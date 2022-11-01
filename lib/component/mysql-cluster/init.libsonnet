@@ -172,6 +172,13 @@ local kube = import '../../kube.libsonnet';
             antiAffinityTopologyKey: 'kubernetes.io/hostname',
           },
           autoRecovery: true,
+          // compress backups
+          configuration: std.join('\n', [
+            '[sst]',
+            'xbstream-opts=--decompress',
+            '[xtrabackup]',
+            'compress=lz4',
+          ]),
           gracePeriod: 600,
           image: helper.getImage(config.imageRegistry, config.mysqlImageRef, config.mysqlImageVersion),
           podDisruptionBudget: {

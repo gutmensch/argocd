@@ -145,7 +145,7 @@ local kube = import 'kube.libsonnet';
           containers: [
             {
               name: name,
-              image: '%s:%s' % [if std.get(c, 'imageRegistry') != null then std.join('/', [c.imageRegistry, c.imageRef]) else c.imageRef, c.imageVersion],
+              image: helper.getImage(c.imageRegistry, c.imageRef, c.imageVersion),
               imagePullPolicy: 'Always',
               envFrom: [
                 {
@@ -263,7 +263,7 @@ local kube = import 'kube.libsonnet';
           containers: [
             {
               name: name,
-              image: '%s:%s' % [if std.get(c, 'imageRegistry') != null then std.join('/', [c.imageRegistry, c.imageRef]) else c.imageRef, c.imageVersion],
+              image: helper.getImage(c.imageRegistry, c.imageRef, c.imageVersion),
               imagePullPolicy: 'Always',
               envFrom: [
                 {

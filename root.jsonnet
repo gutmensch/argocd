@@ -8,10 +8,6 @@ local projectList = [
     desc: 'Base applications like Backstage, MX, roundcube, Nextcloud, etc.',
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
-      // mysql-operator
-      // { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole' },
-      // { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
-      // { group: 'zalando.org', kind: 'ClusterKopfPeering' },
     ],
   }),
 ];
@@ -33,6 +29,7 @@ local appList = [
   def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
   def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
   def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', tenant: ['lts'] }),
+  def.withApp({ name: 'roundcube', project: 'base', path: 'roundcube', tenant: ['lts'] }),
 ];
 
 

@@ -1,0 +1,9 @@
+{
+  "example": {
+    "imageRegistry": "harbor.kubectl.me",
+    "imageRef": "phpldapadmin",
+    "imageVersion": "1.2.7-test",
+    "imageOwner": "robert-schumann",
+    "imageTimestamp": "2022-08-01T11:00:00Z"
+  }
+}
