@@ -11,7 +11,7 @@ local kube = import '../../kube.libsonnet';
     appConfig,
     defaultConfig={
       imageRef: 'gutmensch/roundcube',
-      imageVersion: '1.5.2-git',
+      imageVersion: '1.6.0',
       replicas: 1,
       memcachedHost: 'memcached:11211',
       dbHost: 'mysql',
