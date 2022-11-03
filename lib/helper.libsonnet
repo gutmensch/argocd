@@ -93,19 +93,17 @@
     ]);
     std.join('\n', body_lines(obj) + ['']),
 
-  //manifestPostConf(obj)::
-  //  local body_lines(body) = std.join([], [
-  //    local entry = body[i];
-  //    local entries = [std.sort(std.flattenArray([
-  //        local elem =
-  //          if std.isArray(entry[j]) then ['%s = %s' % [j, std.join(', ', entry[j])]]
-  //          else ['%s = %s' % [j, entry[j]]];
-  //        elem
-  //        for j in std.objectFields(entry)
-  //        ])
-  //      )];
-  //    for i in std.objectFields(body)
-  //  ]);
-  //  std.join('\n', body_lines(obj) + ['']),
+  phpWrapVariable(var)::
+    if std.type(var) == 'boolean' || std.type(var) == 'number' then var else "'%s'" % [var],
 
+  manifestPhpConfig(obj)::
+    local body_lines(body) = std.join([], [
+      local entry = body[i];
+      local elem =
+        if std.isArray(entry) then ["$config['%s'] = ['%s'];" % [i, std.strReplace(std.join(',', entry), ',', "','")]]
+        else ["$config['%s'] = %s;" % [i, self.phpWrapVariable(entry)]];
+      elem
+      for i in std.objectFields(body)
+    ]);
+    std.join('\n', ['<?php', '$config = [];'] + body_lines(obj) + ['']),
 }

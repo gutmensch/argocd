@@ -13,24 +13,32 @@ local kube = import '../../kube.libsonnet';
       imageRef: 'gutmensch/roundcube',
       imageVersion: '1.6.0',
       replicas: 1,
-      memcachedHost: 'memcached:11211',
-      dbHost: 'mysql',
+      memcachedHosts: ['memcached:11211', 'foobar:11211'],
+      dbWriteHost: 'mysql',
+      dbReadHost: 'mysql',
       dbUser: 'roundcube',
       dbPassword: 'changeme',
       dbDatabase: 'roundcubemail',
       dbOpts: {
-        //certificate: '/etc/ssl/certs/server.crt',
-        //key: '/etc/ssl/certs/server.key',
-        //ca_certificate: '/etc/ssl/certs/ca.crt',
+        // certificate: '/etc/ssl/certs/server.crt',
+        // key: '/etc/ssl/certs/server.key',
+        // ca_certificate: '/etc/ssl/certs/ca.crt',
         verify_server_cert: 'false',
       },
+      imapCache: 'memcached',
+      imapCacheTTL: '10d',
+      messagesCache: 'db',
+      messagesCacheTTL: '10d',
+      messagesCacheThreshold: 500,
       imapHost: 'mailer',
       smtpHost: 'mailer',
       managesieveHost: 'mailer',
-      logLogins: 'true',
+      logLogins: true,
       logDriver: 'stdout',
-      sessionLifetime: '20160',
+      // minutes - 2 weeks
+      sessionLifetime: 20160,
       desKey: 'changeme',
+      loginUsernameFilter: 'email',
       certIssuer: 'letsencrypt-prod',
     },
   ):: helper.uniquify({
@@ -42,46 +50,109 @@ local kube = import '../../kube.libsonnet';
     local appName = name,
     local componentName = 'roundcube',
 
-    configmap: kube.ConfigMap(componentName) {
-      metadata+: {
-        namespace: namespace,
-        labels+: config.labels,
-      },
-      data: {
-        ROUNDCUBE_IMAP_HOST: config.imapHost,
-        ROUNDCUBE_SMTP_HOST: config.smtpHost,
-        ROUNDCUBE_MANAGESIEVE_HOST: config.managesieveHost,
-        MEMCACHED_SERVER: config.memcachedHost,
-        ROUNDCUBE_SESSION_LIFETIME: config.sessionLifetime,
-        ROUNDCUBE_LOG_DRIVER: config.logDriver,
-        ROUNDCUBE_LOG_LOGINS: config.logLogins,
-      },
-    },
-
     secret: kube.Secret(componentName) {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,
       },
       stringData: {
-        ROUNDCUBE_DB_DSNW: 'mysql://%s:%s@%s/%s?%s' % [
-          config.dbUser,
-          config.dbPassword,
-          config.dbHost,
-          config.dbDatabase,
-          std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
-        ],
-        ROUNDCUBE_DES_KEY: config.desKey,
+        'config.inc.php': helper.manifestPhpConfig({
+          db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
+            config.dbUser,
+            config.dbPassword,
+            config.dbWriteHost,
+            config.dbDatabase,
+            std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
+          ],
+          db_dsnr: 'mysql://%s:%s@%s/%s?%s' % [
+            config.dbUser,
+            config.dbPassword,
+            config.dbReadHost,
+            config.dbDatabase,
+            std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
+          ],
+          memcache_hosts: config.memcachedHosts,
+          des_key: config.desKey,
+          imap_cache: config.imapCache,
+          imap_cache_ttl: config.imapCacheTTL,
+          messages_cache: config.messagesCache,
+          messages_cache_ttl: config.messagesCacheTTL,
+          messages_cache_threshold: config.messagesCacheThreshold,
+          imap_host: config.imapHost,
+          smtp_host: config.smtpHost,
+          managesieve_host: config.managesieveHost,
+          session_lifetime: config.sessionLifetime,
+          log_driver: config.logDriver,
+          log_logins: config.logLogins,
+          login_username_filter: config.loginUsernameFilter,
+        }),
       },
     },
 
-    deployment: argo.SimpleRollout(componentName, componentName, 8080, '/', config) {
+    deployment: kube._Object('argoproj.io/v1alpha1', 'Rollout', componentName) {
+      metadata+: {
+        name: name,
+        labels+: config.labels,
+      },
       spec+: {
+        replicas: std.get(config, 'replicas', default=1),
+        revisionHistoryLimit: 5,
+        selector: {
+          matchLabels: config.labels,
+        },
         template+: {
           metadata+: {
             annotations+: {
-              'checksum/env': std.md5(std.toString(this.configmap)),
+              'checksum/config': std.md5(std.toString(this.secret)),
             },
+            labels+: config.labels + config.containerImageLabels,
+          },
+          spec: {
+            volumes: [{
+              name: 'config',
+              secret: {
+                secretName: componentName,
+                defaultMode: std.parseOctal('0400'),
+              },
+            }],
+            containers: [
+              {
+                name: name,
+                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                imagePullPolicy: 'Always',
+                livenessProbe: {
+                  httpGet: {
+                    path: '/',
+                    port: 'http',
+                  },
+                },
+                ports: [
+                  {
+                    containerPort: 8080,
+                    name: 'http',
+                    protocol: 'TCP',
+                  },
+                ],
+                readinessProbe: {
+                  httpGet: {
+                    path: '/',
+                    port: 'http',
+                  },
+                },
+                volumeMounts: [{
+                  mountPath: '/tmp/provisioned/config.inc.php',
+                  name: 'config',
+                  subPath: 'config.inc.php',
+                  readOnly: true,
+                }],
+              },
+            ],
+          },
+        },
+        strategy: {
+          canary: {
+            maxSurge: 1,
+            maxUnavailable: 1,
           },
         },
       },
