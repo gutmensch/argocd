@@ -11,9 +11,9 @@ local kube = import '../../kube.libsonnet';
     appConfig,
     defaultConfig={
       imageRef: 'gutmensch/roundcube',
-      imageVersion: '1.6.0-1',
+      imageVersion: '1.6.0-2',
       replicas: 1,
-      memcachedHosts: ['memcached:11211', 'foobar:11211'],
+      memcachedHosts: ['memcached:11211'],
       dbWriteHost: 'mysql',
       dbReadHost: 'mysql',
       dbUser: 'roundcube',
@@ -56,7 +56,8 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       stringData: {
-        'config.inc.php': helper.manifestPhpConfig({
+        // XXX: double base64 encoded in secret, decoded by entrypoint
+        RCCONFIG: std.base64(helper.manifestPhpConfig({
           db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
             config.dbUser,
             config.dbPassword,
@@ -85,7 +86,7 @@ local kube = import '../../kube.libsonnet';
           log_driver: config.logDriver,
           log_logins: config.logLogins,
           login_username_filter: config.loginUsernameFilter,
-        }),
+        })),
       },
     },
 
@@ -108,15 +109,15 @@ local kube = import '../../kube.libsonnet';
             labels+: config.labels + config.containerImageLabels,
           },
           spec: {
-            volumes: [{
-              name: 'config',
-              secret: {
-                secretName: componentName,
-                defaultMode: std.parseOctal('0400'),
-              },
-            }],
             containers: [
               {
+                envFrom: [
+                  {
+                    secretRef: {
+                      name: componentName,
+                    },
+                  },
+                ],
                 name: name,
                 image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
@@ -139,12 +140,6 @@ local kube = import '../../kube.libsonnet';
                     port: 'http',
                   },
                 },
-                volumeMounts: [{
-                  mountPath: '/tmp/provisioned/config.inc.php',
-                  name: 'config',
-                  subPath: 'config.inc.php',
-                  readOnly: true,
-                }],
               },
             ],
           },
