@@ -200,7 +200,7 @@ local kube = import '../../kube.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/usr/bin/docker-entrypoint.sh minio server http://minio-0.%s.svc.cluster.local/export -S /etc/minio/certs/ --address :9000 --console-address :9001' % [namespace],
+                  '/usr/bin/docker-entrypoint.sh minio server /export -S /etc/minio/certs/ --address :9000 --console-address :9001' % [namespace],
                 ],
                 env: [
                   {
