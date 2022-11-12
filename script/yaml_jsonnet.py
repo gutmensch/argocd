@@ -30,28 +30,34 @@ def check_tools():
 def sanitize_obj(doc):
     # manipulating doc for use as jsonnet object
     kind = doc['kind']
-    doc_id = '{}_{}: kube.{}(\'{}\')'.format(
+    doc_id = '{}_{}: kube.{}(componentName)'.format(
             str.lower(kind), doc['metadata']['name'].replace('-', '_'),
-            kind, doc['metadata']['name'])
+            kind)
     doc['metadata'].pop('name', None)
+    doc['metadata']['labels'] = 'config.labels'
+
     try:
-        doc['metadata']['labels'].pop('chart', None)
-        doc['metadata']['labels'].pop('heritage', None)
+        if doc['spec']['template']['metadata']['labels']:
+            doc['spec']['template']['metadata']['labels'] = 'config.labels'
     except KeyError:
         pass
 
     try:
-        if doc['spec']['template']['metadata']['labels']:
-            doc['spec']['template']['metadata']['labels'].pop('chart', None)
-            doc['spec']['template']['metadata']['labels'].pop('heritage', None)
+        if doc['spec']['selector']['matchLabels']:
+            doc['spec']['selector']['matchLabels'] = 'config.labels'
+    except KeyError:
+        pass
+
+    try:
+        if kind == 'Service' and doc['spec']['selector']:
+            doc['spec']['selector'] = 'config.labels'
     except KeyError:
         pass
 
     try:
         if doc['spec']['volumeClaimTemplates']:
             for i, _ in enumerate(doc['spec']['volumeClaimTemplates']):
-                doc['spec']['volumeClaimTemplates'][i]['metadata']['labels'].pop('chart', None)
-                doc['spec']['volumeClaimTemplates'][i]['metadata']['labels'].pop('heritage', None)
+                doc['spec']['volumeClaimTemplates'][i]['metadata']['labels'] = 'config.labels'
     except KeyError:
         pass
 
@@ -98,15 +104,52 @@ def jsonnet(data):
 
 # hacky function to modify object key to object key + function call
 def convert(data):
-    lines = ["local kube = import 'kube.libsonnet';"]
-    for line in data.splitlines():
+    # XXX: custom template start for our component library
+    template_start = [
+            "local kube = import '../../kube.libsonnet';",
+            "local helper = import '../../helper.libsonnet';",
+            "",
+            "{",
+            "generate(name, namespace, region, tenant, appConfig, defaultConfig={",
+            "imageRegistry: '',",
+            "imageRef: '__INSERT__',",
+            "imageVersion: '__INSERT__',",
+            "replicas: 1,",
+            "}",
+            "):: helper.uniquify({",
+            "",
+            "local this = self,",
+            "",
+            "local config = std.mergePatch(defaultConfig, appConfig),",
+            "",
+            "local appName = name,",
+            "local componentName = '__INSERT__',",
+            ""
+    ]
+
+    lines = []
+    for i, line in enumerate(data.splitlines(), start=1):
+        # remove global object parentheses, because we want a function instead
+        if i == 1 or i == len(data.splitlines()):
+            continue
         if ': kube.' in line:
-            lines.append(line.replace('"',''))
+            new = line.replace("'","")
+            new = new.replace('): {', ') {')
+            lines.append(new)
         elif '__NAMESPACE__' in line:
-            lines.append(line.replace("'__NAMESPACE__'", "namespace"))
+            lines.append(line.replace("'__NAMESPACE__'", 'namespace'))
+        elif 'config.labels' in line:
+            lines.append(line.replace("'config.labels'", 'config.labels'))
+        elif 'serviceAccountName:' in line:
+            lines.append('serviceAccountName: componentName,')
+        elif 'image:' in line:
+            lines.append(line.replace('image:', 'image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion), // orig:'))
         else:
             lines.append(line)
-    return '\n'.join(lines)
+
+    template_end = ['}),', '}']
+
+    return '\n'.join(template_start + lines + template_end)
 
 def write_file(path, data):
     with open(path, 'w') as f:
