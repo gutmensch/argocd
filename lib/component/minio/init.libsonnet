@@ -109,11 +109,11 @@ local kube = import '../../kube.libsonnet';
     },
 
     service_minio: kube.Service(componentName) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
-      spec: {
+      spec+: {
         ports: [
           {
             name: 'http',
@@ -128,11 +128,11 @@ local kube = import '../../kube.libsonnet';
     },
 
     service_console: kube.Service('%s-console' % [componentName]) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
-      spec: {
+      spec+: {
         ports: [
           {
             name: 'http',
@@ -147,11 +147,11 @@ local kube = import '../../kube.libsonnet';
     },
 
     service_sfs: kube.Service('%s-headless' % [componentName]) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
-      spec: {
+      spec+: {
         clusterIP: 'None',
         ports: [
           {
@@ -167,18 +167,18 @@ local kube = import '../../kube.libsonnet';
     },
 
     serviceaccount: kube.ServiceAccount(componentName) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
     },
 
     statefulset: kube.StatefulSet(componentName) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
-      spec: {
+      spec+: {
         podManagementPolicy: 'Parallel',
         replicas: config.replicas,
         selector: {
@@ -295,7 +295,7 @@ local kube = import '../../kube.libsonnet';
     },
 
     secret: kube.Secret(componentName) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
