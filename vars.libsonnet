@@ -41,7 +41,7 @@ local def = import 'defaults.libsonnet';
 
   appList: [
     def.withApp({ name: 'dns', project: 'base', path: 'dns', tenant: ['lts'] }),
-    //def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
+    def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
     //def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
     //def.withApp({ name: 'minio', project: 'base', path: 'minio', tenant: ['lts'] }),
     //def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', region: 'falkenstein', tenant: ['lts'] }),
