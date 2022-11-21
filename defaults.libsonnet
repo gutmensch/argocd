@@ -5,15 +5,18 @@
     tenant: ['staging', 'lts'],
     region: 'helsinki',
   },
-  crd: {
+  yaml: {
+    name: 'default',
+    namespace: 'default',
     repoURL: 'https://github.com/gutmensch/argocd.git',
     targetRevision: 'HEAD',
+    protect: true,
   },
   project: {
     clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
   },
 
   withApp(map): $.app + map,
-  withCRD(map): $.crd + map,
+  withYaml(map): $.yaml + map,
   withProject(map): $.project + map,
 }

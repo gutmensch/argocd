@@ -1,0 +1,15 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zfs-fast-xfs
+  labels:
+    app.kubernetes.io/managed-by: ArgoCD
+parameters:
+  volblocksize: "4k"
+  compression: "off"
+  dedup: "off"
+  fstype: "xfs"
+  poolname: "tank-fast"
+provisioner: zfs.csi.openebs.io
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer

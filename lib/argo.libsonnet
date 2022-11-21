@@ -80,14 +80,14 @@ local kube = import 'kube.libsonnet';
     },
   },
 
-  CRDApplication(app): kube._Object('argoproj.io/v1alpha1', 'Application', '%s-crds' % [app.name]) {
+  YamlApplication(app): kube._Object('argoproj.io/v1alpha1', 'Application', '%s-%s' % [app.name, app.type]) {
     metadata: {
       namespace: 'argo-cd-system',
-      name: '%s-crds' % [app.name],
-      finalizers: ['resources-finalizer.argocd.argoproj.io'],
+      name: '%s-%s' % [app.name, app.type],
+      finalizers: if app.protect then null else ['resources-finalizer.argocd.argoproj.io'],
       labels: {
-        'app.kubernetes.io/name': '%s-crds' % [app.name],
-        'app.kubernetes.io/instance': '%s-crds' % [app.name],
+        'app.kubernetes.io/name': '%s-%s' % [app.name, app.type],
+        'app.kubernetes.io/instance': '%s-%s' % [app.name, app.type],
         'app.kubernetes.io/managed-by': 'ArgoCD',
       },
     },
@@ -99,12 +99,12 @@ local kube = import 'kube.libsonnet';
         path: app.path,
         directory: {
           recurse: false,
-          include: '{%s}' % [std.join(',', app.crds)],
+          include: '{%s}' % [std.join(',', app.files)],
         },
       },
       destination: {
         server: 'https://kubernetes.default.svc',
-        namespace: 'default',
+        namespace: app.namespace,
       },
       syncPolicy: {
         automated: {

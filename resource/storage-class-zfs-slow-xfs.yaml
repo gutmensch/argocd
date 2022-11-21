@@ -1,0 +1,20 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zfs-slow-xfs
+  labels:
+    app.kubernetes.io/managed-by: ArgoCD
+parameters:
+  volblocksize: "4k" 
+  compression: "off"
+  dedup: "off"
+  fstype: "xfs"
+  poolname: "tank-slow"
+allowVolumeExpansion: true
+provisioner: zfs.csi.openebs.io
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: kubernetes.io/hostname
+    values:
+      - queen1.lan
