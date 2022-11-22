@@ -61,7 +61,7 @@ local policy = import 'templates/policy.libsonnet';
         'add-custom-policy.sh': std.join('\n', [
           '#!/bin/sh',
           'source /config/add-policy.sh',
-          '${MC} admin policy set consoleAdmin group="%s"' % [config.ldapAdminGroupDN],
+          '${MC} admin policy set myminio consoleAdmin group="%s"' % [config.ldapAdminGroupDN],
         ] + this.policies),
       } + this.policyFiles,
       metadata+: {
