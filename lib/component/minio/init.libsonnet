@@ -119,6 +119,13 @@ local policy = import 'templates/policy.libsonnet';
                     value: '9000',
                   },
                 ],
+                envFrom: [
+                  {
+                    secretRef: {
+                      name: componentName,
+                    },
+                  },
+                ],
                 image: helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
@@ -147,11 +154,11 @@ local policy = import 'templates/policy.libsonnet';
                         name: componentName,
                       },
                     },
-                    {
-                      secret: {
-                        name: componentName,
-                      },
-                    },
+                    // {
+                    //   secret: {
+                    //     name: componentName,
+                    //   },
+                    // },
                   ],
                 },
               },
@@ -198,6 +205,13 @@ local policy = import 'templates/policy.libsonnet';
                     value: '9000',
                   },
                 ],
+                envFrom: [
+                  {
+                    secretRef: {
+                      name: componentName,
+                    },
+                  },
+                ],
                 image: helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
@@ -226,11 +240,11 @@ local policy = import 'templates/policy.libsonnet';
                         name: componentName,
                       },
                     },
-                    {
-                      secret: {
-                        name: componentName,
-                      },
-                    },
+                    // {
+                    //   secret: {
+                    //     name: componentName,
+                    //   },
+                    // },
                   ],
                 },
               },

@@ -8,11 +8,12 @@ MC="/usr/bin/mc --insecure --config-dir ${MC_CONFIG_DIR}"
 connectToMinio() {
   SCHEME=$1
   ATTEMPTS=0 ; LIMIT=29 ; # Allow 30 attempts
-  set -e ; # fail if we can't read the keys.
-  ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword) ;
+  #set -e ; # fail if we can't read the keys.
+  #ACCESS=$(cat /config/rootUser) ; SECRET=$(cat /config/rootPassword) ;
   set +e ; # The connections to minio are allowed to fail.
   echo "Connecting to MinIO server: $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT" ;
-  MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET" ;
+  #MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $ACCESS $SECRET" ;
+  MC_COMMAND="${MC} alias set myminio $SCHEME://$MINIO_ENDPOINT:$MINIO_PORT $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD" ;
   $MC_COMMAND ;
   STATUS=$? ;
   until [ $STATUS = 0 ]
