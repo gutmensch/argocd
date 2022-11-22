@@ -72,7 +72,7 @@ local policy = import 'templates/policy.libsonnet';
     configmapcfg: kube.ConfigMap('%s-config' % [componentName]) {
       data: {
         MINIO_PROMETHEUS_AUTH_TYPE: config.prometheusAuthType,
-        MINIO_IDENTITY_LDAP_SERVER_ADDR: config.ldapHost,
+        MINIO_IDENTITY_LDAP_SERVER_ADDR: if std.endsWith(config.ldapHost, ':389') then config.ldapHost else '%s:389' % [config.ldapHost],
         MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN: config.ldapBaseDN,
         MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER: config.ldapGroupSearchFilter,
         MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY: std.toString(config.ldapTlsSkipVerify),
