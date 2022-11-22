@@ -174,7 +174,7 @@ local policy = import 'templates/policy.libsonnet';
     },
 
     policies:: [
-      'createPolicy %s /config/policy-%s.json' % [p, p]
+      'createPolicy %s /config/policy-%s.json %s' % [p, p, config.policies[p].group]
       for p in std.objectFields(config.policies)
     ],
 
