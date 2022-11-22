@@ -74,7 +74,6 @@ local policy = import 'templates/policy.libsonnet';
         MINIO_PROMETHEUS_AUTH_TYPE: config.prometheusAuthType,
         MINIO_IDENTITY_LDAP_SERVER_ADDR: config.ldapHost,
         MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN: config.ldapBaseDN,
-        MINIO_IDENTITY_LDAP_FILTER: config.ldapGroupSearchFilter,
         MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER: config.ldapGroupSearchFilter,
         MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY: std.toString(config.ldapTlsSkipVerify),
         MINIO_IDENTITY_LDAP_SERVER_STARTTLS: std.toString(config.ldapStartTls),
