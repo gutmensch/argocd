@@ -46,13 +46,13 @@ createPolicy () {
   LDAPGROUP=$3
 
   # Create the name if it does not exist
-  echo "Checking policy: $NAME (in /config/$FILENAME.json)"
+  echo "Checking policy: $NAME (in $FILENAME)"
   if ! checkPolicyExists $NAME ; then
     echo "Creating policy '$NAME'"
   else
     echo "Policy '$NAME' already exists."
   fi
-  ${MC} admin policy add myminio $NAME /config/$FILENAME.json
+  ${MC} admin policy add myminio $NAME $FILENAME
   ${MC} admin policy set --$NAME group='$LDAPGROUP'
 }
 
