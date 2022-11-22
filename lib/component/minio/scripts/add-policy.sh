@@ -42,6 +42,7 @@ checkPolicyExists() {
 createPolicy () {
   NAME=$1
   FILENAME=$2
+  LDAPGROUP=$3
 
   # Create the name if it does not exist
   echo "Checking policy: $NAME (in /config/$FILENAME.json)"
@@ -51,7 +52,7 @@ createPolicy () {
     echo "Policy '$NAME' already exists."
   fi
   ${MC} admin policy add myminio $NAME /config/$FILENAME.json
-
+  ${MC} admin policy set --$NAME group='$LDAPGROUP'
 }
 
 # Try connecting to MinIO instance

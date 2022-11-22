@@ -1,5 +1,6 @@
 local helper = import '../../helper.libsonnet';
 local kube = import '../../kube.libsonnet';
+local policy = import 'templates/policy.libsonnet';
 
 {
   generate(
@@ -13,25 +14,70 @@ local kube = import '../../kube.libsonnet';
       rootPassword: 'changeme',
       storageClass: 'default',
       storageSize: '20Gi',
+      cacheStorageClass: 'default',
+      cacheStorageSize: '1Gi',
+      ldapServiceAccountBindDN: '',
+      ldapServiceAccountPassword: '',
+      ldapHost: '',
+      ldapBaseDN: 'o=auth,dc=local',
+      ldapUsernameFormat: 'uid=%%s,ou=People,%s,uid=%%s,ou=ServiceAccount,%s' % [self.ldapBaseDN, self.ldapBaseDN],
+      ldapGroupSearchFilter: '(&(objectclass=groupOfNames)(member=%s))',
+      ldapAdminGroupDN: 'cn=MinIOAdmin,ou=Group,%s' % [self.ldapBaseDN],
+      ldapTlsSkipVerify: true,
+      ldapStartTls: true,
       replicas: 1,
+      prometheusAuthType: 'public',
+      buckets: {
+        // example: { locks: false, versioning: true },
+      },
+      policies: {
+        // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
+      },
     }
-  ):: helper.uniquify({
+  ):: {
 
     local this = self,
 
     local config = std.mergePatch(defaultConfig, appConfig),
 
     assert config.rootPassword != 'changeme' : error '"changeme" is an invalid password',
+    assert config.ldapHost != '' : error 'ldapHost must be set',
 
     local appName = name,
     local componentName = 'minio',
 
     configmap: kube.ConfigMap(componentName) {
       data: {
-        'add-policy': importstr 'scripts/add-policy.sh',
-        'add-user': importstr 'scripts/add-user.sh',
-        'custom-command': importstr 'scripts/custom-command.sh',
+        'add-policy.sh': importstr 'scripts/add-policy.sh',
+        'add-user.sh': importstr 'scripts/add-user.sh',
+        'custom-command.sh': importstr 'scripts/custom-command.sh',
         initialize: importstr 'scripts/initialize.sh',
+        // manage buckets and resources
+        'add-custom-bucket.sh': std.join('\n', [
+          '#!/bin/sh',
+          'source /config/custom-command.sh',
+        ] + this.buckets),
+        'add-custom-policy.sh': std.join('\n', [
+          '#!/bin/sh',
+          'source /config/add-policy.sh',
+          '${MC} admin policy set --consoleAdmin group="%s"' % [config.ldapAdminGroupDN],
+        ] + this.policies),
+      } + this.policyFiles,
+      metadata+: {
+        labels+: config.labels,
+        namespace: namespace,
+      },
+    },
+
+    configmapcfg: kube.ConfigMap('%s-config' % [componentName]) {
+      data: {
+        MINIO_PROMETHEUS_AUTH_TYPE: config.prometheusAuthType,
+        MINIO_IDENTITY_LDAP_SERVER_ADDR: config.ldapHost,
+        MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN: config.ldapBaseDN,
+        MINIO_IDENTITY_LDAP__FILTER: config.ldapGroupSearchFilter,
+        MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER: config.ldapGroupSearchFilter,
+        MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY: std.toString(config.ldapTlsSkipVerify),
+        MINIO_IDENTITY_LDAP_SERVER_STARTTLS: std.toString(config.ldapStartTls),
       },
       metadata+: {
         labels+: config.labels,
@@ -39,7 +85,12 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    job_users: kube.Job('%s-user-mgmt' % [componentName]) {
+    buckets:: [
+      '${MC} mb --ignore-existing %s %s myminio/%s' % [if config.buckets[b].locks then '--with-locks' else '', if config.buckets[b].versioning then '--with-versioning' else '', b]
+      for b in std.objectFields(config.buckets)
+    ],
+
+    job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(std.toString(this.buckets)), 23, 8)]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,
@@ -54,7 +105,86 @@ local kube = import '../../kube.libsonnet';
               {
                 command: [
                   '/bin/sh',
-                  '/config/add-user',
+                  '/config/add-custom-bucket.sh',
+                ],
+                env: [
+                  {
+                    name: 'MINIO_ENDPOINT',
+                    value: componentName,
+                  },
+                  {
+                    name: 'MINIO_PORT',
+                    value: '9000',
+                  },
+                ],
+                image: helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                imagePullPolicy: 'IfNotPresent',
+                name: 'minio-mc',
+                resources: {
+                  requests: {
+                    memory: '128Mi',
+                  },
+                },
+                volumeMounts: [
+                  {
+                    mountPath: '/config',
+                    name: 'minio-configuration',
+                  },
+                ],
+              },
+            ],
+            restartPolicy: 'OnFailure',
+            serviceAccountName: componentName,
+            volumes: [
+              {
+                name: 'minio-configuration',
+                projected: {
+                  sources: [
+                    {
+                      configMap: {
+                        name: componentName,
+                      },
+                    },
+                    {
+                      secret: {
+                        name: componentName,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      },
+    },
+
+    policyFiles:: {
+      ['policy-%s.json' % [p]]: std.manifestJsonMinified(policy { Bucket: config.policies[p].bucket, Actions: config.policies[p].actions })
+      for p in std.objectFields(config.policies)
+    },
+
+    policies:: [
+      'createPolicy %s /config/policy-%s.json' % [p, p]
+      for p in std.objectFields(config.policies)
+    ],
+
+    job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(std.toString(this.policies)), 23, 8)]) {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      spec: {
+        template: {
+          metadata: {
+            labels: config.labels,
+          },
+          spec: {
+            containers: [
+              {
+                command: [
+                  '/bin/sh',
+                  '/config/add-custom-policy.sh',
                 ],
                 env: [
                   {
@@ -188,7 +318,7 @@ local kube = import '../../kube.libsonnet';
         template: {
           metadata: {
             annotations: {
-              'checksum/config': std.md5(std.toString(this.configmap)),
+              'checksum/config': std.md5(std.toString(this.configmapcfg)),
               'checksum/secrets': std.md5(std.toString(this.secret)),
             },
             labels: config.labels,
@@ -200,30 +330,18 @@ local kube = import '../../kube.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/usr/bin/docker-entrypoint.sh minio server /export -S /etc/minio/certs/ --address :9000 --console-address :9001',
+                  '/usr/bin/docker-entrypoint.sh minio server /storage /cache -S /etc/minio/certs/ --address :9000 --console-address :9001',
                 ],
-                env: [
+                envFrom: [
                   {
-                    name: 'MINIO_ROOT_USER',
-                    valueFrom: {
-                      secretKeyRef: {
-                        key: 'rootUser',
-                        name: componentName,
-                      },
+                    configMapRef: {
+                      name: '%s-config' % [componentName],
                     },
                   },
                   {
-                    name: 'MINIO_ROOT_PASSWORD',
-                    valueFrom: {
-                      secretKeyRef: {
-                        key: 'rootPassword',
-                        name: componentName,
-                      },
+                    secretRef: {
+                      name: componentName,
                     },
-                  },
-                  {
-                    name: 'MINIO_PROMETHEUS_AUTH_TYPE',
-                    value: 'public',
                   },
                 ],
                 image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
@@ -246,8 +364,12 @@ local kube = import '../../kube.libsonnet';
                 },
                 volumeMounts: [
                   {
-                    mountPath: '/export',
-                    name: 'export',
+                    mountPath: '/storage',
+                    name: 'storage',
+                  },
+                  {
+                    mountPath: '/cache',
+                    name: 'cache',
                   },
                 ],
               },
@@ -260,12 +382,13 @@ local kube = import '../../kube.libsonnet';
             },
             serviceAccountName: componentName,
             volumes: [
-              {
-                name: 'minio-user',
-                secret: {
-                  secretName: componentName,
-                },
-              },
+              // XXX: not in use?!
+              //  {
+              //    name: 'minio-user',
+              //    secret: {
+              //      secretName: componentName,
+              //    },
+              //  },
             ],
           },
         },
@@ -276,7 +399,7 @@ local kube = import '../../kube.libsonnet';
           {
             metadata: {
               labels: config.labels,
-              name: 'export',
+              name: 'storage',
             },
             spec: {
               storageClassName: config.storageClass,
@@ -290,6 +413,24 @@ local kube = import '../../kube.libsonnet';
               },
             },
           },
+          {
+            metadata: {
+              labels: config.labels,
+              name: 'cache',
+            },
+            spec: {
+              storageClassName: config.cacheStorageClass,
+              accessModes: [
+                'ReadWriteOnce',
+              ],
+              resources: {
+                requests: {
+                  storage: config.cacheStorageSize,
+                },
+              },
+            },
+          },
+
         ],
       },
     },
@@ -300,11 +441,13 @@ local kube = import '../../kube.libsonnet';
         namespace: namespace,
       },
       stringData: {
-        rootPassword: config.rootPassword,
-        rootUser: config.rootUser,
+        MINIO_ROOT_PASSWORD: config.rootPassword,
+        MINIO_ROOT_USER: config.rootUser,
+        MINIO_IDENTITY_LDAP_LOOKUP_BIND_DN: config.ldapServiceAccountBindDN,
+        MINIO_IDENTITY_LDAP_LOOKUP_BIND_PASSWORD: config.ldapServiceAccountPassword,
       },
       type: 'Opaque',
     },
 
-  }),
+  },
 }

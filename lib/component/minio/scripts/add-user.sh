@@ -78,9 +78,7 @@ createUser() {
 scheme=http
 connectToMinio $scheme
 
-
-
 # Create the users
-echo console > $MINIO_ACCESSKEY_SECRETKEY_TMP
-echo console123 >> $MINIO_ACCESSKEY_SECRETKEY_TMP
-createUser consoleAdmin
+# echo console > $MINIO_ACCESSKEY_SECRETKEY_TMP
+# echo console123 >> $MINIO_ACCESSKEY_SECRETKEY_TMP
+# createUser consoleAdmin

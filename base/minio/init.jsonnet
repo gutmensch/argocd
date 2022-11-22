@@ -17,15 +17,14 @@ function(name, namespace, project, tenant, region)
     ),
   };
 
-  local resources = std.prune(
+  local resources =
     minio.generate(
       name,
       namespace,
       region,
       tenant,
       componentConfigs.minio,
-    )
-  );
+    );
 
   kube.List() {
     items_+: resources,
