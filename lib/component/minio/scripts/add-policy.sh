@@ -53,7 +53,7 @@ createPolicy () {
     echo "Policy '$NAME' already exists."
   fi
   ${MC} admin policy add myminio $NAME $FILENAME
-  ${MC} admin policy set myminio $NAME "group='$LDAPGROUP'"
+  ${MC} admin policy set myminio $NAME group='$LDAPGROUP'
 }
 
 # Try connecting to MinIO instance
