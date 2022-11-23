@@ -92,7 +92,7 @@ local policy = import 'templates/policy.libsonnet';
         if config.buckets[b].locks then '--with-locks' else '',
         if config.buckets[b].versioning then '--with-versioning' else '',
         b,
-        if std.get(config.buckets[b], 'expiry', 0) > 0 then '\n${MC} ilm add myminio/%s --expiry-days %s' % [b, config.buckets[b].expiry] else '',
+        if std.get(config.buckets[b], 'expiry', 0) > 0 then '\ntest -z "$(${MC} ilm ls myminio/%s)" && ${MC} ilm add myminio/%s --expiry-days %s' % [b, b, config.buckets[b].expiry] else '',
       ]
       for b in std.objectFields(config.buckets)
     ],
