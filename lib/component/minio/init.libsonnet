@@ -107,10 +107,10 @@ local policy = import 'templates/policy.libsonnet';
           metadata: {
             labels: config.labels,
           },
-          nodeSelector: {
-            'topology.kubernetes.io/region': region,
-          },
           spec: {
+            nodeSelector: {
+              'topology.kubernetes.io/region': region,
+            },
             containers: [
               {
                 command: [
@@ -196,10 +196,10 @@ local policy = import 'templates/policy.libsonnet';
           metadata: {
             labels: config.labels,
           },
-          nodeSelector: {
-            'topology.kubernetes.io/region': region,
-          },
           spec: {
+            nodeSelector: {
+              'topology.kubernetes.io/region': region,
+            },
             containers: [
               {
                 command: [
