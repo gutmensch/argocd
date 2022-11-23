@@ -107,6 +107,9 @@ local policy = import 'templates/policy.libsonnet';
           metadata: {
             labels: config.labels,
           },
+          nodeSelector: {
+            'topology.kubernetes.io/region': region,
+          },
           spec: {
             containers: [
               {
@@ -192,6 +195,9 @@ local policy = import 'templates/policy.libsonnet';
         template: {
           metadata: {
             labels: config.labels,
+          },
+          nodeSelector: {
+            'topology.kubernetes.io/region': region,
           },
           spec: {
             containers: [
