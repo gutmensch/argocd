@@ -22,7 +22,7 @@ local policy = import 'templates/policy.libsonnet';
       ldapBaseDN: 'o=auth,dc=local',
       ldapUsernameFormat: 'uid=%%s,ou=People,%s,uid=%%s,ou=ServiceAccount,%s' % [self.ldapBaseDN, self.ldapBaseDN],
       ldapUserDNSearchFilter: '(&(objectclass=inetOrgPerson)(uid=%s))',
-      ldapGroupSearchFilter: '(&(objectclass=groupOfNames)(member=%s))',
+      ldapGroupSearchFilter: '(&(objectclass=groupOfNames)(|(member=uid=%%s,ou=People,%s)(member=uid=%%s,ou=ServiceAccount,%s)))' % [self.ldapBaseDN, self.ldapBaseDN],
       ldapAdminGroupDN: 'cn=MinIOAdmin,ou=Group,%s' % [self.ldapBaseDN],
       ldapTlsSkipVerify: true,
       ldapStartTls: true,
