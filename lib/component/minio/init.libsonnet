@@ -57,10 +57,12 @@ local policy = import 'templates/policy.libsonnet';
         'add-custom-bucket.sh': std.join('\n', [
           '#!/bin/sh',
           'source /config/custom-command.sh',
+          'set +e',
         ] + this.buckets),
         'add-custom-policy.sh': std.join('\n', [
           '#!/bin/sh',
           'source /config/add-policy.sh',
+          'set +e',
           '${MC} admin policy set myminio consoleAdmin group="%s"' % [config.ldapAdminGroupDN],
         ] + this.policies),
       } + this.policyFiles,
@@ -92,7 +94,7 @@ local policy = import 'templates/policy.libsonnet';
         if config.buckets[b].locks then '--with-locks' else '',
         if config.buckets[b].versioning then '--with-versioning' else '',
         b,
-        if std.get(config.buckets[b], 'expiry', 0) > 0 then '\ntest -z "$(${MC} ilm ls myminio/%s)" && ${MC} ilm add myminio/%s --expiry-days %s' % [b, b, config.buckets[b].expiry] else '',
+        if std.get(config.buckets[b], 'expiry', 0) > 0 then '\nif ! ${MC} ilm ls myminio/%s 2>/dev/null; then echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [b, b, config.buckets[b].expiry] else '',
       ]
       for b in std.objectFields(config.buckets)
     ],
