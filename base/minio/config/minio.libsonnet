@@ -11,8 +11,8 @@
     cacheStorageClass: 'zfs-fast-xfs',
     cacheStorageSize: '25Gi',
     buckets: {
-      'mysql-backup': { locks: false, versioning: true },
-      'openldap-backup': { locks: false, versioning: true },
+      'mysql-backup': { locks: false, versioning: true, expiry: 60 },
+      'openldap-backup': { locks: false, versioning: true, expiry: 180 },
       nextcloud: { locks: false, versioning: true },
     },
     policies: {
