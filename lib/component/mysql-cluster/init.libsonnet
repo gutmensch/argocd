@@ -17,7 +17,7 @@ local kube = import '../../kube.libsonnet';
       pmmImageRef: 'percona/pmm-client',
       pmmImageVersion: '2.28.0',
 
-      replicas: 2,
+      replicas: 1,
       storageClass: 'default',
       storageSize: '10Gi',
 
@@ -31,8 +31,11 @@ local kube = import '../../kube.libsonnet';
       pmmEnable: false,
       logcollectorEnable: false,
 
-      backupStorageClass: 'default',
-      backupStorageSize: '50Gi',
+      backupMinioEnable: false,
+      backupMinioEndpoint: '',
+      backupMinioBucket: '',
+      backupMinioUser: '',
+      backupMinioPassword: '',
 
       // system user passwords
       rootPassword: 'changeme',
@@ -72,10 +75,16 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    // backuppvc: kube.PersistentVolumeClaim('%s-backup' % [componentName]) {
-    //   storage: config.backupStorageSize,
-    //   storageClass: config.backupStorageClass,
-    // },
+    miniosecret: if config.backupMinioEnable then kube.Secret('%s-minio-credentials' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      stringData: {
+        AWS_ACCESS_KEY_ID: config.backupMinioUser,
+        AWS_SECRET_ACCESS_KEY: config.backupMinioPassword,
+      },
+    } else null,
 
     xtradbcluster: kube._Object('pxc.percona.com/v1', 'PerconaXtraDBCluster', componentName) {
       metadata+: {
@@ -89,36 +98,28 @@ local kube = import '../../kube.libsonnet';
         secretsName: '%s-system-users' % [componentName],
         allowUnsafeConfigurations: true,
         enableCRValidationWebhook: true,
-        backup: {
+        [if config.backupMinioEnable then 'backup' else null]: {
           image: helper.getImage(config.imageRegistry, config.baseImageRef, '%s-pxc8.0-backup' % [config.baseImageVersion]),
           pitr: {
             enabled: false,
-            storageName: 'fs-pvc',
+            storageName: 'minio',
             timeBetweenUploads: 60,
           },
           schedule: [
             {
               keep: 10,
               name: 'daily-backup',
-              schedule: '0 1 * * *',
-              storageName: 'fs-pvc',
+              schedule: '*/30 * * * *',
+              storageName: 'minio',
             },
           ],
           storages: {
-            'fs-pvc': {
-              type: 'filesystem',
-              volume: {
-                persistentVolumeClaim: {
-                  storageClassName: config.backupStorageClass,
-                  accessModes: [
-                    'ReadWriteOnce',
-                  ],
-                  resources: {
-                    requests: {
-                      storage: config.backupStorageSize,
-                    },
-                  },
-                },
+            minio: {
+              type: 's3',
+              s3: {
+                bucket: config.backupMinioBucket,
+                credentialsSecret: '%s-minio-credentials' % [componentName],
+                endpointUrl: config.backupMinioEndpoint,
               },
             },
           },
@@ -168,6 +169,9 @@ local kube = import '../../kube.libsonnet';
           },
         },
         pxc: {
+          nodeSelector: {
+            region: region,
+          },
           affinity: {
             antiAffinityTopologyKey: 'kubernetes.io/hostname',
           },

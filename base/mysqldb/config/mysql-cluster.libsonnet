@@ -6,9 +6,10 @@
   staging: {},
 
   lts: {
-    storageClass: 'fast',
+    storageClass: 'zfs-fast-xfs',
     storageSize: '30Gi',
-    backupStorageClass: 'slow',
-    backupStorageSize: '100Gi',
+    backupMinioEnable: true,
+    backupMinioEndpoint: 'http://minio.base-minio-lts.svc.cluster.local:9000',
+    backupMinioBucket: 'mysql-backup',
   },
 }
