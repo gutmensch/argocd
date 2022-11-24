@@ -75,7 +75,8 @@ local kube = import 'kube.libsonnet';
             maxDuration: '5m',
           },
         },
-        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=foreground'],
+        // XXX: https://github.com/argoproj/argo-cd/issues/7383
+        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background'],
       },
     },
   },
