@@ -169,9 +169,9 @@ local kube = import '../../kube.libsonnet';
           },
         },
         pxc: {
-          nodeSelector: {
-            'topology.kubernetes.io/region': region,
-          },
+          // nodeSelector: {
+          //   'topology.kubernetes.io/region': region,
+          // },
           affinity: {
             antiAffinityTopologyKey: 'kubernetes.io/hostname',
           },

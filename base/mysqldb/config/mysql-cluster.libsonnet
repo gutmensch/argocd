@@ -11,5 +11,7 @@
     backupMinioEnable: true,
     backupMinioEndpoint: 'http://minio.base-minio-lts.svc.cluster.local:9000',
     backupMinioBucket: 'mysql-backup',
+    // XXX: start with 1 and node selector region to for pxc-0 in region
+    replicas: 2,
   },
 }
