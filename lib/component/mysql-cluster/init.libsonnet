@@ -88,9 +88,10 @@ local kube = import '../../kube.libsonnet';
 
     xtradbcluster: kube._Object('pxc.percona.com/v1', 'PerconaXtraDBCluster', componentName) {
       metadata+: {
-        finalizers: [
-          'delete-pxc-pods-in-order',
-        ],
+        // plain broken?!
+        // finalizers: [
+        //   'delete-pxc-pods-in-order',
+        // ],
         labels+: config.labels,
         namespace: namespace,
       },
@@ -116,6 +117,7 @@ local kube = import '../../kube.libsonnet';
           storages: {
             minio: {
               type: 's3',
+              verifyTLS: false,
               s3: {
                 bucket: config.backupMinioBucket,
                 credentialsSecret: '%s-minio-credentials' % [componentName],

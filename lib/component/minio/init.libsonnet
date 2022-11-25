@@ -357,7 +357,7 @@ local policy = import 'templates/policy.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/usr/bin/docker-entrypoint.sh minio server /storage -S /etc/minio/certs/ --address :9000 --console-address :9001',
+                  '/usr/bin/docker-entrypoint.sh minio server /storage --certs-dir /etc/minio/certs/ --address :9000 --console-address :9001',
                 ],
                 envFrom: [
                   {
@@ -398,6 +398,21 @@ local policy = import 'templates/policy.libsonnet';
                     mountPath: '/cache',
                     name: 'cache',
                   },
+                  // {
+                  //   mountPath: '/etc/minio/certs/public.crt',
+                  //   name: 'certificate',
+                  //   subPath: 'tls.crt',
+                  // },
+                  // {
+                  //   mountPath: '/etc/minio/certs/private.key',
+                  //   name: 'certificate',
+                  //   subPath: 'tls.key',
+                  // },
+                  // {
+                  //   mountPath: '/etc/minio/certs/ca.crt',
+                  //   name: 'certificate',
+                  //   subPath: 'ca.crt',
+                  // },
                 ],
               },
             ],
@@ -409,11 +424,10 @@ local policy = import 'templates/policy.libsonnet';
             },
             serviceAccountName: componentName,
             volumes: [
-              // XXX: not in use?!
               //  {
-              //    name: 'minio-user',
+              //    name: 'certificate',
               //    secret: {
-              //      secretName: componentName,
+              //      secretName: '%s-server-cert' % [componentName],
               //    },
               //  },
             ],
