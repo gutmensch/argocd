@@ -28,12 +28,8 @@ local ca = import '../../localca.libsonnet';
           },
         },
       },
-      backupMinioEnable: false,
-      backupMinioEndpoint: 'http://minio.base-minio-lts.svc.cluster.local:9000',
-      backupMinioBucket: 'mysql-backup',
     }
-    //):: helper.uniquify({
-  ):: {
+  ):: helper.uniquify({
 
     local this = self,
 
@@ -307,79 +303,5 @@ local ca = import '../../localca.libsonnet';
         MYSQL_ROOT_PASSWORD: config.rootPassword,
       },
     },
-
-    backupCronJobs:: {
-      ['backup-%s' % [user.database]]: kube.CronJob('backup-%s' % [user.database]) {
-        metadata+: {
-          namespace: namespace,
-          labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
-        },
-        spec+: {
-          schedule: '15 1 * * *',
-          jobTemplate+: {
-            metadata+: {
-              annotations+: {
-              },
-              labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
-            },
-            spec+: {
-              template+: {
-                spec+: {
-                  backoffLimit: 10,
-                  containers_+: {
-                    backup: {
-                      args: [
-                        '/bin/sh',
-                        '/backup.sh',
-                        user.database,
-                      ],
-                      env: [],
-                      envFrom: [
-                        {
-                          secretRef: {
-                            name: '%s-creds' % [componentName],
-                          },
-                        },
-                      ],
-                      image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
-                      imagePullPolicy: 'Always',
-                      name: componentName,
-                      volumeMounts: [
-                        {
-                          mountPath: '/backup.sh',
-                          name: '%s-config' % [componentName],
-                          subPath: 'backup.sh',
-                        },
-                        {
-                          mountPath: '/var/backup',
-                          name: '%s-dump' % [componentName],
-                          readOnly: false,
-                        },
-                      ],
-                    },
-                  },
-                  volumes_+: {
-                    config: {
-                      configMap: {
-                        name: '%s-config' % [componentName],
-                      },
-                      name: '%s-config' % [componentName],
-                    },
-                    dump: {
-                      emptyDir: {
-                        sizeLimit: '3Gi',
-                      },
-                      name: '%s-dump' % [componentName],
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      }
-      for user in config.mysqlUsers
-    },
-
-  },
+  }),
 }
