@@ -49,9 +49,10 @@ local ca = import '../../localca.libsonnet';
               labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
             },
             spec+: {
+              backoffLimit: 10,
+              completions: 1,
               template+: {
                 spec+: {
-                  backoffLimit: 10,
                   containers_+: {
                     backup: {
                       args: [
