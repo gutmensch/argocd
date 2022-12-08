@@ -70,7 +70,7 @@ local ca = import '../../localca.libsonnet';
       },
     },
 
-    servicecluster: kube.Service(componentName) {
+    servicecluster: kube.Service('mysql') {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,
@@ -91,7 +91,7 @@ local ca = import '../../localca.libsonnet';
       },
     },
 
-    serviceheadless: kube.Service('%s-headless' % [componentName]) {
+    serviceheadless: kube.Service('mysql-headless') {
       apiVersion: 'v1',
       kind: 'Service',
       metadata+: {
