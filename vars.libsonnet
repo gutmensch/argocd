@@ -33,8 +33,6 @@ local def = import 'defaults.libsonnet';
       type: 'crd',
       path: 'lib/crds',
       files: [
-        // app: mysql
-        'percona-xtradb-cluster_20221030.yaml',
       ],
     }),
   ],
@@ -44,7 +42,7 @@ local def = import 'defaults.libsonnet';
     def.withApp({ name: 'auth', project: 'base', path: 'auth', tenant: ['lts'] }),
     def.withApp({ name: 'minio', project: 'base', path: 'minio', tenant: ['lts'] }),
     //def.withApp({ name: 'mx', project: 'base', path: 'mx', tenant: ['lts'] }),
-    //def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', region: 'falkenstein', tenant: ['lts'] }),
+    def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', region: 'falkenstein', tenant: ['lts'] }),
     //def.withApp({ name: 'roundcube', project: 'base', path: 'roundcube', tenant: ['lts'] }),
   ],
 }

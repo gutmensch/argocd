@@ -1,7 +1,7 @@
 {
   default: {
     imageRegistry: 'registry.lan:5000',
-    storageClass: 'fast',
+    storageClass: 'zfs-fast-xfs',
   },
 
   staging: {

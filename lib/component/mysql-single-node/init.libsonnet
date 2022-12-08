@@ -1,9 +1,6 @@
 local helper = import '../../helper.libsonnet';
 local kube = import '../../kube.libsonnet';
 local ca = import '../../localca.libsonnet';
-local configDefinitions = import 'ldif/config.libsonnet';
-local initDefinitions = import 'ldif/init.libsonnet';
-local schemaDefinitions = import 'schema/definitions.libsonnet';
 
 {
   generate(
@@ -16,48 +13,40 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       imageRegistry: '',
-      imageRef: 'bitnami/openldap',
-      // first 2.6.3 with argon2 and pbkdf2 support
-      imageVersion: '2.6.3-debian-11-r49',
-      replicas: 1,
+      imageRef: 'percona',
+      imageVersion: '8.0.29-21',
       storageClass: 'standard',
-      storageSize: '8Gi',
-      ldapRoot: 'o=auth,dc=local',
-      ldapInitModules: ['memberof', 'refint'],
-      ldapInitMailDomains: [],
-      ldapIncludeProvidedSchemas: ['cosine', 'inetorgperson'],
-      ldapIncludeManagedSchemas: ['rfc2307bis', 'virtualmail', 'nextcloud', 'opendkim', 'openssh-lpk'],
-      // example secrets (errors out if unchanged)
-      ldapAdminUsername: 'admin',
-      ldapAdminPassword: 'changeme',
-      ldapConfigAdminUsername: 'configadmin',
-      ldapConfigAdminPassword: 'changeme',
+      storageSize: '20Gi',
+      myCnf: {
+        main: {},
+        sections: {
+          mysqld: {
+            ssl_ca: '/ssl/ca.pem',
+            ssl_cert: '/ssl/server-cert.pem',
+            ssl_key: '/ssl/server-key.pem',
+            require_secure_transport: 'OFF',
+          },
+        },
+      },
+      backupMinioEnable: false,
+      backupMinioEndpoint: 'http://minio.base-minio-lts.svc.cluster.local:9000',
+      backupMinioBucket: 'mysql-backup',
     }
-  ):: helper.uniquify({
+    //):: helper.uniquify({
+  ):: {
 
     local this = self,
 
     local config = std.mergePatch(defaultConfig, appConfig),
 
-    assert config.ldapAdminPassword != 'changeme' && config.ldapConfigAdminPassword != 'changeme' : error '"changeme" is an invalid password',
-
     local appName = name,
-    local componentName = 'openldap',
-
-    local ldapConfig = configDefinitions {
-      ldapModules: std.get(config, 'ldapInitModules', []),
-    },
-
-    local ldapBootstrap = initDefinitions {
-      ldapBase: config.ldapRoot,
-      ldapMailDomains: std.get(config, 'ldapInitMailDomains', []),
-    },
+    local componentName = 'mysql-single-node',
 
     local certCRDs = ca.serverCert(
       name=componentName,
       namespace=namespace,
       createIssuer=true,
-      dnsNames=['%s.%s.svc.cluster.local' % [componentName, namespace], '%s.%s.svc.cluster.local' % [name, namespace]],
+      dnsNames=['%s.%s.svc.cluster.local' % [componentName, namespace]],
       labels=config.labels,
     ),
     localrootcacert: certCRDs.localrootcacert,
@@ -70,27 +59,18 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         labels+: config.labels,
       },
       data: {
-        LDAP_ADD_SCHEMAS: 'yes',
-        LDAP_ADMIN_PASSWORD_FILE: '',
-        LDAP_ALLOW_ANON_BINDING: 'no',
-        LDAP_CONFIG_ADMIN_ENABLED: 'yes',
-        LDAP_CONFIG_ADMIN_PASSWORD_FILE: '',
-        // skip default tree, use our provided /ldifs/init.ldif
-        LDAP_SKIP_DEFAULT_TREE: 'yes',
-        LDAP_CUSTOM_LDIF_DIR: '/ldifs',
-        LDAP_ENABLE_TLS: 'yes',
-        LDAP_EXTRA_SCHEMAS: std.join(',', config.ldapIncludeProvidedSchemas + config.ldapIncludeManagedSchemas),
-        LDAP_LDAPS_PORT_NUMBER: '1636',
-        LDAP_LOGLEVEL: '256',
-        LDAP_PORT_NUMBER: '1389',
-        LDAP_ROOT: config.ldapRoot,
-        LDAP_ULIMIT_NOFILES: '1024',
-        // unused, we skip default tree and mount schemas in directory and ref as extra
-        LDAP_GROUP: 'Readers',
-        LDAP_USER_DC: 'Users',
-        LDAP_USERS: '',
-        LDAP_PASSWORDS: '',
-        LDAP_CUSTOM_SCHEMA_FILE: '/schema/custom.ldif',
+        // currently empty, because no options needed, see
+        // https://hub.docker.com/_/percona
+      },
+    },
+
+    configmapcnf: kube.ConfigMap('%s-server-cnf' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      data: {
+        'server.cnf': std.manifestIni(config.myCnf),
       },
     },
 
@@ -102,18 +82,11 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       spec: {
         ports: [
           {
-            name: 'ldap-port',
+            name: 'mysql-port',
             nodePort: null,
-            port: 389,
+            port: 3306,
             protocol: 'TCP',
-            targetPort: 'ldap-port',
-          },
-          {
-            name: 'ldaps-port',
-            nodePort: null,
-            port: 636,
-            protocol: 'TCP',
-            targetPort: 'ldaps-port',
+            targetPort: 'mysql-port',
           },
         ],
         selector: config.labels,
@@ -133,9 +106,9 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         clusterIP: 'None',
         ports: [
           {
-            name: 'ldap-port',
-            port: 389,
-            targetPort: 'ldap-port',
+            name: 'mysql-port',
+            port: 3306,
+            targetPort: 'mysql-port',
           },
         ],
         selector: config.labels,
@@ -150,7 +123,8 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         labels+: config.labels,
       },
       spec: {
-        replicas: config.replicas,
+        // hardcoded to avoid potential dual master problems
+        replicas: 1,
         selector: {
           matchLabels: config.labels,
         },
@@ -158,8 +132,8 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         template: {
           metadata+: {
             annotations+: {
-              // configmaps ldap init and schemas only used at bootstrap, so not added here
               'checksum/env': std.md5(std.toString(this.configmap)),
+              'checksum/cnf': std.md5(std.toString(this.configmapcnf)),
               'checksum/credentials': std.md5(std.toString(this.secret)),
             },
             labels: config.labels,
@@ -198,18 +172,6 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                       },
                     },
                   },
-                  {
-                    name: 'LDAP_TLS_CERT_FILE',
-                    value: '/ssl/server.crt',
-                  },
-                  {
-                    name: 'LDAP_TLS_KEY_FILE',
-                    value: '/ssl/server.key',
-                  },
-                  {
-                    name: 'LDAP_TLS_CA_FILE',
-                    value: '/ssl/ca.crt',
-                  },
                 ],
                 envFrom: [
                   {
@@ -231,19 +193,15 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                   periodSeconds: 10,
                   successThreshold: 1,
                   tcpSocket: {
-                    port: 'ldap-port',
+                    port: 'mysql-port',
                   },
                   timeoutSeconds: 1,
                 },
                 name: componentName,
                 ports: [
                   {
-                    containerPort: 1389,
-                    name: 'ldap-port',
-                  },
-                  {
-                    containerPort: 1636,
-                    name: 'ldaps-port',
+                    containerPort: 3306,
+                    name: 'mysql-port',
                   },
                 ],
                 readinessProbe: {
@@ -252,7 +210,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                   periodSeconds: 10,
                   successThreshold: 1,
                   tcpSocket: {
-                    port: 'ldap-port',
+                    port: 'mysql-port',
                   },
                   timeoutSeconds: 1,
                 },
@@ -266,51 +224,29 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                 },
                 volumeMounts: [
                   {
-                    mountPath: '/bitnami/openldap',
+                    mountPath: '/var/lib/mysql',
                     name: 'data',
                   },
                   {
-                    mountPath: '/ssl/server.crt',
+                    mountPath: '/etc/my.cnf.d',
+                    name: '%s-server-cnf' % [componentName],
+                  },
+
+                  {
+                    mountPath: config.myCnf.sections.mysqld.ssl_cert,
                     name: 'certificate',
                     subPath: 'tls.crt',
                   },
                   {
-                    mountPath: '/ssl/server.key',
+                    mountPath: config.myCnf.sections.mysqld.ssl_key,
                     name: 'certificate',
                     subPath: 'tls.key',
                   },
                   {
-                    mountPath: '/ssl/ca.crt',
+                    mountPath: config.myCnf.sections.mysqld.ssl_ca,
                     name: 'certificate',
                     subPath: 'ca.crt',
                   },
-                  {
-                    mountPath: '/config/add.ldif',
-                    name: '%s-config-init' % [componentName],
-                    subPath: 'add.ldif',
-                  },
-                  {
-                    mountPath: '/config/mod.ldif',
-                    name: '%s-config-init' % [componentName],
-                    subPath: 'mod.ldif',
-                  },
-                  {
-                    mountPath: '/docker-entrypoint-initdb.d/config-apply.sh',
-                    name: '%s-config-init' % [componentName],
-                    subPath: 'config-apply.sh',
-                  },
-                  {
-                    mountPath: '/ldifs/init.ldif',
-                    name: '%s-config-init' % [componentName],
-                    subPath: 'init.ldif',
-                  },
-                ] + [
-                  {
-                    mountPath: '/opt/bitnami/openldap/etc/schema/%s.ldif' % [schema],
-                    name: '%s-schemas' % [componentName],
-                    subPath: '%s.ldif' % [schema],
-                  }
-                  for schema in config.ldapIncludeManagedSchemas
                 ],
               },
             ],
@@ -330,16 +266,9 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
               },
               {
                 configMap: {
-                  name: '%s-config-init' % [componentName],
-                  defaultMode: std.parseOctal('0755'),
+                  name: '%s-server-cnf' % [componentName],
                 },
-                name: '%s-config-init' % [componentName],
-              },
-              {
-                configMap: {
-                  name: '%s-schemas' % [componentName],
-                },
-                name: '%s-schemas' % [componentName],
+                name: '%s-server-cnf' % [componentName],
               },
             ],
           },
@@ -369,52 +298,88 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       },
     },
 
-    configmapldapinit: kube.ConfigMap('%s-config-init' % [componentName]) {
-      metadata+: {
-        namespace: namespace,
-        labels: config.labels,
-      },
-      data: {
-        'init.ldif': helper.manifestLdif(ldapBootstrap),
-        'add.ldif': helper.manifestLdif(ldapConfig.add),
-        'mod.ldif': helper.manifestLdif(ldapConfig.modify),
-        'config-apply.sh': |||
-          #!/bin/bash
-          export LDAPTLS_REQCERT=never
-          source /opt/bitnami/scripts/libopenldap.sh
-          ldap_start_bg
-          sleep 5
-          ldapmodify -a -Y EXTERNAL -H "ldapi:///" -f /config/add.ldif
-          sleep 2
-          ldapmodify -Y EXTERNAL -H "ldapi:///" -f /config/mod.ldif
-          sleep 5
-          ldap_stop
-        |||,
-      },
-    },
-
-    configmapschemas: kube.ConfigMap('%s-schemas' % [componentName]) {
-      metadata+: {
-        namespace: namespace,
-        labels: config.labels,
-      },
-      data: {
-        [schemaDefinitions[schema].file]: schemaDefinitions[schema].content
-        for schema in config.ldapIncludeManagedSchemas
-      },
-    },
-
     secret: kube.Secret(componentName) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
       },
       stringData: {
-        LDAP_ADMIN_PASSWORD: config.ldapAdminPassword,
-        LDAP_ADMIN_USERNAME: config.ldapAdminUsername,
-        LDAP_CONFIG_ADMIN_PASSWORD: config.ldapConfigAdminPassword,
-        LDAP_CONFIG_ADMIN_USERNAME: config.ldapConfigAdminUsername,
+        MYSQL_ROOT_PASSWORD: config.rootPassword,
       },
     },
-  }),
+
+    backupCronJobs:: {
+      ['backup-%s' % [user.database]]: kube.CronJob('backup-%s' % [user.database]) {
+        metadata+: {
+          namespace: namespace,
+          labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
+        },
+        spec+: {
+          schedule: '15 1 * * *',
+          jobTemplate+: {
+            metadata+: {
+              annotations+: {
+              },
+              labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
+            },
+            spec+: {
+              template+: {
+                spec+: {
+                  backoffLimit: 10,
+                  containers_+: {
+                    backup: {
+                      args: [
+                        '/bin/sh',
+                        '/backup.sh',
+                        user.database,
+                      ],
+                      env: [],
+                      envFrom: [
+                        {
+                          secretRef: {
+                            name: '%s-creds' % [componentName],
+                          },
+                        },
+                      ],
+                      image: '%s:%s' % [if config.imageRegistry != '' then std.join('/', [config.imageRegistry, config.imageRef]) else config.imageRef, config.imageVersion],
+                      imagePullPolicy: 'Always',
+                      name: componentName,
+                      volumeMounts: [
+                        {
+                          mountPath: '/backup.sh',
+                          name: '%s-config' % [componentName],
+                          subPath: 'backup.sh',
+                        },
+                        {
+                          mountPath: '/var/backup',
+                          name: '%s-dump' % [componentName],
+                          readOnly: false,
+                        },
+                      ],
+                    },
+                  },
+                  volumes_+: {
+                    config: {
+                      configMap: {
+                        name: '%s-config' % [componentName],
+                      },
+                      name: '%s-config' % [componentName],
+                    },
+                    dump: {
+                      emptyDir: {
+                        sizeLimit: '3Gi',
+                      },
+                      name: '%s-dump' % [componentName],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }
+      for user in config.mysqlUsers
+    },
+
+  },
 }

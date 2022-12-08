@@ -42,6 +42,7 @@ local kube = import '../../kube.libsonnet';
             labels: config.labels,
           },
           spec+: {
+            backoffLimit: 10,
             containers: [
               {
                 args: [
