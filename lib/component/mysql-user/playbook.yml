@@ -12,7 +12,7 @@
         login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
-      #no_log: True
+      no_log: True
       with_items: "{{ mysql_db_users }}"
 
     - name: manage user(s)
@@ -25,5 +25,5 @@
         login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
-      #no_log: True
+      no_log: True
       with_items: "{{ mysql_db_users }}"
