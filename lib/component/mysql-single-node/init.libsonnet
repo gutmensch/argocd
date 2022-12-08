@@ -42,7 +42,7 @@ local ca = import '../../localca.libsonnet';
       name=componentName,
       namespace=namespace,
       createIssuer=true,
-      dnsNames=['%s.%s.svc.cluster.local' % [componentName, namespace]],
+      dnsNames=['mysql', 'mysql.%s.svc.cluster.local' % [namespace], '%s.%s.svc.cluster.local' % [componentName, namespace]],
       labels=config.labels,
     ),
     localrootcacert: certCRDs.localrootcacert,
