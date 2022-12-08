@@ -13,7 +13,7 @@ local ca = import '../../localca.libsonnet';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       imageRegistry: '',
-      imageRef: 'percona',
+      imageRef: 'library/percona',
       imageVersion: '8.0.29-21',
       storageClass: 'standard',
       storageSize: '20Gi',
