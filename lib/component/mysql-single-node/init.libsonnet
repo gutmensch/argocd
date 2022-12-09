@@ -21,6 +21,7 @@ local ca = import '../../localca.libsonnet';
         main: {},
         sections: {
           mysqld: {
+            skip_name_resolve: 'ON',
             ssl_ca: '/ssl/ca.pem',
             ssl_cert: '/ssl/server-cert.pem',
             ssl_key: '/ssl/server-key.pem',
