@@ -3,9 +3,11 @@
 TARGET=/var/backup
 
 prepare_mysqldump_credentials() {
+  mkdir -p $HOME
   umask 077
   cat <<EOF> $HOME/.my.cnf
 [mysqldump]
+host=$MYSQL_HOST
 user=root
 password=$MYSQL_ROOT_PASSWORD
 EOF
@@ -23,7 +25,7 @@ dump_database() {
   fi
 }
 
-upload_file() {
+upload() {
   # about the file
   file_to_upload=$1
   bucket=$BUCKET

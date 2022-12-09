@@ -16,7 +16,8 @@ local ca = import '../../localca.libsonnet';
       imageRef: 'library/percona',
       imageVersion: '8.0.29-21',
       rootSecretRef: 'mysql-single-node',
-      mysqlUsers: {},
+      mysqlHost: 'mysql',
+      mysqlDatabaseUsers: {},
       backupMinioEnable: false,
       backupMinioEndpoint: 'http://minio:9000',
       backupMinioBucket: 'mysql-backup',
@@ -60,7 +61,9 @@ local ca = import '../../localca.libsonnet';
                         '/backup.sh',
                         user.database,
                       ],
-                      env: [],
+                      env: [
+                        { name: 'MYSQL_HOST', value: config.mysqlHost },
+                      ],
                       envFrom: [
                         {
                           secretRef: {
