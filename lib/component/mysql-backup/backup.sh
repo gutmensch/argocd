@@ -38,11 +38,11 @@ dump_database() {
   prepare_mysqldump_credentials
   date=$(date +%s)
   backup_file=$TARGET/mysql_$1_$date.sql.gz
-  mysqldump --defaults-file=$TARGET/.my.cnf --single-transaction $1 | gzip -9 > $backup_file
+  mysqldump -v --defaults-file=$TARGET/.my.cnf --single-transaction $1 | gzip -9 > $backup_file
   if [ $? -eq 0 ]; then
-	  echo $backup_file
+    echo $backup_file
   else
-	  exit 1
+    exit 1
   fi
 }
 
