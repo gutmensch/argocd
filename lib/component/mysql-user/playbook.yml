@@ -25,6 +25,8 @@
         login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
+        resource_limits:
+          MAX_USER_CONNECTIONS: "{{ item.maxUserConnections | default(20) }}"
       no_log: True
       with_items: "{{ mysql_database_users }}"
 
@@ -38,5 +40,7 @@
         login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
+        resource_limits:
+          MAX_USER_CONNECTIONS: "{{ item.maxUserConnections | default(20) }}"
       no_log: True
       with_items: "{{ mysql_system_users }}"
