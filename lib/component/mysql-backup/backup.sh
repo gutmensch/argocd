@@ -22,6 +22,9 @@ get_api_keys() {
   fi
   _ACCESS_KEY=$(echo $response | sed -r 's%.*<AccessKeyId>(.*)</AccessKeyId>.*%\1%')
   _SECRET_KEY=$(echo $response | sed -r 's%.*<SecretAccessKey>(.*)</SecretAccessKey>.*%\1%')
+  echo "Response: ${response}"
+  echo "Access Key: ${_ACCESS_KEY}"
+  echo "Secret Key: ${_SECRET_KEY}"
 }
 
 prepare_mysqldump_credentials() {
@@ -31,6 +34,8 @@ prepare_mysqldump_credentials() {
 host=$MYSQL_HOST
 user=root
 password=$MYSQL_ROOT_PASSWORD
+verbose=TRUE
+single-transaction=TRUE
 EOF
 }
 
@@ -38,7 +43,7 @@ dump_database() {
   prepare_mysqldump_credentials
   date=$(date +%s)
   backup_file=$TARGET/mysql_$1_$date.sql.gz
-  mysqldump -v --defaults-file=$TARGET/.my.cnf --single-transaction $1 | gzip -9 > $backup_file
+  mysqldump --defaults-file=$TARGET/.my.cnf $1 | gzip -9 > $backup_file
   if [ $? -eq 0 ]; then
     echo $backup_file
   else
