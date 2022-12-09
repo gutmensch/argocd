@@ -3,6 +3,7 @@
 TARGET=/var/backup
 
 cleanup() {
+  echo
   rm -vf $TARGET/.my.cnf
   rm -vf $TARGET/*.sql.gz
 }
@@ -36,7 +37,7 @@ upload() {
   filepath="/${bucket}/$(basename $file_to_upload)"
   
   # metadata
-  contentType="application/x-compressed-tar"
+  contentType="application/octet-stream"
   dateValue=`date -R`
   signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepath}"
   
@@ -45,16 +46,16 @@ upload() {
   s3_secret_key=$SECRET_KEY
   
   #prepare signature hash to be sent in Authorization header
-  signature_hash=`echo -en ${signature_string} | openssl sha1 -hmac ${s3_secret_key} -binary | base64`
+  signature_hash=$(echo -en ${signature_string} | openssl sha1 -hmac ${s3_secret_key} -binary | base64)
 
   hostValue=$(echo $ENDPOINT | sed 's%http://%%')
   # actual curl command to do PUT operation on s3
-  curl -v -X PUT -T "${file_to_upload}" \
+  curl -s -v -X PUT -T "${file_to_upload}" \
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
     -H "Authorization: AWS ${s3_access_key}:${signature_hash}" \
-    $ENDPOINT${filepath}
+    ${ENDPOINT}${filepath}
 }
 
 trap cleanup EXIT
