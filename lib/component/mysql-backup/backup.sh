@@ -2,10 +2,14 @@
 
 TARGET=/var/backup
 
+cleanup() {
+  rm -vf $TARGET/.my.cnf
+  rm -vf $TARGET/*.sql.gz
+}
+
 prepare_mysqldump_credentials() {
-  mkdir -p $HOME
   umask 077
-  cat <<EOF> $HOME/.my.cnf
+  cat <<EOF> $TARGET/.my.cnf
 [mysqldump]
 host=$MYSQL_HOST
 user=root
@@ -17,7 +21,7 @@ dump_database() {
   prepare_mysqldump_credentials
   date=$(date +%s)
   backup_file=$TARGET/mysql_$1_$date.sql.gz
-  mysqldump --single-transaction $1 | gzip -9 > $backup_file
+  mysqldump --defaults-file=$TARGET/.my.cnf --single-transaction $1 | gzip -9 > $backup_file
   if [ $? -eq 0 ]; then
 	  echo $backup_file
   else
@@ -42,15 +46,17 @@ upload() {
   
   #prepare signature hash to be sent in Authorization header
   signature_hash=`echo -en ${signature_string} | openssl sha1 -hmac ${s3_secret_key} -binary | base64`
-  
+
+  hostValue=$(echo $ENDPOINT | sed 's%http://%%')
   # actual curl command to do PUT operation on s3
   curl -v -X PUT -T "${file_to_upload}" \
-    -H "Host: ${ENDPOINT}" \
+    -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
     -H "Authorization: AWS ${s3_access_key}:${signature_hash}" \
-    $ENDPOINT/${filepath}
+    $ENDPOINT${filepath}
 }
 
+trap cleanup EXIT
 backup=$(dump_database $1)
 upload $backup
