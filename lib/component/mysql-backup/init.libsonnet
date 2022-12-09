@@ -41,7 +41,7 @@ local ca = import '../../localca.libsonnet';
         },
         spec+: {
           //containers_+: { foo: { image: 'foobar' } },
-          schedule: '15 1 * * *',
+          schedule: '*/30 * * * *',
           jobTemplate+: {
             metadata+: {
               annotations+: {
