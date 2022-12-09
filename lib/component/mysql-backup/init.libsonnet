@@ -111,7 +111,7 @@ local ca = import '../../localca.libsonnet';
 
         },
       }
-      for user in config.mysqlUsers
+      for user in config.mysqlDatabaseUsers
     } + {
       secret: kube.Secret('%s-minio' % [componentName]) {
         metadata+: {

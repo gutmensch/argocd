@@ -17,7 +17,8 @@ local kube = import '../../kube.libsonnet';
       rootUser: 'root',
       rootPassword: 'changeme',
       mysqlHost: 'mysql',
-      mysqlUsers: {},
+      mysqlDatabaseUsers: {},
+      mysqlSystemUsers: {},
     }
   ):: helper.uniquify({
 
@@ -27,9 +28,10 @@ local kube = import '../../kube.libsonnet';
 
     local appName = name,
     local componentName = 'mysql-user',
+    local jobVersion = std.substr(std.md5(std.toString([config.mysqlDatabaseUsers, config.mysqlSystemUsers])), 15, 16),
 
     // new simple job will be created when content of zone changes
-    job: kube.Job('job-%s-%s' % [componentName, std.substr(std.md5(std.toString(config.mysqlUsers)), 15, 16)]) {
+    job: kube.Job('job-%s-%s' % [componentName, jobVersion]) {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,
@@ -124,7 +126,7 @@ local kube = import '../../kube.libsonnet';
         labels: config.labels,
       },
       stringData: {
-        'data.yml': std.manifestYamlDoc({ mysql_db_users: config.mysqlUsers }),
+        'data.yml': std.manifestYamlDoc({ mysql_database_users: config.mysqlDatabaseUsers, mysql_system_users: config.mysqlSystemUsers }),
       },
     },
 

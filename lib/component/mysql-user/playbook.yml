@@ -13,9 +13,9 @@
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
       no_log: True
-      with_items: "{{ mysql_db_users }}"
+      with_items: "{{ mysql_database_users }}"
 
-    - name: manage user(s)
+    - name: manage database user(s)
       community.mysql.mysql_user:
         name: "{{ item.user }}"
         password: "{{ item.password }}"
@@ -26,4 +26,17 @@
         login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
         login_host: "{{ lookup('env','MYSQL_HOST') }}"
       no_log: True
-      with_items: "{{ mysql_db_users }}"
+      with_items: "{{ mysql_database_users }}"
+
+    - name: manage system user(s)
+      community.mysql.mysql_user:
+        name: "{{ item.user }}"
+        password: "{{ item.password }}"
+        priv: "*.*:{{ item.grants | default(['ALL']) | join(',') }}"
+        state: "{{ item.state }}"
+        host: "{{ item.host | default('%') }}"
+        login_user: "{{ lookup('env','MYSQL_ADMIN_USERNAME') }}"
+        login_password: "{{ lookup('env','MYSQL_ADMIN_PASSWORD') }}"
+        login_host: "{{ lookup('env','MYSQL_HOST') }}"
+      no_log: True
+      with_items: "{{ mysql_system_users }}"
