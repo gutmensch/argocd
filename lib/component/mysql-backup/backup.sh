@@ -1,11 +1,27 @@
 #!/bin/sh
 
 TARGET=/var/backup
+_ACCESS_KEY=
+_SECRET_KEY=
 
 cleanup() {
   echo
   rm -vf $TARGET/.my.cnf
   rm -vf $TARGET/*.sql.gz
+}
+
+get_api_keys() {
+  # using STS api to get keys for actual use from ldap credentials
+  # https://github.com/minio/minio/blob/master/docs/sts/ldap.md
+  if [ -z "${_ACCESS_KEY}" -o -z "${_SECRET_KEY}" ]; then
+    response=$(curl -o - -s -XPOST $ENDPOINT -d "Action=AssumeRoleWithLDAPIdentity&LDAPUsername=${ACCESS_KEY}&LDAPPassword=${SECRET_KEY}&Version=2011-06-15&DurationSeconds=3600")
+  fi
+  if echo $response | grep '<Error>'; then
+    echo $response
+    exit 1
+  fi
+  _ACCESS_KEY=$(echo $response | sed -r 's%.*<AccessKeyId>(.*)</AccessKeyId>.*%\1%')
+  _SECRET_KEY=$(echo $response | sed -r 's%.*<SecretAccessKey>(.*)</SecretAccessKey>.*%\1%')
 }
 
 prepare_mysqldump_credentials() {
@@ -40,13 +56,11 @@ upload() {
   contentType="application/octet-stream"
   dateValue=`date -R`
   signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepath}"
-  
-  #s3 keys
-  s3_access_key=$ACCESS_KEY
-  s3_secret_key=$SECRET_KEY
+
+  get_api_keys
   
   #prepare signature hash to be sent in Authorization header
-  signature_hash=$(echo -en ${signature_string} | openssl sha1 -hmac ${s3_secret_key} -binary | base64)
+  signature_hash=$(echo -en ${signature_string} | openssl sha1 -hmac ${_SECRET_KEY} -binary | base64)
 
   hostValue=$(echo $ENDPOINT | sed 's%http://%%')
   # actual curl command to do PUT operation on s3
@@ -54,7 +68,7 @@ upload() {
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
-    -H "Authorization: AWS ${s3_access_key}:${signature_hash}" \
+    -H "Authorization: AWS ${_ACCESS_KEY}:${signature_hash}" \
     ${ENDPOINT}${filepath}
 }
 
