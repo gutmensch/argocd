@@ -64,6 +64,7 @@ upload() {
   contentType="application/octet-stream"
   dateValue=$(date -R)
   signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepathUrl}"
+  md5=$(cat $file_to_upload | openssl dgst -md5 -binary | base64)
 
   get_api_keys
   
@@ -76,6 +77,7 @@ upload() {
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
+    -H "Content-MD5: ${md5}" \
     -H "X-Amz-Security-Token: ${_SESSION_TOKEN}" \
     -H "Authorization: AWS ${_ACCESS_KEY}:${signature_hash}" \
     ${ENDPOINT}${filepath}
