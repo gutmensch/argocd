@@ -3,6 +3,7 @@
 TARGET=/var/backup
 _ACCESS_KEY=
 _SECRET_KEY=
+_SESSION_TOKEN=
 
 cleanup() {
   echo
@@ -22,9 +23,11 @@ get_api_keys() {
   fi
   _ACCESS_KEY=$(echo $response | sed -r 's%.*<AccessKeyId>(.*)</AccessKeyId>.*%\1%')
   _SECRET_KEY=$(echo $response | sed -r 's%.*<SecretAccessKey>(.*)</SecretAccessKey>.*%\1%')
+  _SESSION_TOKEN=$(echo $response | sed -r 's%.*<SessionToken>(.*)</SessionToken>.*%\1%')
   echo "Response: ${response}"
   echo "Access Key: ${_ACCESS_KEY}"
   echo "Secret Key: ${_SECRET_KEY}"
+  echo "Session Token: ${_SESSION_TOKEN}"
 }
 
 prepare_mysqldump_credentials() {
@@ -73,6 +76,7 @@ upload() {
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
+    -H "X-Amz-Security-Token: ${_SESSION_TOKEN}" \
     -H "Authorization: AWS ${_ACCESS_KEY}:${signature_hash}" \
     ${ENDPOINT}${filepath}
 }
