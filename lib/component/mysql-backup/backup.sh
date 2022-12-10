@@ -58,11 +58,12 @@ upload() {
   # about the file
   file_to_upload=$1
   filepath="/${BUCKET}/$(basename $file_to_upload)"
+  filepathUrl="$(echo $filepath | sed 's|/|%2F|g')"
   
   # metadata
   contentType="application/octet-stream"
   dateValue=$(date -R)
-  signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepath}"
+  signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepathUrl}"
 
   get_api_keys
   
@@ -74,7 +75,6 @@ upload() {
   curl -s -v -X PUT -T "${file_to_upload}" \
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
-    -H "X-Amz-Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
     -H "X-Amz-Security-Token: ${_SESSION_TOKEN}" \
     -H "Authorization: AWS ${_ACCESS_KEY}:${signature_hash}" \
