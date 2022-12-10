@@ -15,7 +15,7 @@ get_api_keys() {
   # using STS api to get keys for actual use from ldap credentials
   # https://github.com/minio/minio/blob/master/docs/sts/ldap.md
   if [ -z "${_ACCESS_KEY}" -o -z "${_SECRET_KEY}" ]; then
-    response=$(curl -o - -s -XPOST $ENDPOINT -d "Action=AssumeRoleWithLDAPIdentity&LDAPUsername=${ACCESS_KEY}&LDAPPassword=${SECRET_KEY}&Version=2011-06-15&DurationSeconds=3600")
+    response=$(curl -o - -s -XPOST $ENDPOINT -d "Action=AssumeRoleWithLDAPIdentity&LDAPUsername=${ACCESS_KEY}&LDAPPassword=${SECRET_KEY}&Version=2011-06-15&DurationSeconds=14400")
   fi
   if echo $response | grep '<Error>'; then
     echo $response
@@ -62,9 +62,9 @@ upload() {
   
   # metadata
   contentType="application/octet-stream"
+  contentHash=$(cat $file_to_upload | openssl dgst -md5 -binary | base64)
   dateValue=$(date -R)
-  signature_string="PUT\n\n${contentType}\n${dateValue}\n${filepathUrl}"
-  md5=$(cat $file_to_upload | openssl dgst -md5 -binary | base64)
+  signature_string="PUT\n\n${contentHash}\n${contentType}\n${dateValue}\n${filepathUrl}"
 
   get_api_keys
   
@@ -77,7 +77,7 @@ upload() {
     -H "Host: ${hostValue}" \
     -H "Date: ${dateValue}" \
     -H "Content-Type: ${contentType}" \
-    -H "Content-MD5: ${md5}" \
+    -H "Content-Md5: ${contentHash}" \
     -H "X-Amz-Security-Token: ${_SESSION_TOKEN}" \
     -H "Authorization: AWS ${_ACCESS_KEY}:${signature_hash}" \
     ${ENDPOINT}${filepath}
