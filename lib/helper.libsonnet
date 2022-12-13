@@ -5,6 +5,9 @@
       for v in std.objectValues(obj)
     },
 
+  strToRandInt(val, mod)::
+    std.mod(std.foldl(function(x, y) (x + y), [std.codepoint(x) for x in std.stringChars(val)], 0), mod),
+
   boolToStrInt(val)::
     if val == true then '1' else '0',
 

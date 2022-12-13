@@ -13,16 +13,16 @@ local ca = import '../../localca.libsonnet';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       imageRegistry: '',
-      imageRef: 'library/percona',
-      imageVersion: '8.0.29-21',
-      rootSecretRef: 'mysql-single-node',
+      imageRef: 'gutmensch/toolbox',
+      imageVersion: '0.0.1',
       mysqlHost: 'mysql',
-      mysqlDatabaseUsers: {},
+      mysqlSystemUsers: {},
       backupMinioEnable: false,
       backupMinioEndpoint: 'http://minio:9000',
       backupMinioBucket: 'mysql-backup',
       backupMinioAccessKey: '',
       backupMinioSecretKey: '',
+      backupDir: '/var/backup',
     }
     //):: helper.uniquify({
   ):: {
@@ -34,6 +34,9 @@ local ca = import '../../localca.libsonnet';
     local appName = name,
     local componentName = 'mysql-backup',
 
+    // lookup backup user from system user list
+    local _backupUser = [x for x in config.mysqlSystemUsers if x.user == 'backup'][0],
+
     backupJobs: {
       ['backup-%s' % [user.database]]: kube.CronJob('backup-%s' % [user.database]) {
         metadata+: {
@@ -41,8 +44,7 @@ local ca = import '../../localca.libsonnet';
           labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
         },
         spec+: {
-          //containers_+: { foo: { image: 'foobar' } },
-          schedule: '*/30 * * * *',
+          schedule: '%s %s * * *' % [helper.strToRandInt(user.database, 60), helper.strToRandInt(user.database, 24)],
           jobTemplate+: {
             metadata+: {
               annotations+: {
@@ -57,22 +59,16 @@ local ca = import '../../localca.libsonnet';
                   containers_+: {
                     backup: {
                       args: [
-                        '/bin/sh',
-                        '/backup.sh',
-                        user.database,
+                        '/usr/bin/mysql_backup.py',
                       ],
                       env: [
-                        { name: 'MYSQL_HOST', value: config.mysqlHost },
+                        { name: 'BACKUP_DIR', value: config.backupDir },
+                        { name: 'MYSQL_DB', value: user.database },
                       ],
                       envFrom: [
                         {
                           secretRef: {
-                            name: config.rootSecretRef,
-                          },
-                        },
-                        {
-                          secretRef: {
-                            name: '%s-minio' % [componentName],
+                            name: '%s-config' % [componentName],
                           },
                         },
                       ],
@@ -81,12 +77,7 @@ local ca = import '../../localca.libsonnet';
                       name: componentName,
                       volumeMounts: [
                         {
-                          mountPath: '/backup.sh',
-                          name: '%s-config' % [componentName],
-                          subPath: 'backup.sh',
-                        },
-                        {
-                          mountPath: '/var/backup',
+                          mountPath: config.backupDir,
                           name: '%s-dump' % [componentName],
                           readOnly: false,
                         },
@@ -94,12 +85,6 @@ local ca = import '../../localca.libsonnet';
                     },
                   },
                   volumes_+: {
-                    config: {
-                      configMap: {
-                        name: '%s-config' % [componentName],
-                      },
-                      name: '%s-config' % [componentName],
-                    },
                     dump: {
                       emptyDir: {
                         sizeLimit: '2Gi',
@@ -116,26 +101,19 @@ local ca = import '../../localca.libsonnet';
       }
       for user in config.mysqlDatabaseUsers
     } + {
-      secret: kube.Secret('%s-minio' % [componentName]) {
+      secret: kube.Secret('%s-config' % [componentName]) {
         metadata+: {
           namespace: namespace,
           labels: config.labels,
         },
         stringData: {
-          ENDPOINT: config.backupMinioEndpoint,
-          BUCKET: config.backupMinioBucket,
-          ACCESS_KEY: config.backupMinioUser,
-          SECRET_KEY: config.backupMinioPassword,
-        },
-      },
-    } + {
-      configmap: kube.ConfigMap('%s-config' % [componentName]) {
-        metadata+: {
-          namespace: namespace,
-          labels: config.labels,
-        },
-        data: {
-          'backup.sh': importstr 'backup.sh',
+          S3_HOST: config.backupMinioEndpoint,
+          S3_BUCKET: config.backupMinioBucket,
+          S3_LDAP_USER: config.backupMinioUser,
+          S3_LDAP_PASS: config.backupMinioPassword,
+          MYSQL_HOST: config.mysqlHost,
+          MYSQL_USER: _backupUser.user,
+          MYSQL_PASS: _backupUser.password,
         },
       },
     },
