@@ -26,6 +26,7 @@ local ca = import '../../localca.libsonnet';
             ssl_cert: '/ssl/server-cert.pem',
             ssl_key: '/ssl/server-key.pem',
             require_secure_transport: 'OFF',
+            default_authentication_plugin: 'mysql_native_password',
           },
         },
       },
