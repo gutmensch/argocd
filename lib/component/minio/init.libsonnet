@@ -182,7 +182,7 @@ local policy = import 'templates/policy.libsonnet';
     },
 
     policies:: [
-      'sleep 1; createPolicy %s /config/policy-%s.json "%s"' % [p, p, config.policies[p].group]
+      'sleep 5; createPolicy %s /config/policy-%s.json "%s"' % [p, p, config.policies[p].group]
       for p in std.objectFields(config.policies)
     ],
 
