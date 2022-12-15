@@ -17,8 +17,8 @@ local kube = import '../../kube.libsonnet';
       rootUser: 'root',
       rootPassword: 'changeme',
       mysqlHost: 'mysql',
-      mysqlDatabaseUsers: {},
-      mysqlSystemUsers: {},
+      mysqlDatabaseUsers: [],
+      mysqlSystemUsers: [],
     }
   ):: helper.uniquify({
 

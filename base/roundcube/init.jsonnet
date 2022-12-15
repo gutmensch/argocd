@@ -21,9 +21,10 @@ function(name, namespace, project, tenant, region)
       'roundcube',
       project,
       tenant,
+      // inheriting user secrets directly from mysql definition
+      import '../mysqldb/secret/shared.libsonnet',
       import 'secret/roundcube.libsonnet',
       import 'config/roundcube.libsonnet',
-      {},
       import 'cd/roundcube.json',
     ),
   };

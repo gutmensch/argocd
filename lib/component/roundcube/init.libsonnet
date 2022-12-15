@@ -10,12 +10,14 @@ local kube = import '../../kube.libsonnet';
     tenant,
     appConfig,
     defaultConfig={
+      imageRegistry: '',
       imageRef: 'gutmensch/roundcube',
       imageVersion: '1.6.0-3',
       replicas: 1,
       memcachedHosts: ['memcached:11211'],
       dbWriteHost: 'mysql',
       dbReadHost: 'mysql',
+      mysqlDatabaseUsers: [],
       dbUser: 'roundcube',
       dbPassword: 'changeme',
       dbDatabase: 'roundcubemail',
@@ -50,6 +52,18 @@ local kube = import '../../kube.libsonnet';
     local appName = name,
     local componentName = 'roundcube',
 
+    // mysql user/db definition takes precedence is username found in definitions
+    local _lookup(userList, user, pass, db) =
+      local mysqlUserDef = [x for x in userList if (x.user == user && x.database == db)];
+      local appUserDef = {
+        user: user,
+        password: pass,
+        database: db,
+      };
+      local res = if std.length(mysqlUserDef) > 0 then mysqlUserDef[0] else appUserDef;
+      res,
+    local _user = _lookup(config.mysqlDatabaseUsers, config.dbUser, config.dbPassword, config.dbDatabase),
+
     secret: kube.Secret(componentName) {
       metadata+: {
         namespace: namespace,
@@ -59,17 +73,17 @@ local kube = import '../../kube.libsonnet';
         // XXX: double base64 encoded in secret, decoded by entrypoint
         RCCONFIG: std.base64(helper.manifestPhpConfig({
           db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
-            config.dbUser,
-            config.dbPassword,
+            _user.user,
+            _user.password,
             config.dbWriteHost,
-            config.dbDatabase,
+            _user.database,
             std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
           ],
           db_dsnr: 'mysql://%s:%s@%s/%s?%s' % [
-            config.dbUser,
-            config.dbPassword,
+            _user.user,
+            _user.password,
             config.dbReadHost,
-            config.dbDatabase,
+            _user.database,
             std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
           ],
           memcache_hosts: config.memcachedHosts,
