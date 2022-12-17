@@ -45,7 +45,7 @@
         { rtype: 'AAAA', content: ips.hetznerQueen1v6 },
         { rtype: 'MX', prio: 10, content: 'mx.bln.space' },
         { rtype: 'TXT', content: 'v=spf1 mx -all' },
-        { name: '_dmarc', rtype: 'TXT', content: 'v=DMARC1; p=quarantine; fo=1; rua=mailto:dmarc@bln.space; ruf=mailto:dmarc@bln.space; adkim=s; aspf=s;' },
+        { name: '_dmarc', rtype: 'TXT', content: 'v=DMARC1; p=reject; fo=1; rua=mailto:dmarc@bln.space; ruf=mailto:dmarc@bln.space; adkim=s; aspf=s;' },
         { rtype: 'CAA', content: '0 issue "letsencrypt.org"' },
         { rtype: 'CAA', content: '0 issuewild ";"' },
         { rtype: 'CAA', content: '0 iodef "mailto:letsencrypt@bln.space"' },
