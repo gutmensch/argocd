@@ -300,16 +300,20 @@ local componentName = 'mailserver';
                     containerPort: 587,
                     name: 'submission-port',
                   },
+                  {
+                    containerPort: 4190,
+                    name: 'sieve-port',
+                  },
                 ],
                 readinessProbe: {
                   failureThreshold: 4,
-                  initialDelaySeconds: 60,
+                  initialDelaySeconds: 40,
                   periodSeconds: 20,
                   successThreshold: 1,
                   tcpSocket: {
                     port: 'smtp-port',
                   },
-                  timeoutSeconds: 2,
+                  timeoutSeconds: 5,
                 },
                 resources: {
                   limits: {},
