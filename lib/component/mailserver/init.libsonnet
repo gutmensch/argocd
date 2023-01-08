@@ -167,6 +167,13 @@ local componentName = 'mailserver';
             protocol: 'TCP',
             targetPort: 'submission-port',
           },
+          {
+            name: 'sieve-port',
+            nodePort: null,
+            port: 4190,
+            protocol: 'TCP',
+            targetPort: 'sieve-port',
+          },
         ],
         selector: config.labels,
         sessionAffinity: 'None',
