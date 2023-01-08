@@ -20,6 +20,11 @@
         hetznerMXv6: '2a01:4f9:6b:4629::42',
       },
       local dkimKeys = {
+        // for cleanup
+        'bln.space': 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4YO+qEk/W9pyh9TwNfLzewPkuR9kkLgpCvrr/xdMnyuAF9vFKJ4wgtGJ8HCr3VVVX509BqmtWdPGSCkDA04wGuVNFKGXrfweEmG3XGIEKtuO+TYmvgD+yXwwiI+P9lNXm5/ZaYYhwPYK4T4RjCzuR6gyVBIxPOOz1VzI0N483gwIDAQAB',
+        'n-os.org': 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCs/pR5d9u+w/pGRCVPI/+7UtLY7ebBLWuQEBR01renwZWQGkbncfnbwzawXr0Wk4JRhATusbHW/6HblfsIj8OTTLo/XZ8Ux/bV0oOvjmroBsLwvJtuuix6H62x9IoTN6QS0X4BVGyHLqDsFUteOVzvLli6dcpNS1U662Rih+jhGQIDAQAB',
+        'remembrance.de': 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDoIAapvRBTXqrzxZDXJp7GrmCl+v2sepSuLHzstH++g4VzKq5LYYFFmRie8G3ww/UTkvji7mQD+bsQFaqdHjyX13TzEB/PhIwgjOCFk\n68CLJZuXaX0li3XnWTdkVLdyaRz1vSoQPjCEgGIxSy+evDk+3hzvmRRn+SaPQbzKR9SQIDAQAB',
+        'schumann.link': 'v=DKIM1; k=rsa; t=s; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDzjUlYJUjanlp8azoHaXLmppSsjTdZqlRwld/zVMA2b48Drc0EwpygFaVSBCjuxl6srQ5RZInMWSQstRUcyCNEaxUh9c/Ta7sBYHjxd\n2yqeovnqkmtoXgo6pTJpJtWCdjXX7rfPHVZg1UjHr2e3xgSqQdqzL6SAfBhXSaGen+4QIDAQAB',
         rsa2022: 'v=DKIM1; k=rsa; t=s; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvjemEA4vQ70RA2e7ENPDSM40NOGvUFUwAYtxJvVEWbImHGb7CaByR7TNmBV2mYNvke9/V7VOLYKbBcnZyP6N9GeSJW0zEO/XC4vWvz3Dk6rAJkMK10IqbW8wwlq7g794KIX6TJOmRfZvf9v0MfktOLcm1XKmtd/+TW2dc1+YhgoGU3OSpjiiSOPUWx04KzVm0+O9py+iozVtYBXwKjGHzfWm2TZo4qdQAq0+xh87cuBfVL02nIrOiodigP9uJ1AVVAZlxjprt2014p34M3mR5CAbosD3Mt5m6BycfiE9FdYJ9ayrkT4N6MrzaW4lH/wQwdo7Dl/WbHiOWJVPiI6wJwIDAQAB',
       },
       // XXX: OpenDKIM filters on selector name only and not domain, so we need

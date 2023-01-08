@@ -1,3 +1,1 @@
-delete released volumes
-
-for v in $(kubectl get pv -A | awk '/Released/{print $1}'); do for i in $(kubectl get pv $v -o json | jq -r '.spec.csi.volumeHandle'); do ls -ld /dev/*/$i; done; done
+* stairbud domains to LDAP
