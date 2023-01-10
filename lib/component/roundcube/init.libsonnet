@@ -42,6 +42,7 @@ local kube = import '../../kube.libsonnet';
       desKey: 'changeme',
       loginUsernameFilter: 'email',
       certIssuer: 'letsencrypt-prod',
+      postSizeLimitMB: 25,
     },
   ):: helper.uniquify({
 
@@ -212,6 +213,7 @@ local kube = import '../../kube.libsonnet';
         annotations+: {
           'cert-manager.io/cluster-issuer': config.certIssuer,
           'kubernetes.io/ingress.class': 'nginx',
+          'nginx.ingress.kubernetes.io/proxy-body-size': '%sm' % [config.postSizeLimitMB],
         },
         labels+: config.labels,
       },
