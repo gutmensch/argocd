@@ -378,6 +378,12 @@
   Secret(name): $._Object('v1', 'Secret', name) {
     local secret = self,
 
+    metadata+: {
+      annotations+: {
+        // avoid plaintext secrets in last applied configuration
+        'argocd.argoproj.io/sync-options': 'Replace=true',
+      },
+    },
     type: 'Opaque',
     data_:: {},
     data: { [k]: std.base64(secret.data_[k]) for k in std.objectFields(secret.data_) },

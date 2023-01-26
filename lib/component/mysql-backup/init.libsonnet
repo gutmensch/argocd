@@ -14,7 +14,7 @@ local ca = import '../../localca.libsonnet';
     defaultConfig={
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
-      imageVersion: '0.0.2',
+      imageVersion: '0.0.3',
       mysqlHost: 'mysql',
       mysqlSystemUsers: [],
       backupMinioEnable: false,
@@ -22,6 +22,8 @@ local ca = import '../../localca.libsonnet';
       backupMinioBucket: 'mysql-backup',
       backupMinioAccessKey: '',
       backupMinioSecretKey: '',
+      backupMinioUser: '',
+      backupMinioPassword: '',
       backupDir: '/var/backup',
     }
     //):: helper.uniquify({
@@ -104,9 +106,9 @@ local ca = import '../../localca.libsonnet';
       secret: kube.Secret('%s-config' % [componentName]) {
         metadata+: {
           namespace: namespace,
-          labels: config.labels,
+          labels+: config.labels,
         },
-        stringData: {
+        data_: {
           S3_HOST: config.backupMinioEndpoint,
           S3_BUCKET: config.backupMinioBucket,
           S3_LDAP_USER: config.backupMinioUser,

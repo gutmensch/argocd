@@ -48,6 +48,7 @@ local componentName = 'mailserver';
       extraAnnotations: {},
       fetchmailAccounts: [],
       reportEnable: false,
+      logSizeLimit: '2Gi',
     }
   ):: helper.uniquify({
 
@@ -334,6 +335,10 @@ local componentName = 'mailserver';
                     name: 'data',
                   },
                   {
+                    mountPath: '/var/log/mail',
+                    name: 'log',
+                  },
+                  {
                     mountPath: '/ssl/server.crt',
                     name: 'certificate',
                     subPath: 'tls.crt',
@@ -368,6 +373,12 @@ local componentName = 'mailserver';
               fsGroup: 5000,
             },
             volumes: [
+              {
+                name: 'log',
+                emptyDir: {
+                  sizeLimit: config.logSizeLimit,
+                },
+              },
               {
                 name: 'certificate',
                 secret: {

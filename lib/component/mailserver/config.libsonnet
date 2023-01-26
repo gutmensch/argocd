@@ -118,7 +118,8 @@ local helper = import '../../helper.libsonnet';
     mynetworks: this.mynetworks.private + this.mynetworks.public,
     lmtp_host_lookup: 'native',
     smtp_host_lookup: 'native',
-    smtpd_client_restrictions: ['permit_mynetworks', 'permit_sasl_authenticated', 'reject_unauth_destination', 'reject_unauth_pipelining'],
+    smtpd_helo_required: 'yes',
+    smtpd_client_restrictions: ['permit_mynetworks', 'permit_sasl_authenticated', 'reject_unauth_destination', 'reject_unauth_pipelining', 'reject_unknown_client_hostname'],
     smtpd_recipient_restrictions: [
       'permit_sasl_authenticated',
       'permit_mynetworks',
@@ -126,6 +127,7 @@ local helper = import '../../helper.libsonnet';
       'check_policy_service unix:private/policyd-spf',
       'reject_unauth_pipelining',
       'reject_invalid_helo_hostname',
+      'reject_unknown_helo_hostname',
       'reject_non_fqdn_helo_hostname',
       'reject_unknown_recipient_domain',
       'reject_rhsbl_helo dbl.spamhaus.org',
