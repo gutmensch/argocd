@@ -7,9 +7,9 @@ local policy = import 'templates/policy.libsonnet';
     name, namespace, region, tenant, appConfig, defaultConfig={
       imageRegistry: '',
       imageRef: 'quay.io/minio/minio',
-      imageVersion: 'RELEASE.2022-10-24T18-35-07Z',
+      imageVersion: 'RELEASE.2023-01-25T00-19-54Z',
       imageConsoleRef: 'quay.io/minio/mc',
-      imageConsoleVersion: 'RELEASE.2022-10-20T23-26-33Z',
+      imageConsoleVersion: 'RELEASE.2023-01-11T03-14-16Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -34,6 +34,9 @@ local policy = import 'templates/policy.libsonnet';
       policies: {
         // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
       },
+      consoleIngress: null,
+      httpBasicAuth: null,
+      certIssuer: 'letsencrypt-prod',
     }
   ):: {
 
@@ -300,6 +303,62 @@ local policy = import 'templates/policy.libsonnet';
         ],
         selector: config.labels,
         type: 'ClusterIP',
+      },
+    },
+
+    basicauthsecret: kube.Secret('%s-basic-auth' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      stringData: {
+        auth: config.httpBasicAuth,
+      },
+    },
+
+    ingress: if std.get(config, 'consoleIngress') != null then kube.Ingress('%s-console' % [componentName]) {
+      local ing = self,
+      metadata+: {
+        namespace: namespace,
+        annotations+: {
+          'cert-manager.io/cluster-issuer': config.certIssuer,
+          'kubernetes.io/ingress.class': 'nginx',
+          'nginx.ingress.kubernetes.io/auth-type': 'basic',
+          'nginx.ingress.kubernetes.io/auth-secret': '%s-basic-auth' % [componentName],
+          'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+        },
+        labels+: config.labels,
+      },
+      spec: {
+        tls: [
+          {
+            hosts: [
+              config.consoleIngress,
+            ],
+            secretName: '%s-console-ingress-cert' % [componentName],
+          },
+        ],
+        rules: [
+          {
+            host: config.consoleIngress,
+            http: {
+              paths: [
+                {
+                  backend: {
+                    service: {
+                      name: ing.metadata.name,
+                      port: {
+                        name: 'http-console',
+                      },
+                    },
+                  },
+                  path: '/',
+                  pathType: 'Prefix',
+                },
+              ],
+            },
+          },
+        ],
       },
     },
 

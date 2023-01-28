@@ -6,6 +6,7 @@
   },
 
   lts: {
+    consoleIngress: 'minio.kubectl.me',
     storageClass: 'zfs-slow-xfs',
     storageSize: '250Gi',
     cacheStorageClass: 'zfs-fast-xfs',

@@ -21,7 +21,7 @@ function(name, namespace, project, tenant, region)
       'phpldapadmin',
       project,
       tenant,
-      import 'secret/phpldapadmin.libsonnet',
+      import '../../config/secret.libsonnet',
       import 'config/phpldapadmin.libsonnet',
       import 'config/shared.libsonnet',
       import 'cd/phpldapadmin.json',
