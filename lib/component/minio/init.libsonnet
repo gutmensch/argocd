@@ -35,7 +35,8 @@ local policy = import 'templates/policy.libsonnet';
         // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
       },
       consoleIngress: null,
-      httpBasicAuth: null,
+      // console IP allow list
+      allowList: [],
       certIssuer: 'letsencrypt-prod',
     }
   ):: {
@@ -326,6 +327,7 @@ local policy = import 'templates/policy.libsonnet';
           // 'nginx.ingress.kubernetes.io/auth-type': 'basic',
           // 'nginx.ingress.kubernetes.io/auth-secret': '%s-basic-auth' % [componentName],
           // 'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
+          'nginx.ingress.kubernetes.io/configuration-snippet': std.join('\n', ['allow %s;' % [x] for x in config.allowList] + ['deny all;']),
         },
         labels+: config.labels,
       },

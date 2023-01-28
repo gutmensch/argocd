@@ -13,21 +13,26 @@
 
   configMerge(name, component, project, tenant, secrets, config, shared, cd)::
     local global = import '../config/global.libsonnet';
+    local secret = import '../config/secret.libsonnet';
     std.mergePatch(
-      std.get(global, tenant, default={}), std.mergePatch(
-        std.get(config, 'default', default={}), std.mergePatch(
-          std.get(shared, tenant, default={}), std.mergePatch(
-            std.get(config, tenant, default={}), std.mergePatch(
-              std.get(secrets, tenant, default={}), std.mergePatch(
-                std.get(cd, tenant, default={}), { labels+: {
-                  'app.kubernetes.io/name': name,
-                  'app.kubernetes.io/project': project,
-                  'app.kubernetes.io/component': component,
-                  'app.kubernetes.io/managed-by': 'ArgoCD',
-                }, containerImageLabels+: {
-                  [if std.get(cd, tenant) != null && std.get(cd[tenant], 'imageOwner') != null then 'app.kubernetes.io/created-by']: cd[tenant].imageOwner,
-                  [if std.get(cd, tenant) != null && std.get(cd[tenant], 'imageTimestamp') != null then 'app.kubernetes.io/created-at']: cd[tenant].imageTimestamp,
-                } }
+      std.get(global, 'common', default={}), std.mergePatch(
+        std.get(global, tenant, default={}), std.mergePatch(
+          std.get(secret, tenant, default={}), std.mergePatch(
+            std.get(config, 'default', default={}), std.mergePatch(
+              std.get(shared, tenant, default={}), std.mergePatch(
+                std.get(config, tenant, default={}), std.mergePatch(
+                  std.get(secrets, tenant, default={}), std.mergePatch(
+                    std.get(cd, tenant, default={}), { labels+: {
+                      'app.kubernetes.io/name': name,
+                      'app.kubernetes.io/project': project,
+                      'app.kubernetes.io/component': component,
+                      'app.kubernetes.io/managed-by': 'ArgoCD',
+                    }, containerImageLabels+: {
+                      [if std.get(cd, tenant) != null && std.get(cd[tenant], 'imageOwner') != null then 'app.kubernetes.io/created-by']: cd[tenant].imageOwner,
+                      [if std.get(cd, tenant) != null && std.get(cd[tenant], 'imageTimestamp') != null then 'app.kubernetes.io/created-at']: cd[tenant].imageTimestamp,
+                    } }
+                  ),
+                ),
               ),
             ),
           ),

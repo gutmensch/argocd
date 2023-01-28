@@ -12,7 +12,7 @@ function(name, namespace, project, tenant, region)
       tenant,
       import 'secret/minio.libsonnet',
       import 'config/minio.libsonnet',
-      import '../../config/secret.libsonnet',
+      {},
       import 'cd/minio.json',
     ),
   };
