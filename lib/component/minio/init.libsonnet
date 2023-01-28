@@ -124,7 +124,8 @@ local policy = import 'templates/policy.libsonnet';
                 env: [
                   {
                     name: 'MINIO_ENDPOINT',
-                    value: componentName,
+                    //value: componentName,
+                    value: 'minio-0',
                   },
                   {
                     name: 'MINIO_PORT',
@@ -208,7 +209,8 @@ local policy = import 'templates/policy.libsonnet';
                 env: [
                   {
                     name: 'MINIO_ENDPOINT',
-                    value: componentName,
+                    //value: componentName,
+                    value: 'minio-0',
                   },
                   {
                     name: 'MINIO_PORT',
