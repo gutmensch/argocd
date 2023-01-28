@@ -166,11 +166,6 @@ local policy = import 'templates/policy.libsonnet';
                         name: componentName,
                       },
                     },
-                    // {
-                    //   secret: {
-                    //     name: componentName,
-                    //   },
-                    // },
                   ],
                 },
               },
@@ -255,11 +250,6 @@ local policy = import 'templates/policy.libsonnet';
                         name: componentName,
                       },
                     },
-                    // {
-                    //   secret: {
-                    //     name: componentName,
-                    //   },
-                    // },
                   ],
                 },
               },
@@ -324,9 +314,6 @@ local policy = import 'templates/policy.libsonnet';
         annotations+: {
           'cert-manager.io/cluster-issuer': config.certIssuer,
           'kubernetes.io/ingress.class': 'nginx',
-          // 'nginx.ingress.kubernetes.io/auth-type': 'basic',
-          // 'nginx.ingress.kubernetes.io/auth-secret': '%s-basic-auth' % [componentName],
-          // 'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
           'nginx.ingress.kubernetes.io/configuration-snippet': std.join('\n', ['allow %s;' % [x] for x in config.allowList] + ['deny all;']),
         },
         labels+: config.labels,
