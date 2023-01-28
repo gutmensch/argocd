@@ -14,7 +14,7 @@ local ca = import '../../localca.libsonnet';
     defaultConfig={
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
-      imageVersion: '0.0.3',
+      imageVersion: '0.0.4',
       mysqlHost: 'mysql',
       mysqlSystemUsers: [],
       backupMinioEnable: false,
