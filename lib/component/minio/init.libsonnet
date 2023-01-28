@@ -348,7 +348,7 @@ local policy = import 'templates/policy.libsonnet';
                     service: {
                       name: ing.metadata.name,
                       port: {
-                        name: 'http-console',
+                        name: 'http',
                       },
                     },
                   },
