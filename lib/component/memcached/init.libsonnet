@@ -31,9 +31,6 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       spec+: {
-        nodeSelector: {
-          'topology.kubernetes.io/region': region,
-        },
         replicas: config.replicas,
         selector: {
           matchLabels: config.labels,
@@ -52,6 +49,9 @@ local kube = import '../../kube.libsonnet';
             },
           },
           spec: {
+            nodeSelector: {
+              'topology.kubernetes.io/region': region,
+            },
             containers: [
               {
                 envFrom: [
