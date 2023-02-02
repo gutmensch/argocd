@@ -116,9 +116,6 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       spec+: {
-        nodeSelector: {
-          'topology.kubernetes.io/region': region,
-        },
         replicas: std.get(config, 'replicas', default=1),
         revisionHistoryLimit: 5,
         selector: {
@@ -132,6 +129,9 @@ local kube = import '../../kube.libsonnet';
             labels+: config.labels + config.containerImageLabels,
           },
           spec: {
+            nodeSelector: {
+              'topology.kubernetes.io/region': region,
+            },
             containers: [
               {
                 envFrom: [
