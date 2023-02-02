@@ -4,7 +4,7 @@
   },
 
   staging: {
-    imageVersion: '1.6.1-php74',
+    imageVersion: '1.6.1-php74-1',
     ingress: 'mail.staging.bln.space',
     dbWriteHost: 'mysql.base-mysqldb-staging.svc.cluster.local',
     dbReadHost: 'mysql.base-mysqldb-staging.svc.cluster.local',
