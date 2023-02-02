@@ -14,6 +14,7 @@
   },
 
   lts: {
+    imageVersion: '1.6.1-php74-1',
     ingress: 'mail.bln.space',
     dbWriteHost: 'mysql.base-mysqldb-lts.svc.cluster.local',
     dbReadHost: 'mysql.base-mysqldb-lts.svc.cluster.local',

@@ -144,16 +144,16 @@ local kube = import '../../kube.libsonnet';
                 name: name,
                 image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
-                // livenessProbe: {
-                //   exec: {
-                //     command: [
-                //       '/bin/bash',
-                //       '/usr/local/bin/probe.sh',
-                //     ],
-                //   },
-                //   initialDelaySeconds: 10,
-                //   periodSeconds: 10,
-                // },
+                livenessProbe: {
+                  exec: {
+                    command: [
+                      '/bin/bash',
+                      '/usr/local/bin/probe.sh',
+                    ],
+                  },
+                  initialDelaySeconds: 10,
+                  periodSeconds: 30,
+                },
                 readinessProbe: {
                   exec: {
                     command: [
