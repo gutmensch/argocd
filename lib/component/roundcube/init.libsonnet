@@ -43,6 +43,7 @@ local kube = import '../../kube.libsonnet';
       loginUsernameFilter: 'email',
       certIssuer: 'letsencrypt-prod',
       postSizeLimitMB: 25,
+      displayProductInfo: 0,
     },
   ):: helper.uniquify({
 
@@ -64,6 +65,9 @@ local kube = import '../../kube.libsonnet';
       local res = if std.length(mysqlUserDef) > 0 then mysqlUserDef[0] else appUserDef;
       res,
     local _user = _lookup(config.mysqlDatabaseUsers, config.dbUser, config.dbPassword, config.dbDatabase),
+
+    assert config.desKey != 'changeme' : error 'please change des key to a random string',
+    assert tenant == 'staging' || (tenant == 'lts' && _user.password != 'changeme') : error 'please change the database password for lts tenant',
 
     secret: kube.Secret(componentName) {
       metadata+: {
@@ -101,6 +105,7 @@ local kube = import '../../kube.libsonnet';
           log_driver: config.logDriver,
           log_logins: config.logLogins,
           login_username_filter: config.loginUsernameFilter,
+          display_product_info: config.displayProductInfo,
         })),
       },
     },
@@ -142,14 +147,8 @@ local kube = import '../../kube.libsonnet';
                 livenessProbe: {
                   exec: {
                     command: [
-                      'curl',
-                      '--fail',
-                      '--cookie-jar',
-                      '/tmp/cookies.txt',
-                      '-b',
-                      '/tmp/cookies.txt',
-                      '-s',
-                      'http://127.0.0.1:8080',
+                      '/bin/bash',
+                      '/usr/local/bin/probe.sh',
                     ],
                   },
                   initialDelaySeconds: 10,
@@ -158,14 +157,8 @@ local kube = import '../../kube.libsonnet';
                 readinessProbe: {
                   exec: {
                     command: [
-                      'curl',
-                      '--fail',
-                      '--cookie-jar',
-                      '/tmp/cookies.txt',
-                      '-b',
-                      '/tmp/cookies.txt',
-                      '-s',
-                      'http://127.0.0.1:8080',
+                      '/bin/bash',
+                      '/usr/local/bin/probe.sh',
                     ],
                   },
                   initialDelaySeconds: 10,
