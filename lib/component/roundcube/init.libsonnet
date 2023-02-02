@@ -44,6 +44,8 @@ local kube = import '../../kube.libsonnet';
       certIssuer: 'letsencrypt-prod',
       postSizeLimitMB: 25,
       displayProductInfo: 0,
+      cipherMethod: 'AES-256-CBC',
+      usernameDomain: null,
     },
   ):: helper.uniquify({
 
@@ -76,7 +78,7 @@ local kube = import '../../kube.libsonnet';
       },
       stringData: {
         // XXX: double base64 encoded in secret, decoded by entrypoint
-        RCCONFIG: std.base64(helper.manifestPhpConfig({
+        RCCONFIG: std.base64(helper.manifestPhpConfig(std.prune({
           db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
             _user.user,
             _user.password,
@@ -106,7 +108,9 @@ local kube = import '../../kube.libsonnet';
           log_logins: config.logLogins,
           login_username_filter: config.loginUsernameFilter,
           display_product_info: config.displayProductInfo,
-        })),
+          cipher_method: config.cipherMethod,
+          username_domain: config.usernameDomain,
+        }))),
       },
     },
 
