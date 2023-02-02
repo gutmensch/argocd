@@ -30,7 +30,10 @@ local kube = import '../../kube.libsonnet';
         namespace: namespace,
         labels+: config.labels,
       },
-      spec: {
+      spec+: {
+        nodeSelector: {
+          'topology.kubernetes.io/region': region,
+        },
         replicas: config.replicas,
         selector: {
           matchLabels: config.labels,

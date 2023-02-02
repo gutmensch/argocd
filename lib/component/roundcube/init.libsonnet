@@ -111,6 +111,9 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       spec+: {
+        nodeSelector: {
+          'topology.kubernetes.io/region': region,
+        },
         replicas: std.get(config, 'replicas', default=1),
         revisionHistoryLimit: 5,
         selector: {
@@ -137,10 +140,36 @@ local kube = import '../../kube.libsonnet';
                 image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
-                  httpGet: {
-                    path: '/',
-                    port: 'http',
+                  exec: {
+                    command: [
+                      'curl',
+                      '--fail',
+                      '--cookie-jar',
+                      '/tmp/cookies.txt',
+                      '-b',
+                      '/tmp/cookies.txt',
+                      '-s',
+                      'http://127.0.0.1:8080',
+                    ],
                   },
+                  initialDelaySeconds: 10,
+                  periodSeconds: 10,
+                },
+                readinessProbe: {
+                  exec: {
+                    command: [
+                      'curl',
+                      '--fail',
+                      '--cookie-jar',
+                      '/tmp/cookies.txt',
+                      '-b',
+                      '/tmp/cookies.txt',
+                      '-s',
+                      'http://127.0.0.1:8080',
+                    ],
+                  },
+                  initialDelaySeconds: 10,
+                  periodSeconds: 10,
                 },
                 ports: [
                   {
@@ -149,12 +178,6 @@ local kube = import '../../kube.libsonnet';
                     protocol: 'TCP',
                   },
                 ],
-                readinessProbe: {
-                  httpGet: {
-                    path: '/',
-                    port: 'http',
-                  },
-                },
               },
             ],
           },

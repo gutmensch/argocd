@@ -3,7 +3,11 @@
     imageRegistry: 'registry.lan:5000',
   },
 
-  staging: {},
+  staging: {
+    storageClass: 'zfs-fast-xfs',
+    storageSize: '10Gi',
+    backupEnable: false,
+  },
 
   lts: {
     storageClass: 'zfs-fast-xfs',

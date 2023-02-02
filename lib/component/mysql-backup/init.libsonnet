@@ -17,7 +17,7 @@ local ca = import '../../localca.libsonnet';
       imageVersion: '0.0.4',
       mysqlHost: 'mysql',
       mysqlSystemUsers: [],
-      backupMinioEnable: false,
+      backupEnable: true,
       backupMinioEndpoint: 'http://minio:9000',
       backupMinioBucket: 'mysql-backup',
       backupMinioAccessKey: '',
@@ -40,7 +40,7 @@ local ca = import '../../localca.libsonnet';
     local _backupUser = [x for x in config.mysqlSystemUsers if x.user == 'backup'][0],
 
     backupJobs: {
-      ['backup-%s' % [user.database]]: kube.CronJob('backup-%s' % [user.database]) {
+      [if config.backupEnable then 'backup-%s' % [user.database]]: kube.CronJob('backup-%s' % [user.database]) {
         metadata+: {
           namespace: namespace,
           labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
@@ -103,7 +103,7 @@ local ca = import '../../localca.libsonnet';
       }
       for user in config.mysqlDatabaseUsers
     } + {
-      secret: kube.Secret('%s-config' % [componentName]) {
+      [if config.backupEnable then 'secret']: kube.Secret('%s-config' % [componentName]) {
         metadata+: {
           namespace: namespace,
           labels+: config.labels,
