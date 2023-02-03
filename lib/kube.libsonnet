@@ -592,7 +592,13 @@
     },
   },
 
-  Ingress(name): $._Object('networking.k8s.io/v1', 'Ingress', name) {
+  Ingress(name, restricted): $._Object('networking.k8s.io/v1', 'Ingress', name) {
+    metadata+: {
+      annotations+: {
+        local globalConfig = import '../config/global.libsonnet',
+        [if restricted then 'nginx.ingress.kubernetes.io/configuration-snippet']+: std.join('\n', ['allow %s;' % [x] for x in globalConfig.common.allowList] + ['deny all;']),
+      },
+    },
     spec: {},
 
     local rel_paths = [

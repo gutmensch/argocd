@@ -35,8 +35,6 @@ local policy = import 'templates/policy.libsonnet';
         // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
       },
       consoleIngress: null,
-      // console IP allow list
-      allowList: [],
       certIssuer: 'letsencrypt-prod',
     }
   ):: {
@@ -50,6 +48,7 @@ local policy = import 'templates/policy.libsonnet';
 
     local appName = name,
     local componentName = 'minio',
+    local ingressRestricted = true,
 
     configmap: kube.ConfigMap(componentName) {
       data: {
@@ -101,7 +100,9 @@ local policy = import 'templates/policy.libsonnet';
       for b in std.objectFields(config.buckets)
     ],
 
-    job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(std.toString(this.buckets)), 23, 8)]) {
+    job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(
+      std.toString(this.buckets) + helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+    ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,
@@ -185,7 +186,9 @@ local policy = import 'templates/policy.libsonnet';
       for p in std.objectFields(config.policies)
     ],
 
-    job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(std.toString(this.policies)), 23, 8)]) {
+    job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(
+      std.toString(this.policies) + helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+    ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,
@@ -307,14 +310,13 @@ local policy = import 'templates/policy.libsonnet';
       },
     },
 
-    ingress: if std.get(config, 'consoleIngress') != null then kube.Ingress('%s-console' % [componentName]) {
+    ingress: if std.get(config, 'consoleIngress') != null then kube.Ingress('%s-console' % [componentName], ingressRestricted) {
       local ing = self,
       metadata+: {
         namespace: namespace,
         annotations+: {
           'cert-manager.io/cluster-issuer': config.certIssuer,
           'kubernetes.io/ingress.class': 'nginx',
-          'nginx.ingress.kubernetes.io/configuration-snippet': std.join('\n', ['allow %s;' % [x] for x in config.allowList] + ['deny all;']),
         },
         labels+: config.labels,
       },

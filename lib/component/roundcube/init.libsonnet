@@ -55,6 +55,7 @@ local kube = import '../../kube.libsonnet';
 
     local appName = name,
     local componentName = 'roundcube',
+    local ingressRestricted = if tenant == 'lts' then false else true,
 
     // mysql user/db definition takes precedence is username found in definitions
     local _lookup(userList, user, pass, db) =
@@ -226,7 +227,7 @@ local kube = import '../../kube.libsonnet';
     //   },
     // },
 
-    ingress: if std.get(config, 'ingress') != null then kube.Ingress(componentName) {
+    ingress: if std.get(config, 'ingress') != null then kube.Ingress(componentName, ingressRestricted) {
       local ing = self,
       metadata+: {
         namespace: namespace,

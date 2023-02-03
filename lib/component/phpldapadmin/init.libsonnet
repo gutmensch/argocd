@@ -100,7 +100,7 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    ingress: if std.get(config, 'ingress') != null then kube.Ingress(componentName) {
+    ingress: if std.get(config, 'ingress') != null then kube.Ingress(componentName, false) {
       local ing = self,
       metadata+: {
         namespace: namespace,
