@@ -26,4 +26,4 @@ if [ $(git diff --name-only --cached | wc -l) -gt 0 ]; then
 	git commit --amend -C HEAD --no-verify
 fi
 
-rm .commit_generated
+rm .commit_generated 2>/dev/null || true
