@@ -14,13 +14,6 @@ local def = import 'defaults.libsonnet';
         { group: '', kind: 'Namespace' },
       ],
     }),
-    def.withProject({
-      name: 'test',
-      desc: 'test',
-      clusterResourceAllowList: [
-        { group: '', kind: 'Namespace' },
-      ],
-    }),
   ],
 
   // --- manage global cluster resources like storage classes, clusterroles, etc.
