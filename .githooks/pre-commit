@@ -6,7 +6,7 @@ if [ -z "$(which jq)" ] || [ -z "$(which jsonnet)" ]; then
 fi
 
 for f in _generated/*.jsonnet; do
-	git rm $f
+	git rm -f $f >/dev/null 2>&1
 done
 
 for row in $(jsonnet root.jsonnet | jq -r '.[] | @base64'); do
@@ -15,5 +15,5 @@ for row in $(jsonnet root.jsonnet | jq -r '.[] | @base64'); do
 	}
 	_gen_file=_generated/$(_jq '(.kind|ascii_downcase),"-",.metadata.name').jsonnet
 	_jq '.' >"${_gen_file}"
-	git add "${_gen_file}"
+	git add -v "${_gen_file}" >/dev/null 2>&1
 done
