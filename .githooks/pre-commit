@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$(which jq)" ] || [ -z "$(which jsonnet)" ]; then
+	echo "please install jsonnet and jq"
+	exit 1
+fi
+
+for f in _generated/*.jsonnet; do
+	git rm $f
+done
+
+for row in $(jsonnet root.jsonnet | jq -r '.[] | @base64'); do
+	_jq() {
+		echo "${row}" | base64 --decode | jq -j ${1}
+	}
+	_gen_file=_generated/$(_jq '(.kind|ascii_downcase),"-",.metadata.name').jsonnet
+	_jq '.' >"${_gen_file}"
+	git add "${_gen_file}"
+done
