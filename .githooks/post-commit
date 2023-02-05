@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ ! -f .commit_generated ]; then
+	exit 0
+fi
+
 if [ -z "$(which jq)" ] || [ -z "$(which jsonnet)" ]; then
 	echo "please install jsonnet and jq"
 	exit 1
