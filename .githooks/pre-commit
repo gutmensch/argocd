@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if git diff --name-only --cached | grep 'root\.jsonnet\|vars\.libsonnet\|defaults\.libsonnet'; then
+if git diff --name-only --cached | grep -q 'root\.jsonnet\|vars\.libsonnet\|defaults\.libsonnet'; then
 	echo "prepare for resource (re)generation"
 	touch .commit_generated
 fi
