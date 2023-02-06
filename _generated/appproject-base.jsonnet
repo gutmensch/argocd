@@ -45,6 +45,10 @@
         "server": "https://kubernetes.default.svc"
       },
       {
+        "namespace": "base-roundcube-staging",
+        "server": "https://kubernetes.default.svc"
+      },
+      {
         "namespace": "base-roundcube-lts",
         "server": "https://kubernetes.default.svc"
       }
