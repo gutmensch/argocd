@@ -37,8 +37,8 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       spec+: {
-        backoffLimit: 10,
-        completions: 10,
+        backoffLimit: 3,
+        completions: 1,
         template+: {
           metadata+: {
             annotations+: {
