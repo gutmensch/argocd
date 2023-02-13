@@ -27,6 +27,9 @@ echo ":msg, contains, \"from unknown[10.244.\"    stop" >>$RSYSLOG_CONF
 echo ":msg, contains, \"CONNECT from [10.244.\"    stop" >>$RSYSLOG_CONF
 echo ":msg, contains, \"WHITELISTED [10.244.\"    stop" >>$RSYSLOG_CONF
 
+# fix logrotate directory handling even though fsGroup is set (but syslog user and root group?!)
+chmod o-w /var/log/mail
+
 # generate IP based whitelist for postgrey based on spf records
 # and remove upstream whitelist clients domain_list
 rm -v /etc/postgrey/whitelist_recipients
