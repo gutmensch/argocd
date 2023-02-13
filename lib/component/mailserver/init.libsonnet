@@ -321,9 +321,32 @@ local componentName = 'mailserver';
                   requests: {},
                 },
                 securityContext: {
+                  allowPrivilegeEscalation: false,
+                  readOnlyRootFilesystem: false,
                   runAsNonRoot: false,
-                  // runAsNonRoot: true,
-                  // runAsUser: 1001,
+                  runAsUser: 0,
+                  runAsGroup: 0,
+                  privileged: false,
+                  capabilities: {
+                    add: [
+                      // file permission capabilities
+                      'CHOWN',
+                      'FOWNER',
+                      'MKNOD',
+                      'SETGID',
+                      'SETUID',
+                      'DAC_OVERRIDE',
+                      // network capabilities
+                      'NET_BIND_SERVICE',
+                      // miscellaneous  capabilities
+                      'SYS_CHROOT',
+                      'KILL',
+                    ] + if config.fail2banEnable then ['NET_ADMIN', 'NET_RAW'] else [],
+                    drop: ['ALL'],
+                  },
+                  seccompProfile: {
+                    type: 'RuntimeDefault',
+                  },
                 },
                 volumeMounts: [
                   {
