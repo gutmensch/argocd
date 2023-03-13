@@ -32,6 +32,12 @@
   },
 
   egress: {
+    all: {
+      to: [
+        { ipBlock: { cidr: '0.0.0.0/0' } },
+      ],
+    },
+
     coreDNS: {
       to: [
         { namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.dnsServiceNamespace } } },
