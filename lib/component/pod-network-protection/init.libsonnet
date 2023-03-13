@@ -44,7 +44,9 @@ local policies = import 'policies.libsonnet';
           labels+: config.labels,
         },
         spec+: {
-          podSelector: config.podSelector,
+          podSelector: {
+            matchLabels: config.podSelector,
+          },
           ingress_: netpol.ingress + config.ingress,
         },
       },
@@ -55,7 +57,9 @@ local policies = import 'policies.libsonnet';
           labels+: config.labels,
         },
         spec+: {
-          podSelector: config.podSelector,
+          podSelector: {
+            matchLabels: config.podSelector,
+          },
           egress_: netpol.egress + config.egress,
         },
       },
