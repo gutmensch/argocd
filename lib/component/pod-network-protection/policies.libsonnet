@@ -49,7 +49,9 @@
 
     [if this.ldapServiceNamespace != null then 'ldap']: {
       to: [
-        { namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.ldapServiceNamespace } } },
+        //{ namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.ldapServiceNamespace } } },
+        { namespaceSelector: {} },
+        { podSelector: {} },
       ],
       ports: [
         { protocol: 'TCP', port: 389 },
