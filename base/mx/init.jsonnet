@@ -1,5 +1,5 @@
-// local dmarcreport = import '../../lib/component/dmarc-report/init.libsonnet';
 local mailserver = import '../../lib/component/mailserver/init.libsonnet';
+local protection = import '../../lib/component/pod-network-protection/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
 local kube = import '../../lib/kube.libsonnet';
 
@@ -16,36 +16,38 @@ function(name, namespace, project, tenant, region)
       import 'config/shared.libsonnet',
       import 'cd/mailserver.json',
     ),
-    // dmarcreport: helper.configMerge(
-    //   name,
-    //   'dmarc-report',
-    //   project,
-    //   tenant,
-    //   import 'secret/dmarcreport.libsonnet',
-    //   import 'config/dmarcreport.libsonnet',
-    //   import 'config/shared.libsonnet',
-    //   import 'cd/dmarcreport.json',
-    // ),
+    protection: helper.configMerge(
+      name,
+      'pod-network-protection',
+      project,
+      tenant,
+      {},
+      import 'config/pod-network-protection.libsonnet',
+      {},
+      {},
+    ),
   };
 
   // XXX: prune is expensive and slow, but otherwise many
   // null resources :-/
   local resources = std.prune(
-    mailserver.generate(
-      name,
-      namespace,
-      region,
-      tenant,
-      componentConfigs.mailserver,
-    )
-    // dmarcreport.generate(
-    //   name,
-    //   namespace,
-    //   region,
-    //   tenant,
-    //   componentConfigs.dmarcreport,
-    // )
-  );
+                      mailserver.generate(
+                        name,
+                        namespace,
+                        region,
+                        tenant,
+                        componentConfigs.mailserver,
+                      )
+                    ) +
+                    protection.generate(
+                      name,
+                      namespace,
+                      region,
+                      tenant,
+                      componentConfigs.protection {
+                        podSelector: componentConfigs.mailserver.labels,
+                      },
+                    );
 
   kube.List() {
     items_+: resources,

@@ -18,6 +18,15 @@
       "namespace": "base-mx-lts",
       "server": "https://kubernetes.default.svc"
     },
+    "ignoreDifferences": [
+      {
+        "group": "networking.k8s.io",
+        "jqPathExpressions": [
+          ".spec.ingress[].from[] | select(.ipBlock.cidr == \"0.0.0.0/0\")"
+        ],
+        "kind": "NetworkPolicy"
+      }
+    ],
     "project": "base",
     "source": {
       "directory": {
@@ -73,7 +82,8 @@
       "syncOptions": [
         "Validate=true",
         "CreateNamespace=true",
-        "PrunePropagationPolicy=background"
+        "PrunePropagationPolicy=background",
+        "RespectIgnoreDifferences=true"
       ]
     }
   }

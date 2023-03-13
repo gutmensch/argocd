@@ -4,6 +4,7 @@
     targetRevision: 'HEAD',
     tenant: ['staging', 'lts'],
     region: 'helsinki',
+    ignoreDiff: [],
   },
   yaml: {
     name: 'default',

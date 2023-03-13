@@ -57,6 +57,7 @@ local kube = import 'kube.libsonnet';
           },
         },
       },
+      [if std.length(app.ignoreDiff) > 0 then 'ignoreDifferences']: app.ignoreDiff,
       destination: {
         server: 'https://kubernetes.default.svc',
         namespace: full_name,
@@ -76,7 +77,12 @@ local kube = import 'kube.libsonnet';
           },
         },
         // XXX: https://github.com/argoproj/argo-cd/issues/7383
-        syncOptions: ['Validate=true', 'CreateNamespace=true', 'PrunePropagationPolicy=background'],
+        syncOptions: std.prune([
+          'Validate=true',
+          'CreateNamespace=true',
+          'PrunePropagationPolicy=background',
+          if std.length(app.ignoreDiff) > 0 then 'RespectIgnoreDifferences=true' else null,
+        ]),
       },
     },
   },

@@ -29,7 +29,7 @@ local componentName = 'mailserver';
       postmasterAddress: '',
       clamavEnable: true,
       spamAssassinEnable: true,
-      spamAssassinSpamSubject: '[SPAM](_SCORE_) ',
+      spamAssassinSpamSubject: '[SPAM:_SCORE_] ',
       spamAssassinTag: '-100000.0',
       spamAssassinTag2: '3.75',
       spamAssassinKill: '100000.0',
