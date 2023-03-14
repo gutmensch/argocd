@@ -31,23 +31,23 @@ function(name, namespace, project, tenant, region)
   // XXX: prune is expensive and slow, but otherwise many
   // null resources :-/
   local resources = std.prune(
-    mailserver.generate(
-      name,
-      namespace,
-      region,
-      tenant,
-      componentConfigs.mailserver,
-    )
-  );
-  //protection.generate(
-  //  name,
-  //  namespace,
-  //  region,
-  //  tenant,
-  //  componentConfigs.protection {
-  //    podSelector: componentConfigs.mailserver.labels,
-  //  },
-  //);
+                      mailserver.generate(
+                        name,
+                        namespace,
+                        region,
+                        tenant,
+                        componentConfigs.mailserver,
+                      )
+                    ) +
+                    protection.generate(
+                      name,
+                      namespace,
+                      region,
+                      tenant,
+                      componentConfigs.protection {
+                        podSelector: componentConfigs.mailserver.labels,
+                      },
+                    );
 
   kube.List() {
     items_+: resources,

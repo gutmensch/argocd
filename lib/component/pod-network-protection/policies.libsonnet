@@ -1,6 +1,8 @@
 {
   servicePortsInternal:: error 'please provide internal service ports if using pod network protection',
   servicePortsExternal:: error 'please provide external service ports if using pod network protection',
+  outboundPorts:: error 'please provide outbound enabled ports if using pod network protection',
+  outboundNetworks:: error 'please provide outbound enabled network if using pod network protection',
   dnsServiceNamespace:: 'kube-system',
   ldapServiceNamespace:: null,
 
@@ -34,7 +36,12 @@
   egress: {
     all: {
       to: [
-        { ipBlock: { cidr: '0.0.0.0/0' } },
+        { ipBlock: { cidr: network } }
+        for network in this.outboundNetworks
+      ],
+      ports: [
+        { protocol: 'TCP', port: port }
+        for port in this.outboundPorts
       ],
     },
 
@@ -49,13 +56,13 @@
 
     [if this.ldapServiceNamespace != null then 'ldap']: {
       to: [
-        //{ namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.ldapServiceNamespace } } },
-        { namespaceSelector: {} },
-        { podSelector: {} },
+        { namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.ldapServiceNamespace } } },
       ],
       ports: [
-        { protocol: 'TCP', port: 389 },
-        { protocol: 'TCP', port: 636 },
+        // XXX: this needs the actual pod service ports and uses
+        // unprivileged high ports on pod level and normal ports on service level!
+        { protocol: 'TCP', port: 1389 },
+        { protocol: 'TCP', port: 1636 },
       ],
     },
   },

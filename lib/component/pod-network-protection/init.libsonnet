@@ -19,6 +19,8 @@ local policies = import 'policies.libsonnet';
       podSelector: {},
       portsInternal: [],
       portsExternal: [],
+      outboundPorts: [],
+      outboundNetworks: [],
       ingress: {},
       egress: {},
       filterRegexes: {},
@@ -35,6 +37,8 @@ local policies = import 'policies.libsonnet';
       local netpol = policies {
         servicePortsInternal: config.portsInternal,
         servicePortsExternal: config.portsExternal,
+        outboundPorts: config.outboundPorts,
+        outboundNetworks: config.outboundNetworks,
         ldapServiceNamespace: 'base-auth-lts',
       },
 
