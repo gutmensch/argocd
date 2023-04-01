@@ -14,8 +14,9 @@ local kube = import '../../kube.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'library/redis',
-      imageVersion: '7.0.7-alpine',
+      imageVersion: '7.0.10-alpine',
       replicas: 1,
+      redisUser: 'default',
       redisPassword: 'changeme',
       dbdumpPath: '/dbdump',
       dbdumpSizeLimit: '1Gi',
@@ -27,7 +28,7 @@ local kube = import '../../kube.libsonnet';
 
     local config = std.mergePatch(defaultConfig, appConfig),
 
-    assert config.redisPassword != 'changeme' : error 'please change the redis password',
+    assert config.redisPassword != 'changeme' : error 'please set password for redis',
 
     local appName = name,
     local componentName = 'redis',
@@ -86,11 +87,21 @@ local kube = import '../../kube.libsonnet';
                     containerPort: 6379,
                   },
                 ],
+                securityContext: {
+                  runAsNonRoot: true,
+                  runAsUser: 999,
+                },
                 volumeMounts: [
                   {
                     name: 'config',
                     mountPath: '/usr/local/etc/redis/redis.conf',
                     subPath: 'redis.conf',
+                    readOnly: true,
+                  },
+                  {
+                    name: 'users',
+                    mountPath: '/usr/local/etc/redis/users.acl',
+                    subPath: 'users.acl',
                     readOnly: true,
                   },
                   {
@@ -100,12 +111,22 @@ local kube = import '../../kube.libsonnet';
                 ],
               },
             ],
+            securityContext: {
+              fsGroup: 1000,
+            },
             volumes: [
               {
                 name: 'config',
-                secret: {
-                  secretName: componentName,
+                configMap: {
+                  name: componentName,
                 },
+              },
+              {
+                name: 'users',
+                secret: {
+                  secretName: '%s-users' % [componentName],
+                },
+                defaultMode: std.parseOctal('0600'),
               },
               {
                 name: 'dbdump',
@@ -119,21 +140,33 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    secret: kube.Secret(componentName) {
+    secret: kube.Secret('%s-users' % [componentName]) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
       },
       stringData: {
         // https://raw.githubusercontent.com/redis/redis/7.0/redis.conf
+        'users.acl': 'user %s on +@all -DEBUG ~* >%s' % [config.redisUser, config.redisPassword],
+      },
+    },
+
+    configmap: kube.ConfigMap(componentName) {
+      metadata+: {
+        namespace: namespace,
+        labels: config.labels,
+      },
+      data: {
+        // https://raw.githubusercontent.com/redis/redis/7.0/redis.conf
         'redis.conf': std.join('\n', [
           'save 3600 1 300 100 60 10000',
           'dbfilename dump.rdb',
           'dir %s' % [config.dbdumpPath],
-          'requirepass %s' % [config.redisPassword],
+          'aclfile /usr/local/etc/redis/users.acl',
         ]),
       },
     },
+
 
     service: kube.Service(componentName) {
       metadata+: {
