@@ -206,7 +206,7 @@ local kube = import '../../kube.libsonnet';
                 name: 'nginx',
                 ports: [
                   {
-                    containerPort: 80,
+                    containerPort: 8080,
                     name: 'http',
                     protocol: 'TCP',
                   },
