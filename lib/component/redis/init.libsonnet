@@ -103,7 +103,7 @@ local kube = import '../../kube.libsonnet';
               {
                 name: 'config',
                 secret: {
-                  name: componentName,
+                  secretName: componentName,
                 },
               },
               {
