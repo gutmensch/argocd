@@ -13,7 +13,7 @@ local kube = import '../../kube.libsonnet';
     defaultConfig={
       imageRegistryMirror: '',
       imageRegistry: '',
-      imageRef: 'redis',
+      imageRef: 'library/redis',
       imageVersion: '7.0.7-alpine',
       replicas: 1,
       redisPassword: 'changeme',
