@@ -127,12 +127,10 @@ local kube = import '../../kube.libsonnet';
         namespace: namespace,
       },
       spec: {
+        serviceName: '%s-headless' % [componentName],
         replicas: 1,
         selector: {
           matchLabels: config.labels,
-        },
-        strategy: {
-          type: 'Recreate',
         },
         template: {
           metadata: {
@@ -298,6 +296,28 @@ local kube = import '../../kube.libsonnet';
             },
           },
         ],
+      },
+    },
+
+    serviceheadless: kube.Service('%s-headless' % [componentName]) {
+      apiVersion: 'v1',
+      kind: 'Service',
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      spec: {
+        clusterIP: 'None',
+        ports: [
+          {
+            name: 'http',
+            port: 8080,
+            targetPort: 'http',
+          },
+        ],
+        selector: config.labels,
+        sessionAffinity: 'None',
+        type: 'ClusterIP',
       },
     },
 
