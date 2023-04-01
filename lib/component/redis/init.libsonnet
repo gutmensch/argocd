@@ -101,6 +101,12 @@ local kube = import '../../kube.libsonnet';
             ],
             volumes: [
               {
+                name: 'config',
+                secret: {
+                  name: componentName,
+                },
+              },
+              {
                 name: 'dbdump',
                 emptyDir: {
                   sizeLimit: config.dbdumpSizeLimit,
