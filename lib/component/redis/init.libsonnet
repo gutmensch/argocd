@@ -19,6 +19,7 @@ local kube = import '../../kube.libsonnet';
       redisPassword: 'changeme',
       dbdumpPath: '/dbdump',
       dbdumpSizeLimit: '1Gi',
+      memoryLimit: '1Gi',
     }
   ):: helper.uniquify({
 
@@ -57,13 +58,11 @@ local kube = import '../../kube.libsonnet';
           spec: {
             containers: [
               {
-                // envFrom: [
-                //   {
-                //     configMapRef: {
-                //       name: componentName,
-                //     },
-                //   },
-                // ],
+                resources: {
+                  limits: {
+                    memory: config.memoryLimit,
+                  },
+                },
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 readinessProbe: {
@@ -100,11 +99,6 @@ local kube = import '../../kube.libsonnet';
                 ],
               },
             ],
-            resources: {
-              limits: {
-                memory: '1Gi',
-              },
-            },
             volumes: [
               {
                 name: 'dbdump',
