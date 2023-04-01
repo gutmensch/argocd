@@ -1,6 +1,5 @@
 {
   default: {
-    imageRegistry: 'registry.lan:5000',
     storageClass: 'zfs-fast-xfs',
   },
 

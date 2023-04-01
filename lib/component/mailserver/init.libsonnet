@@ -275,7 +275,7 @@ local componentName = 'mailserver';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 4,

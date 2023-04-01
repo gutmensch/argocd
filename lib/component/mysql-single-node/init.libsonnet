@@ -183,7 +183,7 @@ local ca = import '../../localca.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,

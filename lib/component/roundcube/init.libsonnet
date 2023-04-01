@@ -56,21 +56,10 @@ local kube = import '../../kube.libsonnet';
     local appName = name,
     local componentName = 'roundcube',
     local ingressRestricted = if tenant == 'lts' then false else true,
-
-    // mysql user/db definition takes precedence is username found in definitions
-    local _lookup(userList, user, pass, db) =
-      local mysqlUserDef = [x for x in userList if (x.user == user && x.database == db)];
-      local appUserDef = {
-        user: user,
-        password: pass,
-        database: db,
-      };
-      local res = if std.length(mysqlUserDef) > 0 then mysqlUserDef[0] else appUserDef;
-      res,
-    local _user = _lookup(config.mysqlDatabaseUsers, config.dbUser, config.dbPassword, config.dbDatabase),
+    local dbCreds = helper.lookupUserCredentials(config.mysqlDatabaseUsers, config.dbUser, config.dbPassword, config.dbDatabase),
 
     assert config.desKey != 'changeme' : error 'please change des key to a random string',
-    assert tenant == 'staging' || (tenant == 'lts' && _user.password != 'changeme') : error 'please change the database password for lts tenant',
+    assert tenant == 'staging' || (tenant == 'lts' && dbCreds.password != 'changeme') : error 'please change the database password for lts tenant',
 
     secret: kube.Secret(componentName) {
       metadata+: {
@@ -81,17 +70,17 @@ local kube = import '../../kube.libsonnet';
         // XXX: double base64 encoded in secret, decoded by entrypoint
         RCCONFIG: std.base64(helper.manifestPhpConfig(std.prune({
           db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
-            _user.user,
-            _user.password,
+            dbCreds.user,
+            dbCreds.password,
             config.dbWriteHost,
-            _user.database,
+            dbCreds.database,
             std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
           ],
           db_dsnr: 'mysql://%s:%s@%s/%s?%s' % [
-            _user.user,
-            _user.password,
+            dbCreds.user,
+            dbCreds.password,
             config.dbReadHost,
-            _user.database,
+            dbCreds.database,
             std.join('&', [std.join('=', [i, config.dbOpts[i]]) for i in std.objectFields(config.dbOpts)]),
           ],
           memcache_hosts: config.memcachedHosts,
@@ -147,7 +136,7 @@ local kube = import '../../kube.libsonnet';
                   },
                 ],
                 name: name,
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   exec: {

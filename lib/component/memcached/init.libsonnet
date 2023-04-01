@@ -12,7 +12,7 @@ local kube = import '../../kube.libsonnet';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       imageRegistry: '',
-      imageRef: 'memcached',
+      imageRef: 'library/memcached',
       imageVersion: '1.6.17-alpine',
       replicas: 1,
     }
@@ -61,7 +61,7 @@ local kube = import '../../kube.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 readinessProbe: {
                   tcpSocket: {

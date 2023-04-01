@@ -23,6 +23,10 @@ local policies = import 'policies.libsonnet';
       outboundNetworks: [],
       ingress: {},
       egress: {},
+      // map of escaped python style regex with defined groups for IP addresses, e.g.
+      // 'bruteForceLogin': '^login failed from: ([\\.0-9])+$'
+      // the matched groups will be added to network policy ingress object except clause
+      // for blocking
       filterRegexes: {},
     }
   ):: helper.uniquify(
@@ -75,8 +79,9 @@ local policies = import 'policies.libsonnet';
         },
         data: {
           NETWORK_POLICY: '%s-ingress' % [prefix],
-          POD_SELECTOR: std.toString(config.podSelector),
-          FILTER_REGEXES: std.toString(config.filterRegexes),
+          LOG_POD_NAME: std.toString(config.podSelector),
+          LOG_CONTAINER_NAME: std.toString(config.podSelector),
+          FILTER_REGEX: std.join('|', std.objectValues(config.filterRegexes)),
         },
       },
 

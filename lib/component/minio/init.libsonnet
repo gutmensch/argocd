@@ -421,7 +421,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio',
                 ports: [

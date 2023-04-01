@@ -17,8 +17,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
     defaultConfig={
       imageRegistry: '',
       imageRef: 'bitnami/openldap',
-      // first 2.6.3 with argon2 and pbkdf2 support
-      imageVersion: '2.6.3-debian-11-r49',
+      imageVersion: '2.6.4-debian-11-r7',
       replicas: 1,
       storageClass: 'standard',
       storageSize: '8Gi',
@@ -223,7 +222,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,

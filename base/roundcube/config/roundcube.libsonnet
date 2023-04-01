@@ -1,7 +1,5 @@
 {
-  default: {
-    imageRegistry: 'registry.lan:5000',
-  },
+  default: {},
 
   staging: {
     imageVersion: '1.6.1-php74-1',

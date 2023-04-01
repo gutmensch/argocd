@@ -1,4 +1,20 @@
 {
+  lookupUserCredentials(globalMysqlDatabaseUsers, appUser, appPassword, appDatabase)::
+    // helper to avoid duplication of user credentials in app configuration
+    // as mysql needs to have the credentials already, we can use those values directly
+    // in case they exist, otherwise resort to local mysql variables
+    local _lookup(userList, user, pass, db) =
+      local mysqlUserDef = [x for x in userList if (x.user == user && x.database == db)];
+      local appUserDef = {
+        user: user,
+        password: pass,
+        database: db,
+      };
+      local res = if std.length(mysqlUserDef) > 0 then mysqlUserDef[0] else appUserDef;
+      res;
+    local _user = _lookup(globalMysqlDatabaseUsers, appUser, appPassword, appDatabase);
+    _user,
+
   uniquify(obj)::
     {
       [std.md5(std.toString(v))]: v
@@ -40,8 +56,8 @@
       ),
     ),
 
-  getImage(registry, image, version):: (
-    local ref = if registry != '' then std.join('/', [registry, image]) else image;
+  getImage(mirrorRegistry, registry, image, version):: (
+    local ref = if registry != '' then std.join('/', [registry, image]) else std.join('/', [mirrorRegistry, image]);
     if std.startsWith(version, 'sha256') then
       '%s@%s' % [ref, version]
     else
