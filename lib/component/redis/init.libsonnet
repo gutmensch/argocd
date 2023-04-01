@@ -125,8 +125,8 @@ local kube = import '../../kube.libsonnet';
                 name: 'users',
                 secret: {
                   secretName: '%s-users' % [componentName],
+                  defaultMode: std.parseOctal('0600'),
                 },
-                defaultMode: std.parseOctal('0600'),
               },
               {
                 name: 'dbdump',
