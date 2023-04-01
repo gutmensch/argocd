@@ -12,6 +12,7 @@ local ca = import '../../localca.libsonnet';
     // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'library/percona',
       imageVersion: '8.0.29-21',
@@ -183,7 +184,7 @@ local ca = import '../../localca.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,

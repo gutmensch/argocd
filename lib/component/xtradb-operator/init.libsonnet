@@ -11,6 +11,7 @@ local kube = import '../../kube.libsonnet';
     // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'percona/percona-xtradb-cluster-operator',
       imageVersion: '1.11.0',
@@ -81,7 +82,7 @@ local kube = import '../../kube.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 livenessProbe: {
                   failureThreshold: 3,

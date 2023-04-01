@@ -10,6 +10,7 @@ local kube = import '../../kube.libsonnet';
     tenant,
     appConfig,
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'gutmensch/roundcube',
       imageVersion: '1.6.0-6',
@@ -136,7 +137,7 @@ local kube = import '../../kube.libsonnet';
                   },
                 ],
                 name: name,
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   exec: {

@@ -2,7 +2,7 @@
   common: {
     // only applied to images without own registry definition (i.e. docker hub images)
     // local registry is pull through mirror for docker hub
-    mirrorImageRegistry: 'registry.lan:5000',
+    imageRegistryMirror: 'registry.lan:5000',
     allowList: [
       // Telekom DSL
       '79.192.0.0/10',

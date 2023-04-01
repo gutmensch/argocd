@@ -13,6 +13,7 @@ local componentName = 'mailserver';
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
       local this = self,
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'mailserver/docker-mailserver',
       imageVersion: '11.3.1',
@@ -275,7 +276,7 @@ local componentName = 'mailserver';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 4,

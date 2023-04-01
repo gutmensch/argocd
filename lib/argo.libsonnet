@@ -152,7 +152,7 @@ local kube = import 'kube.libsonnet';
           containers: [
             {
               name: name,
-              image: helper.getImage(c.mirrorImageRegistry, std.get(c, 'imageRegistry', ''), c.imageRef, c.imageVersion),
+              image: helper.getImage(c.imageRegistryMirror, std.get(c, 'imageRegistry', ''), c.imageRef, c.imageVersion),
               imagePullPolicy: 'Always',
               envFrom: [
                 {

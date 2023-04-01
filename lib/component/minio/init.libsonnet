@@ -5,6 +5,7 @@ local policy = import 'templates/policy.libsonnet';
 {
   generate(
     name, namespace, region, tenant, appConfig, defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: 'quay.io',
       imageRef: 'minio/minio',
       imageVersion: 'RELEASE.2023-01-25T00-19-54Z',
@@ -101,7 +102,7 @@ local policy = import 'templates/policy.libsonnet';
     ],
 
     job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(
-      std.toString(this.buckets) + helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+      std.toString(this.buckets) + helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
     ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
@@ -139,7 +140,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
                 resources: {
@@ -187,7 +188,7 @@ local policy = import 'templates/policy.libsonnet';
     ],
 
     job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(
-      std.toString(this.policies) + helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+      std.toString(this.policies) + helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
     ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
@@ -225,7 +226,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
                 resources: {
@@ -421,7 +422,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio',
                 ports: [

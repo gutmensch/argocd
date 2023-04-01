@@ -12,6 +12,7 @@ local ca = import '../../localca.libsonnet';
     // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
       imageVersion: '0.0.4',

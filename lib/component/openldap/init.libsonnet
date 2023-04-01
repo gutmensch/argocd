@@ -15,6 +15,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
     // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'bitnami/openldap',
       imageVersion: '2.6.4-debian-11-r7',
@@ -222,7 +223,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'Always',
                 livenessProbe: {
                   failureThreshold: 10,

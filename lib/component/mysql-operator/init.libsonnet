@@ -11,6 +11,7 @@ local kube = import '../../kube.libsonnet';
     // override below values in the specific app/$name/config/, app/$name/secret or app/$name/cd
     // directories app instantiation and configuration and pass as appConfig parameter above
     defaultConfig={
+      imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'mysql/mysql-operator',
       imageVersion: '8.0.31-2.0.7',
