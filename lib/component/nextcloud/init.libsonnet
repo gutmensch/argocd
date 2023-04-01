@@ -52,7 +52,7 @@ local kube = import '../../kube.libsonnet';
 
     local dbCreds = helper.lookupUserCredentials(config.mysqlDatabaseUsers, config.mysqlUser, config.mysqlPassword, config.mysqlDatabase),
 
-    configmap_nextcloud_config: kube.ConfigMap('%s-config' % [componentName]) {
+    configmap_nextcloud_config: kube.ConfigMap('%s-cfg' % [componentName]) {
       data: {
         'apcu.config.php': importstr 'templates/apcu.config.php.tmpl',
         'apps.config.php': importstr 'templates/apps.config.php.tmpl',
@@ -111,7 +111,7 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    configmap_nextcloud_nginxconfig: kube.ConfigMap('%s-nginx-config' % [componentName]) {
+    configmap_nextcloud_nginxconfig: kube.ConfigMap('%s-nginx-cfg' % [componentName]) {
       data: {
         'nginx.conf': importstr 'templates/nginx.conf.tmpl',
       },
@@ -177,7 +177,7 @@ local kube = import '../../kube.libsonnet';
                 ] + [
                   {
                     mountPath: '/var/www/html/config/%s' % [f],
-                    name: '%s-config' % [componentName],
+                    name: '%s-cfg' % [componentName],
                     subPath: f,
                   }
                   for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php']
@@ -363,6 +363,7 @@ local kube = import '../../kube.libsonnet';
         ],
       },
     },
+
     service_nextcloud: kube.Service(componentName) {
       metadata+: {
         labels: config.labels,
