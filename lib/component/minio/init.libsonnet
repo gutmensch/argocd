@@ -5,10 +5,10 @@ local policy = import 'templates/policy.libsonnet';
 {
   generate(
     name, namespace, region, tenant, appConfig, defaultConfig={
-      imageRegistry: '',
-      imageRef: 'quay.io/minio/minio',
+      imageRegistry: 'quay.io',
+      imageRef: 'minio/minio',
       imageVersion: 'RELEASE.2023-01-25T00-19-54Z',
-      imageConsoleRef: 'quay.io/minio/mc',
+      imageConsoleRef: 'minio/mc',
       imageConsoleVersion: 'RELEASE.2023-01-11T03-14-16Z',
       rootUser: 'root',
       rootPassword: 'changeme',
@@ -101,7 +101,7 @@ local policy = import 'templates/policy.libsonnet';
     ],
 
     job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(
-      std.toString(this.buckets) + helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+      std.toString(this.buckets) + helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
     ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
@@ -139,7 +139,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
                 resources: {
@@ -187,7 +187,7 @@ local policy = import 'templates/policy.libsonnet';
     ],
 
     job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(
-      std.toString(this.policies) + helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
+      std.toString(this.policies) + helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
     ), 23, 8)]) {
       metadata+: {
         labels: config.labels,
@@ -225,7 +225,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                image: helper.getImage(config.mirrorImageRegistry, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
                 resources: {
