@@ -66,6 +66,7 @@ local kube = import '../../kube.libsonnet';
                 },
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
+                args: ['/usr/local/etc/redis/redis.conf'],
                 readinessProbe: {
                   tcpSocket: {
                     port: 6379,
