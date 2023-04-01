@@ -90,6 +90,7 @@ local kube = import '../../kube.libsonnet';
                   {
                     name: 'config',
                     mountPath: '/usr/local/etc/redis/redis.conf',
+                    subPath: 'redis.conf',
                     readOnly: true,
                   },
                   {
