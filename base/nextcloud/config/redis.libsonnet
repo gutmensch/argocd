@@ -1,0 +1,8 @@
+{
+  default: {
+  },
+
+  staging: {},
+
+  lts: {},
+}
