@@ -8,6 +8,8 @@ local kube = import '../../kube.libsonnet';
       imageRegistry: '',
       imageRef: 'library/nextcloud',
       imageVersion: '26.0.0-fpm-alpine',
+      nginxImageRef: 'library/nginx',
+      nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
       mysqlHost: 'mysql',
       mysqlDatabaseUsers: [],
@@ -184,7 +186,7 @@ local kube = import '../../kube.libsonnet';
                 ],
               },
               {
-                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.nginxImageRef, config.nginxImageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 livenessProbe: {
                   failureThreshold: 3,
