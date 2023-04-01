@@ -302,7 +302,7 @@ local kube = import '../../kube.libsonnet';
     },
 
     ingress_nextcloud: kube.Ingress(componentName, false) {
-      metadata: {
+      metadata+: {
         annotations: {
           'cert-manager.io/cluster-issuer': 'letsencrypt-prod',
           'nginx.ingress.kubernetes.io/proxy-body-size': '5000m',
@@ -344,7 +344,7 @@ local kube = import '../../kube.libsonnet';
       },
     },
     service_nextcloud: kube.Service(componentName) {
-      metadata: {
+      metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
