@@ -4,5 +4,7 @@
 
   staging: {},
 
-  lts: {},
+  lts: {
+    enableAuth: false,
+  },
 }

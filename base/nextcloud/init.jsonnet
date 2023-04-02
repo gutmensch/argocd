@@ -12,7 +12,7 @@ function(name, namespace, project, tenant, region)
       project,
       tenant,
       import 'secret/shared.libsonnet',
-      {},
+      import 'config/redis.libsonnet',
       {},
       {},
     ),

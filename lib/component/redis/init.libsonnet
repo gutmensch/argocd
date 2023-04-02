@@ -18,6 +18,7 @@ local kube = import '../../kube.libsonnet';
       replicas: 1,
       redisUser: 'default',
       redisPassword: 'changeme',
+      enableAuth: true,
       dbdumpPath: '/dbdump',
       dbdumpSizeLimit: '1Gi',
       memoryLimit: '1Gi',
@@ -28,10 +29,12 @@ local kube = import '../../kube.libsonnet';
 
     local config = std.mergePatch(defaultConfig, appConfig),
 
-    assert config.redisPassword != 'changeme' : error 'please set password for redis',
+    assert (config.enableAuth == false) || (config.enableAuth == true && config.redisPassword != 'changeme') : error 'please change default password for redis',
 
     local appName = name,
     local componentName = 'redis',
+    local redisConf = '/usr/local/etc/redis/redis.conf',
+    local userConf = '/usr/local/etc/redis/users.acl',
 
     deployment: kube.Deployment(componentName) {
       metadata+: {
@@ -95,13 +98,13 @@ local kube = import '../../kube.libsonnet';
                 volumeMounts: [
                   {
                     name: 'config',
-                    mountPath: '/usr/local/etc/redis/redis.conf',
+                    mountPath: redisConf,
                     subPath: 'redis.conf',
                     readOnly: true,
                   },
                   {
                     name: 'users',
-                    mountPath: '/usr/local/etc/redis/users.acl',
+                    mountPath: userConf,
                     subPath: 'users.acl',
                     readOnly: true,
                   },
@@ -148,7 +151,9 @@ local kube = import '../../kube.libsonnet';
       },
       stringData: {
         // https://raw.githubusercontent.com/redis/redis/7.0/redis.conf
-        'users.acl': 'user %s on +@all -DEBUG ~* >%s' % [config.redisUser, config.redisPassword],
+        'users.acl': if config.enableAuth then
+          'user %s on +@all -DEBUG ~* >%s' % [config.redisUser, config.redisPassword] else
+          'user default on +@all ~* nopass',
       },
     },
 
@@ -163,7 +168,7 @@ local kube = import '../../kube.libsonnet';
           'save 3600 1 300 100 60 10000',
           'dbfilename dump.rdb',
           'dir %s' % [config.dbdumpPath],
-          'aclfile /usr/local/etc/redis/users.acl',
+          'aclfile %s' % [userConf],
         ]),
       },
     },

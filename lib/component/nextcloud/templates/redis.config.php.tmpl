@@ -1,13 +1,17 @@
-<?php
+<?phpa
+// https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/caching_configuration.html
 if (getenv('REDIS_HOST')) {
   $CONFIG = array (
     'memcache.distributed' => '\OC\Memcache\Redis',
     'memcache.locking' => '\OC\Memcache\Redis',
     'redis' => array(
-      'host' => getenv('REDIS_HOST'),
-      'port' => getenv('REDIS_HOST_PORT') ?: 6379,
-      'user' => getenv('REDIS_HOST_USER') ?: 'default',
-      'password' => getenv('REDIS_HOST_PASSWORD'),
+      'host'         => getenv('REDIS_HOST'),
+      'port'         => getenv('REDIS_HOST_PORT') ?: 6379,
+      'user'         => getenv('REDIS_HOST_USER') ?: 'default',
+      'password'     => getenv('REDIS_HOST_PASSWORD') ?: 'changeme',
+      'dbindex'      => 0,
+      'timeout'      => 1.5,
+      'read_timeout' => 1.5,
     ),
   );
 }
