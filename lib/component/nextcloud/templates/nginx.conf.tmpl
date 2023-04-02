@@ -104,8 +104,9 @@ http {
 
         rewrite ^/\.well-known/host-meta\.json  __PUBLIC_FQDN__/public.php?service=host-meta-json    last;
         rewrite ^/\.well-known/host-meta        __PUBLIC_FQDN__/public.php?service=host-meta         last;
-        rewrite ^/\.well-known/webfinger        __PUBLIC_FQDN__/public.php?service=webfinger         last;
-        rewrite ^/\.well-known/nodeinfo         __PUBLIC_FQDN__/public.php?service=nodeinfo          last;
+
+        rewrite ^/\.well-known/webfinger        __PUBLIC_FQDN__/index.php/.well-known/webfinger      last;
+        rewrite ^/\.well-known/nodeinfo         __PUBLIC_FQDN__/index.php/.well-known/nodeinfo       last;
 
         location = /.well-known/carddav   { return 301 __PUBLIC_FQDN__/remote.php/dav/; }
         location = /.well-known/caldav    { return 301 __PUBLIC_FQDN__/remote.php/dav/; }
