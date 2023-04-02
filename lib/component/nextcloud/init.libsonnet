@@ -1,3 +1,6 @@
+// debugging
+// su - www-data -s /bin/sh -c "PHP_MEMORY_LIMIT=512M php /var/www/html/occ app:list"
+
 local helper = import '../../helper.libsonnet';
 local kube = import '../../kube.libsonnet';
 
@@ -7,7 +10,7 @@ local kube = import '../../kube.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'library/nextcloud',
-      imageVersion: '26.0.0-fpm-alpine',
+      imageVersion: '25.0.5-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
