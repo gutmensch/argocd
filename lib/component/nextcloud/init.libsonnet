@@ -62,6 +62,7 @@ local kube = import '../../kube.libsonnet';
         'autoconfig.php': importstr 'templates/autoconfig.php.tmpl',
         'redis.config.php': importstr 'templates/redis.config.php.tmpl',
         'smtp.config.php': importstr 'templates/smtp.config.php.tmpl',
+        'settings.config.php': importstr 'templates/settings.config.php.tmpl',
       },
       metadata+: {
         labels+: config.labels,
@@ -184,7 +185,7 @@ local kube = import '../../kube.libsonnet';
                     name: '%s-cfg' % [componentName],
                     subPath: f,
                   }
-                  for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php']
+                  for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'settings.config.php']
                 ],
               },
               {
