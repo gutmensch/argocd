@@ -115,6 +115,7 @@ local kube = import '../../kube.libsonnet';
         OBJECTSTORE_S3_AUTOCREATE: std.toString(config.s3AutoCreate),
         REDIS_HOST: config.redisHost,
         REDIS_HOST_PORT: std.toString(config.redisPort),
+        TLS_REQCERT: 'never',
       },
       metadata+: {
         labels+: config.labels,
