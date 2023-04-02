@@ -121,7 +121,7 @@ local kube = import '../../kube.libsonnet';
 
     configmap_nextcloud_nginxconfig: kube.ConfigMap('%s-nginx-cfg' % [componentName]) {
       data: {
-        'nginx.conf': importstr 'templates/nginx.conf.tmpl',
+        'nginx.conf': std.strReplace(importstr 'templates/nginx.conf.tmpl', '__PUBLIC_FQDN__', 'https://%s' % [config.publicFQDN]),
       },
       metadata+: {
         labels+: config.labels,
