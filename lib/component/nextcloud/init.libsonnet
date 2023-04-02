@@ -270,6 +270,7 @@ local kube = import '../../kube.libsonnet';
               {
                 configMap: {
                   name: '%s-cfg' % [componentName],
+                  defaultMode: std.parseOctal('0640'),
                 },
                 name: '%s-cfg' % [componentName],
               },
