@@ -12,6 +12,7 @@ local kube = import '../../kube.libsonnet';
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
       mysqlHost: 'mysql',
+      mysqlPort: 3306,
       mysqlDatabaseUsers: [],
       mysqlDatabase: 'nextcloud',
       mysqlUser: 'nextcloud',
@@ -62,6 +63,7 @@ local kube = import '../../kube.libsonnet';
         'autoconfig.php': importstr 'templates/autoconfig.php.tmpl',
         'redis.config.php': importstr 'templates/redis.config.php.tmpl',
         'smtp.config.php': importstr 'templates/smtp.config.php.tmpl',
+        'objectstore.config.php': importstr 'templates/objectstore.config.php.tmpl',
         'settings.config.php': importstr 'templates/settings.config.php.tmpl',
       },
       metadata+: {
@@ -92,6 +94,7 @@ local kube = import '../../kube.libsonnet';
     configmap_nextcloud_env: kube.ConfigMap('%s-env' % [componentName]) {
       data: {
         MYSQL_HOST: config.mysqlHost,
+        MYSQL_PORT: std.toString(config.mysqlPort),
         MYSQL_DATABASE: dbCreds.database,
         NEXTCLOUD_TRUSTED_DOMAINS: std.join(',', config.trustedDomains + [config.publicFQDN]),
         NEXTCLOUD_DATA_DIR: '/var/www/html/data',
@@ -104,8 +107,8 @@ local kube = import '../../kube.libsonnet';
         OBJECTSTORE_S3_HOST: config.s3Host,
         OBJECTSTORE_S3_BUCKET: config.s3Bucket,
         OBJECTSTORE_S3_PORT: std.toString(config.s3Port),
-        OBJECTSTORE_S3_SSL: std.toString(config.s3UseSSL),
-        OBJECTSTORE_S3_USEPATH_STYLE: std.toString(config.s3UsePathStyle),
+        OBJECTSTORE_S3_USE_SSL: std.toString(config.s3UseSSL),
+        OBJECTSTORE_S3_USE_PATH_STYLE: std.toString(config.s3UsePathStyle),
         OBJECTSTORE_S3_AUTOCREATE: std.toString(config.s3AutoCreate),
         REDIS_HOST: config.redisHost,
         REDIS_HOST_PORT: std.toString(config.redisPort),
@@ -142,8 +145,8 @@ local kube = import '../../kube.libsonnet';
             annotations: {
               'checksum/nextcloud-env': std.md5(std.toString(this.configmap_nextcloud_env)),
               'checksum/nextcloud-secret-env': std.md5(std.toString(this.secret_nextcloud_env)),
-              'nginx-config-hash': std.md5(std.toString(this.configmap_nextcloud_nginxconfig)),
-              // 'php-config-hash': '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',
+              'checksum/nginx-config-hash': std.md5(std.toString(this.configmap_nextcloud_nginxconfig)),
+              // 'checksum/php-config-hash': std.md5(),
             },
             labels: config.labels,
           },
@@ -185,7 +188,7 @@ local kube = import '../../kube.libsonnet';
                     name: '%s-cfg' % [componentName],
                     subPath: f,
                   }
-                  for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'settings.config.php']
+                  for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'objectstore.config.php', 'settings.config.php']
                 ],
               },
               {

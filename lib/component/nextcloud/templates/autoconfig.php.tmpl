@@ -10,6 +10,7 @@ if (getenv('SQLITE_DATABASE')) {
   $AUTOCONFIG["dbuser"] = getenv('MYSQL_USER');
   $AUTOCONFIG["dbpass"] = getenv('MYSQL_PASSWORD');
   $AUTOCONFIG["dbhost"] = getenv('MYSQL_HOST');
+  $AUTOCONFIG["dbport"] = getenv('MYSQL_PORT');
   $autoconfig_enabled = true;
 } elseif (getenv('POSTGRES_DB') && getenv('POSTGRES_USER') && getenv('POSTGRES_PASSWORD') && getenv('POSTGRES_HOST')) {
   $AUTOCONFIG["dbtype"] = "pgsql";
