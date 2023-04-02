@@ -5,15 +5,15 @@ if (getenv('OBJECTSTORE_S3_HOST') && getenv('OBJECTSTORE_S3_BUCKET')) {
       'class' => '\\OC\\Files\\ObjectStore\\S3',
       'arguments' => array (
         'bucket' => getenv('OBJECTSTORE_S3_BUCKET') ?: 'nextcloud',
-        'autocreate' => getenv('OBJECTSTORE_S3_AUTOCREATE') ?: false,
+        'autocreate' => getenv('OBJECTSTORE_S3_AUTOCREATE') ? (getenv('OBJECTSTORE_S3_AUTOCREATE') === 'false' ? false : true) : false,
         'key' => getenv('OBJECTSTORE_S3_KEY') ?: 'undefined',
         'secret' => getenv('OBJECTSTORE_S3_SECRET') ?: 'undefined',
         'hostname' => getenv('OBJECTSTORE_S3_HOST') ?: 'minio',
         'port' => getenv('OBJECTSTORE_S3_PORT') ?: 9000,
-        'use_ssl' => getenv('OBJECTSTORE_S3_USE_SSL') ?: false,
+        'use_ssl' => getenv('OBJECTSTORE_S3_USE_SSL') ? (getenv('OBJECTSTORE_S3_USE_SSL') === 'false' ? false : true) : false,
         'region' => 'optional',
         // required for some non Amazon S3 implementations
-        'use_path_style' => getenv('OBJECTSTORE_S3_USE_PATH_STYLE') ?: true,
+        'use_path_style' => getenv('OBJECTSTORE_S3_USE_PATH_STYLE') ? (getenv('OBJECTSTORE_S3_USE_PATH_STYLE') === 'false' ? false : true)  : true,
       ),
     ),
   );
