@@ -1,5 +1,5 @@
 <?php
-if (getenv('OBJECTSTORE_S3_HOST') && getenv('OBJECTSTORE_S3_BUCKET') {
+if (getenv('OBJECTSTORE_S3_HOST') && getenv('OBJECTSTORE_S3_BUCKET')) {
   $CONFIG = array (
     'objectstore' => array (
       'class' => '\\OC\\Files\\ObjectStore\\S3',
