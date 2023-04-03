@@ -28,6 +28,12 @@ http {
     server 127.0.0.1:9000;
   }
 
+  # Set the `immutable` cache control options only for assets with a cache busting `v` argument
+  map $arg_v $asset_immutable {
+      "" "";
+      default "immutable";
+  }
+
   server {
     listen 8080;
 
@@ -162,7 +168,7 @@ http {
 
     # Rule borrowed from `.htaccess`
     location /remote {
-        return 301 /remote.php$request_uri;
+        return 301 __PUBLIC_FQDN__/remote.php$request_uri;
     }
 
     location / {
