@@ -1,13 +1,19 @@
 worker_processes auto;
 
-error_log /var/log/nginx/error.log warn;
-pid /var/run/nginx.pid;
+error_log stderr warn;
+pid /tmp/nginx.pid;
 
 events {
   worker_connections 1024;
 }
 
 http {
+  proxy_temp_path /tmp/proxy_temp;
+  client_body_temp_path /tmp/client_body_temp;
+  fastcgi_temp_path /tmp/fastcgi_temp;
+  uwsgi_temp_path /tmp/uwsgi_temp;
+  scgi_temp_path /tmp/scgi_temp;
+
   include /etc/nginx/mime.types;
   default_type application/octet-stream;
 
@@ -15,7 +21,7 @@ http {
     '$status $body_bytes_sent \"$http_referer\" '
     '\"$http_user_agent\" \"$http_x_forwarded_for\"';
 
-  access_log /var/log/nginx/access.log main;
+  access_log stdout main;
 
   sendfile on;
   #tcp_nopush on;
@@ -129,7 +135,7 @@ http {
     # then Nginx will encounter an infinite rewriting loop when it prepends `/index.php`
     # to the URI, resulting in a HTTP 500 error response.
     location ~ \.php(?:$|/) {
-      # Required for legacy support
+      # Required for legacy support, e.g. user_ldap setup dialogue!
       rewrite ^/(?!index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|oc[ms]-provider\/.+|.+\/richdocumentscode\/proxy) /index.php$request_uri;
 
       fastcgi_split_path_info ^(.+?\.php)(/.*)$;

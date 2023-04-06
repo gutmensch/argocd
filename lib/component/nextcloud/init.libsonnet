@@ -47,6 +47,17 @@ local kube = import '../../kube.libsonnet';
       smtpAuthType: 'LOGIN',
       storageSize: '10Gi',
       storageClass: 'default',
+      ldapHost: 'openldap',
+      ldapPort: 636,
+      ldapTLS: true,
+      ldapBaseDN: 'o=auth,dc=local',
+      ldapBaseUsersDN: 'ou=People,o=auth,dc=local',
+      ldapBaseGroupsDN: 'ou=Group,o=auth,dc=local',
+      ldapLoginFilter: '(&(objectclass=inetOrgPerson)(uid=%uid)(nextcloudEnabled=TRUE))',
+      ldapUserFilter: '(&(objectclass=inetOrgPerson)(nextcloudEnabled=TRUE))',
+      ldapGroupFilter: '(cn=Nextcloud*)',
+      ldapGroupMemberAssocAttr: 'member',
+      ldapEmailAttribute: 'mail',
     }
   ):: helper.uniquify({
 
@@ -87,6 +98,8 @@ local kube = import '../../kube.libsonnet';
         NEXTCLOUD_ADMIN_PASSWORD: config.adminPassword,
         OBJECTSTORE_S3_KEY: config.s3AccessKey,
         OBJECTSTORE_S3_SECRET: config.s3SecretKey,
+        LDAP_AGENT_NAME: config.ldapServiceAccountBindDN,
+        LDAP_AGENT_PASSWORD: config.ldapServiceAccountPassword,
         [if config.smtpUser != null then 'SMTP_NAME']: config.smtpUser,
         [if config.smtpPassword != null then 'SMTP_PASSWORD']: config.smtpPassword,
         [if config.redisUser != null then 'REDIS_HOST_USER']: config.redisUser,
@@ -116,6 +129,17 @@ local kube = import '../../kube.libsonnet';
         REDIS_HOST: config.redisHost,
         REDIS_HOST_PORT: std.toString(config.redisPort),
         TLS_REQCERT: 'never',
+        LDAP_TLS: helper.boolToStrInt(config.ldapTLS),
+        LDAP_USER_FILTER: config.ldapUserFilter,
+        LDAP_GROUP_FILTER: config.ldapGroupFilter,
+        LDAP_LOGIN_FILTER: config.ldapLoginFilter,
+        LDAP_HOST: 'ldaps://%s' % [config.ldapHost],
+        LDAP_PORT: std.toString(config.ldapPort),
+        LDAP_BASE_DN: config.ldapBaseDN,
+        LDAP_BASE_USERS_DN: config.ldapBaseUsersDN,
+        LDAP_BASE_GROUPS_DN: config.ldapBaseGroupsDN,
+        LDAP_GROUP_MEMBER_ASSOC_ATTR: config.ldapGroupMemberAssocAttr,
+        LDAP_EMAIL_ATTRIBUTE: config.ldapEmailAttribute,
       },
       metadata+: {
         labels+: config.labels,
@@ -126,6 +150,16 @@ local kube = import '../../kube.libsonnet';
     configmap_nextcloud_nginxconfig: kube.ConfigMap('%s-nginx-cfg' % [componentName]) {
       data: {
         'nginx.conf': std.strReplace(importstr 'templates/nginx.conf.tmpl', '__PUBLIC_FQDN__', 'https://%s' % [config.publicFQDN]),
+      },
+      metadata+: {
+        labels+: config.labels,
+        namespace: namespace,
+      },
+    },
+
+    configmap_nextcloud_ldap_integration: kube.ConfigMap('%s-ldap-cfg' % [componentName]) {
+      data: {
+        'enable_ldap_and_start.sh': importstr 'templates/enable_ldap_and_start.sh',
       },
       metadata+: {
         labels+: config.labels,
@@ -150,11 +184,18 @@ local kube = import '../../kube.libsonnet';
               'checksum/nextcloud-env': std.md5(std.toString(this.configmap_nextcloud_env)),
               'checksum/nextcloud-secret-env': std.md5(std.toString(this.secret_nextcloud_env)),
               'checksum/nginx-config-hash': std.md5(std.toString(this.configmap_nextcloud_nginxconfig)),
-              // 'checksum/php-config-hash': std.md5(),
+              'checksum/ldap-config-hash': std.md5(std.toString(this.configmap_nextcloud_ldap_integration)),
             },
             labels: config.labels,
           },
           spec: {
+            // www-data
+            securityContext: {
+              fsGroup: 82,
+              fsGroupChangePolicy: 'OnRootMismatch',
+              runAsGroup: 82,
+              runAsUser: 82,
+            },
             containers: [
               {
                 envFrom: [
@@ -172,6 +213,9 @@ local kube = import '../../kube.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: componentName,
+                // the fpm image runs php-fpm as arg for entrypoint, we inject ldap configuration before
+                // and then exec php-fpm as last step in our script
+                args: ['/usr/local/bin/enable_ldap_and_start.sh'],
                 resources: {},
                 volumeMounts: [
                   {
@@ -193,6 +237,12 @@ local kube = import '../../kube.libsonnet';
                     subPath: f,
                   }
                   for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'objectstore.config.php', 'settings.config.php']
+                ] + [
+                  {
+                    mountPath: '/usr/local/bin/enable_ldap_and_start.sh',
+                    name: '%s-ldap-cfg' % [componentName],
+                    subPath: 'enable_ldap_and_start.sh',
+                  },
                 ],
               },
               {
@@ -263,9 +313,6 @@ local kube = import '../../kube.libsonnet';
                 ],
               },
             ],
-            securityContext: {
-              fsGroup: 82,
-            },
             volumes: [
               {
                 emptyDir: {},
@@ -277,6 +324,13 @@ local kube = import '../../kube.libsonnet';
                   defaultMode: std.parseOctal('0640'),
                 },
                 name: '%s-cfg' % [componentName],
+              },
+              {
+                configMap: {
+                  name: '%s-ldap-cfg' % [componentName],
+                  defaultMode: std.parseOctal('0750'),
+                },
+                name: '%s-ldap-cfg' % [componentName],
               },
               {
                 configMap: {
