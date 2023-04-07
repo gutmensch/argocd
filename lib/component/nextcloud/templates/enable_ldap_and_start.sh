@@ -1,8 +1,6 @@
 #!/bin/sh
 set -eu
 
-exec 1>&2
-
 # configuration of user_ldap plugin injected between entrypoint install and starting php-fpm process
 # source and example of entrypoint.sh are here https://github.com/nextcloud/docker/blob/master/25/fpm/Dockerfile#L152
 # leverage environment variables defined for container
