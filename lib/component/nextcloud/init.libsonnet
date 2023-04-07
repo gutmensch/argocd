@@ -216,7 +216,7 @@ local kube = import '../../kube.libsonnet';
                 name: componentName,
                 // the fpm image runs php-fpm as arg for entrypoint, we inject ldap configuration before
                 // and then exec php-fpm as last step in our script
-                // args: ['/bin/sh', '/usr/local/bin/enable_ldap_and_start.sh'],
+                args: ['/bin/sh', '/usr/local/bin/enable_ldap_and_start.sh'],
                 resources: {},
                 volumeMounts: [
                   {
