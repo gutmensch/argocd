@@ -14,7 +14,6 @@ run_as() {
 }
 
 enable_plugin_ldap() {
-	find /var/www -type f -exec ls -la {} \;
 	echo "enabling user_ldap app."
 	run_as 'php /var/www/html/occ app:enable user_ldap'
 }
@@ -82,18 +81,22 @@ fi
 
 configure_ldap
 
+test_success=1
 for try in 1 2 3 4 5; do
 	if ! test_ldap; then
 		echo "testing ldap failed (${try})."
 		sleep 1
-		continue
 	else
+		test_success=0
 		echo "testing ldap succeeded (${try})."
 		sync_admins_from_ldap
 		break
 	fi
-	disable_plugin_ldap
 done
+
+if [ $test_success -eq 1 ]; then
+	disable_plugin_ldap
+fi
 
 # run original docker container command
 exec php-fpm
