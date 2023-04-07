@@ -1,13 +1,15 @@
 #!/bin/sh
 set -eu
 
+exec 1>&2
+
 # configuration of user_ldap plugin injected between entrypoint install and starting php-fpm process
 # source and example of entrypoint.sh are here https://github.com/nextcloud/docker/blob/master/25/fpm/Dockerfile#L152
 # leverage environment variables defined for container
 
 run_as() {
 	if [ "$(id -u)" = "0" ]; then
-		su -p "www-data" -s /bin/sh -c "PHP_MEMORY_LIMIT=128M ${1}"
+		su -p "www-data" -s /bin/sh -c "PHP_MEMORY_LIMIT=512M ${1}"
 	else
 		sh -c "PHP_MEMORY_LIMIT=512M ${1}"
 	fi
