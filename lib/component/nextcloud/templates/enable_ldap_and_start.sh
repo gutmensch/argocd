@@ -86,6 +86,7 @@ for try in 1 2 3 4 5; do
 	if ! test_ldap; then
 		echo "testing ldap failed (${try})."
 		sleep 1
+		continue
 	else
 		echo "testing ldap succeeded (${try})."
 		sync_admins_from_ldap
