@@ -14,17 +14,17 @@ run_as() {
 }
 
 enable_plugin_ldap() {
-	echo "enabling user_ldap app."
+	echo "Enabling user_ldap app for authentication."
 	run_as 'php /var/www/html/occ app:enable user_ldap'
 }
 
 disable_plugin_ldap() {
-	echo "disabling user_ldap app."
+	echo "Disabling user_ldap app for authentication."
 	run_as 'php /var/www/html/occ app:disable user_ldap'
 }
 
 enable_config_ldap() {
-	echo "creating new empty ldap configuration."
+	echo "Creating new empty LDAP configuration."
 	run_as 'php /var/www/html/occ ldap:create-empty-config'
 
 }
@@ -42,6 +42,7 @@ test_ldap() {
 }
 
 configure_ldap() {
+	echo "Configuring LDAP from environment variables."
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapTLS ${LDAP_TLS}"
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapUserFilter \"${LDAP_USER_FILTER}\""
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapGroupFilter \"${LDAP_GROUP_FILTER}\""
@@ -63,39 +64,64 @@ configure_ldap() {
 }
 
 sync_admins_from_ldap() {
+	echo "Syncing NextcloudAdmin LDAP group members to Nextcloud admin group."
 	users=$(run_as "php /var/www/html/occ group:list --output json" | sed -e 's%.*NextcloudAdmin":\[\([^]]*\)\].*%\1%' | tr -d '"' | tr ',' ' ')
 	for u in $users; do
-		echo "adding user ${u} to nextcloud admin group"
-		run_as "php /var/www/html/occ group:adduser admin ${u}"
+		if echo "$u" | grep -q -e '\[\|\]\|{\|}'; then
+			echo "Group lookup seems to have failed, aborting admin user setup."
+		else
+			echo "Adding user ${u} to Nextcloud admin group."
+			run_as "php /var/www/html/occ group:adduser admin ${u}"
+		fi
 	done
 }
 
-# run ldap integration functions
-if ! check_plugin_ldap; then
-	enable_plugin_ldap
-fi
-
-if ! check_config_ldap; then
-	enable_config_ldap
-fi
-
-configure_ldap
-
-test_success=1
-for try in 1 2 3 4 5; do
-	if ! test_ldap; then
-		echo "testing ldap failed (${try})."
-		sleep 1
+check_environment() {
+	if [ -z "${LDAP_HOST}" ] || [ -z "${LDAP_PORT}" ] || [ -z "${LDAP_BASE_DN}" ] || [ -z "${LDAP_AGENT_NAME}" ] || [ -z "${LDAP_AGENT_PASSWORD}" ]; then
+		return 1
 	else
-		test_success=0
-		echo "testing ldap succeeded (${try})."
-		sync_admins_from_ldap
-		break
+		return 0
 	fi
-done
+}
 
-if [ $test_success -eq 1 ]; then
-	disable_plugin_ldap
+# run ldap integration functions
+if check_environment; then
+
+	if ! check_plugin_ldap; then
+		enable_plugin_ldap
+	fi
+
+	if ! check_config_ldap; then
+		enable_config_ldap
+	fi
+
+	configure_ldap
+
+	test_success=1
+	for try in 1 2 3 4 5; do
+		if ! test_ldap; then
+			echo "Testing LDAP failed (attempt ${try})."
+			sleep 1
+		else
+			test_success=0
+			echo "Testing LDAP succeeded (attempt ${try})."
+			sync_admins_from_ldap
+			break
+		fi
+	done
+
+	if [ $test_success -eq 1 ]; then
+		disable_plugin_ldap
+	fi
+
+else
+	echo "LDAP environment variables are incomplete. Please provide at least:"
+	echo "  - LDAP_HOST"
+	echo "  - LDAP_PORT"
+	echo "  - LDAP_BASE_DN"
+	echo "  - LDAP_AGENT_NAME"
+	echo "  - LDAP_AGENT_PASSWORD"
+	echo "Continuing startup without LDAP."
 fi
 
 # run original docker container command
