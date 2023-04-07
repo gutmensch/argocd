@@ -13,7 +13,7 @@ local kube = import '../../kube.libsonnet';
       imageVersion: '25.0.5-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
-      replicas: 1,
+      replicas: 0,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
       mysqlDatabaseUsers: [],
@@ -191,12 +191,12 @@ local kube = import '../../kube.libsonnet';
           },
           spec: {
             // www-data
-            // securityContext: {
-            //   fsGroup: 82,
-            //   fsGroupChangePolicy: 'OnRootMismatch',
-            //   runAsGroup: 82,
-            //   runAsUser: 82,
-            // },
+            securityContext: {
+              fsGroup: 82,
+              //   fsGroupChangePolicy: 'OnRootMismatch',
+              //   runAsGroup: 82,
+              //   runAsUser: 82,
+            },
             containers: [
               {
                 envFrom: [

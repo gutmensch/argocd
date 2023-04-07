@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -eu
 
 # configuration of user_ldap plugin injected between entrypoint install and starting php-fpm process
@@ -6,14 +6,15 @@ set -eu
 # leverage environment variables defined for container
 
 run_as() {
-	if [ "$(id -u)" = 0 ]; then
-		su -p "www-data" -s /bin/sh -c "PHP_MEMORY_LIMIT=128M $1"
+	if [ "$(id -u)" = "0" ]; then
+		su -p "www-data" -s /bin/sh -c "PHP_MEMORY_LIMIT=128M ${1}"
 	else
-		sh -c "PHP_MEMORY_LIMIT=512M $1"
+		sh -c "PHP_MEMORY_LIMIT=512M ${1}"
 	fi
 }
 
 enable_plugin_ldap() {
+	find /var/www -type f -exec ls -la {} \;
 	echo "enabling user_ldap app."
 	run_as 'php /var/www/html/occ app:enable user_ldap'
 }
