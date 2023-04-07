@@ -9,7 +9,7 @@ run_as() {
 	if [ "$(id -u)" = 0 ]; then
 		su -p "www-data" -s /bin/sh -c "PHP_MEMORY_LIMIT=128M $1"
 	else
-		sh -c "PHP_MEMORY_LIMIT=128M $1"
+		sh -c "PHP_MEMORY_LIMIT=512M $1"
 	fi
 }
 

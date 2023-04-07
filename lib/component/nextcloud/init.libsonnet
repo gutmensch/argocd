@@ -114,6 +114,7 @@ local kube = import '../../kube.libsonnet';
         MYSQL_DATABASE: dbCreds.database,
         NEXTCLOUD_TRUSTED_DOMAINS: std.join(',', config.trustedDomains + [config.publicFQDN]),
         NEXTCLOUD_DATA_DIR: '/var/www/html/data',
+        NEXTCLOUD_UPDATE: std.toString(1),
         MAIL_FROM_ADDRESS: config.mailFromAddress,
         MAIL_DOMAIN: config.mailDomain,
         SMTP_HOST: config.smtpHost,
@@ -190,12 +191,12 @@ local kube = import '../../kube.libsonnet';
           },
           spec: {
             // www-data
-            securityContext: {
-              fsGroup: 82,
-              fsGroupChangePolicy: 'OnRootMismatch',
-              runAsGroup: 82,
-              runAsUser: 82,
-            },
+            // securityContext: {
+            //   fsGroup: 82,
+            //   fsGroupChangePolicy: 'OnRootMismatch',
+            //   runAsGroup: 82,
+            //   runAsUser: 82,
+            // },
             containers: [
               {
                 envFrom: [
