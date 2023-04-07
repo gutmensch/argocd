@@ -61,6 +61,9 @@ configure_ldap() {
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapGroupDisplayName cn"
 	run_as "php /var/www/html/occ ldap:set-config s01 hasMemberOfFilterSupport 1"
 	run_as "php /var/www/html/occ ldap:set-config s01 turnOffCertCheck 1"
+	run_as "php /var/www/html/occ ldap:set-config s01 hasMemberOfFilterSupport 1"
+	run_as "php /var/www/html/occ ldap:set-config s01 useMemberOfToDetectMembership 1"
+	run_as "php /var/www/html/occ ldap:set-config s01 ldapConfigurationActive 1"
 }
 
 sync_admins_from_ldap() {
