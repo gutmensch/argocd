@@ -12,7 +12,7 @@ local kube = import '../../kube.libsonnet';
       imageRef: 'library/nextcloud',
       imageVersion: '25.0.5-fpm-alpine',
       cronjobImageRef: 'gutmensch/toolbox',
-      cronjobImageVersion: '0.0.11',
+      cronjobImageVersion: '0.0.12',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
@@ -455,7 +455,7 @@ local kube = import '../../kube.libsonnet';
 
     cronjob_service_account: kube.ServiceAccount('%s-cronjob' % [componentName]) {
       metadata+: {
-        labels: config.labels,
+        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
         namespace: namespace,
       },
     },
@@ -463,7 +463,7 @@ local kube = import '../../kube.libsonnet';
     cronjob: kube.CronJob('%s-cronjob' % [componentName]) {
       metadata+: {
         namespace: namespace,
-        labels: config.labels,
+        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
       },
       spec+: {
         schedule: '*/5 * * * *',
@@ -491,6 +491,18 @@ local kube = import '../../kube.libsonnet';
                           },
                         },
                       },
+                      {
+                        name: 'CONTAINER_NAME',
+                        value: componentName,
+                      },
+                      {
+                        name: 'LABEL_APP_NAME',
+                        value: componentName,
+                      },
+                      {
+                        name: 'LABEL_APP_COMPONENT',
+                        value: componentName,
+                      },
                     ],
                     image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.cronjobImageRef, config.cronjobImageVersion),
                     imagePullPolicy: 'Always',
@@ -506,7 +518,7 @@ local kube = import '../../kube.libsonnet';
 
     cronjob_role: kube.Role('%s-cronjob' % [componentName]) {
       metadata+: {
-        labels: config.labels,
+        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
         namespace: namespace,
       },
       rules: [
@@ -525,7 +537,7 @@ local kube = import '../../kube.libsonnet';
 
     cronjob_role_binding: kube.RoleBinding('%s-cronjob' % [componentName]) {
       metadata+: {
-        labels: config.labels,
+        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
         namespace: namespace,
       },
       subjects_:: [
