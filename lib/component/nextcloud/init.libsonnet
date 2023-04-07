@@ -12,7 +12,7 @@ local kube = import '../../kube.libsonnet';
       imageRef: 'library/nextcloud',
       imageVersion: '25.0.5-fpm-alpine',
       cronjobImageRef: 'gutmensch/toolbox',
-      cronjobImageVersion: '0.0.9',
+      cronjobImageVersion: '0.0.10',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
