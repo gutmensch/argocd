@@ -11,6 +11,8 @@ local kube = import '../../kube.libsonnet';
       imageRegistry: '',
       imageRef: 'library/nextcloud',
       imageVersion: '25.0.5-fpm-alpine',
+      cronjobImageRef: 'gutmensch/toolbox',
+      cronjobImageVersion: '0.0.8',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
@@ -450,5 +452,87 @@ local kube = import '../../kube.libsonnet';
         type: 'ClusterIP',
       },
     },
+
+    cronjob_service_account: kube.ServiceAccount('%s-cronjob' % [componentName]) {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+    },
+
+    cronjob: kube.CronJob('%s-cronjob' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels: config.labels,
+      },
+      spec+: {
+        schedule: '*/5 * * * *',
+        jobTemplate+: {
+          metadata+: {
+            labels: config.labels,
+          },
+          spec+: {
+            backoffLimit: 3,
+            completions: 1,
+            template+: {
+              spec+: {
+                serviceAccountName: '%s-cronjob' % [componentName],
+                containers_+: {
+                  cronjob: {
+                    args: [
+                      '/usr/bin/nextcloud_cronjob.py',
+                    ],
+                    env: [
+                      {
+                        name: 'K8S_NAMESPACE',
+                        valueFrom: {
+                          fieldRef: {
+                            fieldPath: 'metadata.namespace',
+                          },
+                        },
+                      },
+                    ],
+                    image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.cronjobImageRef, config.cronjobImageVersion),
+                    imagePullPolicy: 'Always',
+                    name: 'cronjob',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    cronjob_role: kube.Role('%s-cronjob' % [componentName]) {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      rules: [
+        {
+          apiGroups: [''],
+          resources: ['pods'],
+          verbs: ['get', 'list'],
+        },
+        {
+          apiGroups: [''],
+          resources: ['pods/exec'],
+          verbs: ['create', 'get'],
+        },
+      ],
+    },
+
+    cronjob_role_binding: kube.RoleBinding('%s-cronjob' % [componentName]) {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      subjects_:: [
+        this.cronjob_service_account,
+      ],
+      roleRef_:: this.cronjob_role,
+    },
+
   }),
 }
