@@ -35,6 +35,7 @@ check_plugin_ldap() {
 }
 
 check_config_ldap() {
+	run_as 'php /var/www/html/occ ldap:show-config'
 	run_as 'php /var/www/html/occ ldap:show-config' >/dev/null 2>&1
 }
 
