@@ -175,7 +175,7 @@ local kube = import '../../kube.libsonnet';
       },
       spec: {
         serviceName: '%s-headless' % [componentName],
-        replicas: 1,
+        replicas: config.replicas,
         selector: {
           matchLabels: config.labels,
         },
