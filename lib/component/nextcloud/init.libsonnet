@@ -480,7 +480,7 @@ local kube = import '../../kube.libsonnet';
                 containers_+: {
                   cronjob: {
                     args: [
-                      '/usr/bin/nextcloud_cronjob.py',
+                      '/usr/bin/nextcloud_cron.py',
                     ],
                     env: [
                       {
