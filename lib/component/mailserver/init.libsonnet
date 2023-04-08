@@ -45,7 +45,7 @@ local componentName = 'mailserver';
       ldapBaseDN: '',
       ldapServiceAccountBindDN: 'uid=mx,ou=ServiceAccount,%s' % [this.ldapBaseDN],
       ldapServiceAccountPassword: 'changeme',
-      opendkimTrustedHosts: ['127.0.0.1', 'localhost', '10.0.0.0/8'],
+      opendkimTrustedHosts: ['127.0.0.1', 'localhost'],
       extraAnnotations: {},
       fetchmailAccounts: [],
       reportEnable: false,
