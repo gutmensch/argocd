@@ -143,6 +143,8 @@ local kube = import '../../kube.libsonnet';
         LDAP_BASE_GROUPS_DN: config.ldapBaseGroupsDN,
         LDAP_GROUP_MEMBER_ASSOC_ATTR: config.ldapGroupMemberAssocAttr,
         LDAP_EMAIL_ATTRIBUTE: config.ldapEmailAttribute,
+        OVERWRITE_HOST: config.publicFQDN,
+        OVERWRITE_PROTOCOL: 'https',
       },
       metadata+: {
         labels+: config.labels,
