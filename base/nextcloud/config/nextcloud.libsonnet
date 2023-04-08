@@ -1,6 +1,13 @@
 {
   default: {
     storageClass: 'zfs-fast-xfs',
+    // https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/background_jobs_configuration.html#cron
+    cronjobTargetContainerCommand: 'su -p www-data -s /bin/sh -c "php -f /var/www/html/cron.php"',
+    cronjobTargetContainerName: 'nextcloud',
+    cronjobTargetPodSelector: {
+      'app.kubernetes.io/name': 'nextcloud',
+      'app.kubernetes.io/component': 'nextcloud',
+    },
   },
 
   staging: {

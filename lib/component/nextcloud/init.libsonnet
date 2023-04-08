@@ -195,6 +195,7 @@ local kube = import '../../kube.libsonnet';
             // www-data
             securityContext: {
               fsGroup: 82,
+              // XXX: nextcloud image not prepared to run as unprivilged user
               //   fsGroupChangePolicy: 'OnRootMismatch',
               //   runAsGroup: 82,
               //   runAsUser: 82,
@@ -452,99 +453,5 @@ local kube = import '../../kube.libsonnet';
         type: 'ClusterIP',
       },
     },
-
-    cronjob_service_account: kube.ServiceAccount('%s-cronjob' % [componentName]) {
-      metadata+: {
-        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
-        namespace: namespace,
-      },
-    },
-
-    cronjob: kube.CronJob('%s-cronjob' % [componentName]) {
-      metadata+: {
-        namespace: namespace,
-        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
-      },
-      spec+: {
-        schedule: '*/5 * * * *',
-        jobTemplate+: {
-          metadata+: {
-            labels: config.labels,
-          },
-          spec+: {
-            backoffLimit: 3,
-            completions: 1,
-            template+: {
-              spec+: {
-                serviceAccountName: '%s-cronjob' % [componentName],
-                containers_+: {
-                  cronjob: {
-                    args: [
-                      '/usr/bin/nextcloud_cron.py',
-                    ],
-                    env: [
-                      {
-                        name: 'K8S_NAMESPACE',
-                        valueFrom: {
-                          fieldRef: {
-                            fieldPath: 'metadata.namespace',
-                          },
-                        },
-                      },
-                      {
-                        name: 'CONTAINER_NAME',
-                        value: componentName,
-                      },
-                      {
-                        name: 'LABEL_APP_NAME',
-                        value: componentName,
-                      },
-                      {
-                        name: 'LABEL_APP_COMPONENT',
-                        value: componentName,
-                      },
-                    ],
-                    image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.cronjobImageRef, config.cronjobImageVersion),
-                    imagePullPolicy: 'Always',
-                    name: 'cronjob',
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-
-    cronjob_role: kube.Role('%s-cronjob' % [componentName]) {
-      metadata+: {
-        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
-        namespace: namespace,
-      },
-      rules: [
-        {
-          apiGroups: [''],
-          resources: ['pods'],
-          verbs: ['get', 'list'],
-        },
-        {
-          apiGroups: [''],
-          resources: ['pods/exec'],
-          verbs: ['create', 'get'],
-        },
-      ],
-    },
-
-    cronjob_role_binding: kube.RoleBinding('%s-cronjob' % [componentName]) {
-      metadata+: {
-        labels: config.labels { 'app.kubernetes.io/component': 'cronjob' },
-        namespace: namespace,
-      },
-      subjects_:: [
-        this.cronjob_service_account,
-      ],
-      roleRef_:: this.cronjob_role,
-    },
-
   }),
 }

@@ -1,3 +1,4 @@
+local cronjob = import '../../lib/component/container-cronjob/init.libsonnet';
 local nextcloud = import '../../lib/component/nextcloud/init.libsonnet';
 local redis = import '../../lib/component/redis/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
@@ -13,6 +14,16 @@ function(name, namespace, project, tenant, region)
       tenant,
       import 'secret/shared.libsonnet',
       import 'config/redis.libsonnet',
+      {},
+      {},
+    ),
+    cronjob: helper.configMerge(
+      name,
+      'cronjob',
+      project,
+      tenant,
+      {},
+      import 'config/nextcloud.libsonnet',
       {},
       {},
     ),
@@ -38,6 +49,13 @@ function(name, namespace, project, tenant, region)
       region,
       tenant,
       componentConfigs.redis,
+    ) +
+    cronjob.generate(
+      name,
+      namespace,
+      region,
+      tenant,
+      componentConfigs.cronjob,
     ) +
     nextcloud.generate(
       name,
