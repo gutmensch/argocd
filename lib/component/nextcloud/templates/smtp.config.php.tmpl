@@ -6,10 +6,17 @@ if (getenv('SMTP_HOST') && getenv('MAIL_FROM_ADDRESS') && getenv('MAIL_DOMAIN'))
     'mail_smtpport' => getenv('SMTP_PORT') ?: (getenv('SMTP_SECURE') ? 465 : 25),
     'mail_smtpsecure' => getenv('SMTP_SECURE') ?: '',
     'mail_smtpauth' => getenv('SMTP_NAME') && getenv('SMTP_PASSWORD'),
-    'mail_smtpauthtype' => getenv('SMTP_AUTHTYPE') ?: 'LOGIN',
+    'mail_smtpauthtype' => getenv('SMTP_AUTHTYPE') ?: false,
     'mail_smtpname' => getenv('SMTP_NAME') ?: '',
     'mail_smtppassword' => getenv('SMTP_PASSWORD') ?: '',
     'mail_from_address' => getenv('MAIL_FROM_ADDRESS'),
     'mail_domain' => getenv('MAIL_DOMAIN'),
+    'mail_smtpstreamoptions' => array(
+        'ssl' => array(
+            'allow_self_signed' => true,
+            'verify_peer' => false,
+            'verify_peer_name' => false
+        )
+    ),
   );
 }
