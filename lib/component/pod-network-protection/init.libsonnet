@@ -45,6 +45,7 @@ local policies = import 'policies.libsonnet';
         outboundPorts: config.outboundPorts,
         outboundNetworks: config.outboundNetworks,
         ldapServiceNamespace: 'base-auth-lts',
+        minioServiceNamespace: 'base-minio-lts',
       },
 
       ingressNetworkPolicy: kube.NetworkPolicy('%s-ingress' % [prefix]) {
@@ -122,30 +123,22 @@ local policies = import 'policies.libsonnet';
         ],
       },
 
-      rolebinding: kube.RoleBinding(componentName) {
-        metadata+: {
-          namespace: namespace,
-          labels+: config.labels,
-        },
-        roleRef: {
-          apiGroup: 'rbac.authorization.k8s.io',
-          kind: 'Role',
-          name: componentName,
-        },
-        subjects: [
-          {
-            kind: 'ServiceAccount',
-            name: componentName,
-            namespace: namespace,
-          },
-        ],
-      },
-
       serviceaccount: kube.ServiceAccount(componentName) {
         metadata+: {
           namespace: namespace,
           labels: config.labels,
         },
+      },
+
+      rolebinding: kube.RoleBinding(componentName) {
+        metadata+: {
+          labels: config.labels,
+          namespace: namespace,
+        },
+        subjects_:: [
+          this.serviceaccount,
+        ],
+        roleRef_:: this.role,
       },
 
       cronjob: kube.CronJob('netpol-filter-update-%s' % [config.podSelector['app.kubernetes.io/component']]) {

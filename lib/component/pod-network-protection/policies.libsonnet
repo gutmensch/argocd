@@ -5,6 +5,7 @@
   outboundNetworks:: error 'please provide outbound enabled network if using pod network protection',
   dnsServiceNamespace:: 'kube-system',
   ldapServiceNamespace:: null,
+  minioServiceNamespace:: null,
 
   local this = self,
 
@@ -67,6 +68,17 @@
         { protocol: 'TCP', port: 1636 },
       ],
     },
-  },
 
+    [if this.minioServiceNamespace != null then 'minio']: {
+      to: [
+        { namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': this.minioServiceNamespace } } },
+      ],
+      ports: [
+        { protocol: 'TCP', port: 9000 },
+        // exclude minio console port for now, because not needed
+        // { protocol: 'TCP', port: 9001 },
+      ],
+    },
+
+  },
 }
