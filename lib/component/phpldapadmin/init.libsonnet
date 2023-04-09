@@ -11,7 +11,7 @@ local kube = import '../../kube.libsonnet';
     appConfig,
     defaultConfig={
       imageRef: 'gutmensch/phpldapadmin',
-      imageVersion: '1.2.6.4-3',
+      imageVersion: '1.2.6.6-1',
       replicas: 1,
       ldapRoot: 'o=auth,dc=local',
       ldapAdmin: 'admin',
