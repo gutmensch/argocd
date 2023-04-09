@@ -35,7 +35,7 @@ local kube = import '../../kube.libsonnet';
       data: {
         PHPLDAPADMIN_HTTPS: 'false',
         PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
-        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'base':array('%s')},{'tls': true},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [config.ldapSvc, config.ldapRoot, config.ldapAdmin, config.ldapRoot],
+        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'base': ['%s']},{'tls': true},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [config.ldapSvc, config.ldapRoot, config.ldapAdmin, config.ldapRoot],
         PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
       },
     },

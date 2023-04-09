@@ -12,6 +12,7 @@ local kube = import '../../kube.libsonnet';
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
       imageVersion: '0.0.13',
+      cronjobCommand: '/usr/bin/container_command.py',
       cronjobTargetPodSelector: {},
       cronjobTargetContainerName: null,
       cronjobTargetContainerCommand: null,
@@ -59,7 +60,7 @@ local kube = import '../../kube.libsonnet';
                 containers_+: {
                   cronjob: {
                     args: [
-                      '/usr/bin/container_command.py',
+                      config.cronjobCommand,
                     ],
                     env: [
                       {
