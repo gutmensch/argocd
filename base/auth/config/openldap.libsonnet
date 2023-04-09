@@ -2,7 +2,7 @@
   default: {
     storageClass: 'zfs-fast-xfs',
     ldapRoot: 'o=auth,dc=local',
-    cronjobCommand: 'sleep 7150',
+    cronjobCommand: ['/bin/sleep', '7150'],
     cronjobTargetContainerCommand: 'echo foo',
     cronjobTargetContainerName: 'openldap',
     cronjobTargetPodSelector: {
