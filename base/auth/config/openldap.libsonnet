@@ -9,7 +9,7 @@
       'app.kubernetes.io/name': 'openldap',
       'app.kubernetes.io/component': 'openldap',
     },
-    cronjobInterval: '45 */2 * * *',
+    cronjobInterval: '56 */2 * * *',
   },
 
   staging: {
