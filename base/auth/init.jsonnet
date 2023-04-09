@@ -1,3 +1,4 @@
+local cronjob = import '../../lib/component/container-cronjob//init.libsonnet';
 local openldap = import '../../lib/component/openldap/init.libsonnet';
 local phpldapadmin = import '../../lib/component/phpldapadmin/init.libsonnet';
 local helper = import '../../lib/helper.libsonnet';
@@ -26,6 +27,16 @@ function(name, namespace, project, tenant, region)
       import 'config/shared.libsonnet',
       import 'cd/phpldapadmin.json',
     ),
+    cronjob: helper.configMerge(
+      name,
+      'cronjob',
+      project,
+      tenant,
+      {},
+      import 'config/openldap.libsonnet',
+      {},
+      {},
+    ),
   };
 
   local resources = std.prune(
@@ -42,6 +53,13 @@ function(name, namespace, project, tenant, region)
       region,
       tenant,
       componentConfigs.phpldapadmin,
+    ) +
+    cronjob.generate(
+      name,
+      namespace,
+      region,
+      tenant,
+      componentConfigs.cronjob,
     )
   );
 
