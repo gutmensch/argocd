@@ -11,7 +11,7 @@ local kube = import '../../kube.libsonnet';
     appConfig,
     defaultConfig={
       imageRef: 'gutmensch/phpldapadmin',
-      imageVersion: '1.2.6.4-3',
+      imageVersion: '1.2.6.6-1',
       replicas: 1,
       ldapRoot: 'o=auth,dc=local',
       ldapAdmin: 'admin',
@@ -35,7 +35,7 @@ local kube = import '../../kube.libsonnet';
       data: {
         PHPLDAPADMIN_HTTPS: 'false',
         PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: 'never',
-        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'base': 'array(\\'o=auth,dc=local\\')'},{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [config.ldapSvc, config.ldapAdmin, config.ldapRoot],
+        PHPLDAPADMIN_LDAP_HOSTS: "#PYTHON2BASH:[{'%s': [{'server': [{'base': 'array(\\'%s\\')'},{'tls': True},{'port':389}]},{'login': [{'bind_id': 'cn=%s,%s' }]}]}]" % [config.ldapSvc, config.ldapRoot, config.ldapAdmin, config.ldapRoot],
         PHPLDAPADMIN_TRUST_PROXY_SSL: 'true',
       },
     },
