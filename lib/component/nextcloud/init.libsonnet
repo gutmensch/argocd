@@ -15,7 +15,7 @@ local kube = import '../../kube.libsonnet';
       cronjobImageVersion: '0.0.12',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
-      replicas: 1,
+      replicas: 0,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
       mysqlDatabaseUsers: [],
