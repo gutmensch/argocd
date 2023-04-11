@@ -2,14 +2,6 @@
   default: {
     storageClass: 'zfs-fast-xfs',
     ldapRoot: 'o=auth,dc=local',
-    cronjobCommand: ['/bin/sleep', '7150'],
-    cronjobTargetContainerCommand: 'echo foo',
-    cronjobTargetContainerName: 'openldap',
-    cronjobTargetPodSelector: {
-      'app.kubernetes.io/name': 'openldap',
-      'app.kubernetes.io/component': 'openldap',
-    },
-    cronjobInterval: '56 */2 * * *',
   },
 
   staging: {

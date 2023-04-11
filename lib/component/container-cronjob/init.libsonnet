@@ -11,7 +11,9 @@ local kube = import '../../kube.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
-      imageVersion: '0.0.13',
+      imageVersion: '0.0.16',
+      cronjobInstance: null,
+      cronjobInstanceEnvConfig: {},
       cronjobCommand: ['/usr/bin/container_command.py'],
       cronjobTargetPodSelector: {},
       cronjobTargetContainerName: null,
@@ -31,16 +33,28 @@ local kube = import '../../kube.libsonnet';
 
     assert std.length(std.objectFields(config.cronjobTargetPodSelector)) > 0 : error 'pod selector for cronjob is empty',
     assert config.cronjobTargetContainerName != null : error 'target container name is null',
-    assert config.cronjobTargetContainerCommand != null : error 'target container command is null',
+    assert config.cronjobInstance != null : error 'container cronjob instance suffix is null',
 
-    cronjob_service_account: kube.ServiceAccount('%s-%s' % [appName, componentName]) {
+    cronjob_service_account: kube.ServiceAccount('%s-%s' % [componentName, config.cronjobInstance]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,
       },
     },
 
-    cronjob: kube.CronJob('%s-%s' % [appName, componentName]) {
+    cronjob_secret: kube.Secret('%s-%s' % [componentName, config.cronjobInstance]) {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      stringData: {
+        CONTAINER_NAME: config.cronjobTargetContainerName,
+        POD_SELECTOR: std.join(',', ['%s=%s' % [k, config.cronjobTargetPodSelector[k]] for k in std.objectFields(config.cronjobTargetPodSelector)]),
+        [if config.cronjobTargetContainerCommand != null then 'CONTAINER_COMMAND']: config.cronjobTargetContainerCommand,
+      } + config.cronjobInstanceEnvConfig,
+    },
+
+    cronjob: kube.CronJob('%s-%s' % [componentName, config.cronjobInstance]) {
       metadata+: {
         namespace: namespace,
         labels: config.labels,
@@ -56,7 +70,7 @@ local kube = import '../../kube.libsonnet';
             completions: config.cronjobCompletions,
             template+: {
               spec+: {
-                serviceAccountName: '%s-%s' % [appName, componentName],
+                serviceAccountName: '%s-%s' % [componentName, config.cronjobInstance],
                 containers_+: {
                   cronjob: {
                     args: config.cronjobCommand,
@@ -69,17 +83,12 @@ local kube = import '../../kube.libsonnet';
                           },
                         },
                       },
+                    ],
+                    envFrom: [
                       {
-                        name: 'CONTAINER_NAME',
-                        value: config.cronjobTargetContainerName,
-                      },
-                      {
-                        name: 'CONTAINER_COMMAND',
-                        value: config.cronjobTargetContainerCommand,
-                      },
-                      {
-                        name: 'POD_SELECTOR',
-                        value: std.join(',', ['%s=%s' % [k, config.cronjobTargetPodSelector[k]] for k in std.objectFields(config.cronjobTargetPodSelector)]),
+                        secretRef: {
+                          name: this.cronjob_secret.metadata.name,
+                        },
                       },
                     ],
                     image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
@@ -94,7 +103,7 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    cronjob_role: kube.Role('%s-%s' % [appName, componentName]) {
+    cronjob_role: kube.Role('%s-%s' % [componentName, config.cronjobInstance]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,
@@ -113,7 +122,7 @@ local kube = import '../../kube.libsonnet';
       ],
     },
 
-    cronjob_role_binding: kube.RoleBinding('%s-%s' % [appName, componentName]) {
+    cronjob_role_binding: kube.RoleBinding('%s-%s' % [componentName, config.cronjobInstance]) {
       metadata+: {
         labels: config.labels,
         namespace: namespace,

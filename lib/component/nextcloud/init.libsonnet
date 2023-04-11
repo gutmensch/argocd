@@ -47,6 +47,8 @@ local kube = import '../../kube.libsonnet';
       smtpSecure: 'tls',
       smtpPort: 25,
       smtpAuthType: null,
+      // used for apps and tmp data
+      // real data will be on S3 as primary storage
       storageSize: '10Gi',
       storageClass: 'default',
       ldapHost: 'openldap',
@@ -60,6 +62,8 @@ local kube = import '../../kube.libsonnet';
       ldapGroupFilter: '(cn=Nextcloud*)',
       ldapGroupMemberAssocAttr: 'member',
       ldapEmailAttribute: 'mail',
+      defaultPhoneRegion: 'DE',
+      lostPasswordLink: 'https://pwreset.bln.space',
     }
   ):: helper.uniquify({
 
@@ -145,6 +149,8 @@ local kube = import '../../kube.libsonnet';
         LDAP_EMAIL_ATTRIBUTE: config.ldapEmailAttribute,
         OVERWRITE_HOST: config.publicFQDN,
         OVERWRITE_PROTOCOL: 'https',
+        DEFAULT_PHONE_REGION: config.defaultPhoneRegion,
+        LOST_PASSWORD_LINK: config.lostPasswordLink,
       },
       metadata+: {
         labels+: config.labels,

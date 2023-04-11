@@ -27,13 +27,13 @@ function(name, namespace, project, tenant, region)
       import 'config/shared.libsonnet',
       import 'cd/phpldapadmin.json',
     ),
-    cronjob: helper.configMerge(
+    openldapBackup: helper.configMerge(
       name,
-      'cronjob',
+      'openldap-backup',
       project,
       tenant,
       {},
-      import 'config/openldap.libsonnet',
+      import 'secret/openldap-backup.libsonnet',
       {},
       {},
     ),
@@ -59,7 +59,7 @@ function(name, namespace, project, tenant, region)
       namespace,
       region,
       tenant,
-      componentConfigs.cronjob,
+      componentConfigs.openldapBackup,
     )
   );
 
