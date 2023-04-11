@@ -14,7 +14,7 @@ local kube = import '../../kube.libsonnet';
       imageVersion: '0.0.16',
       cronjobInstance: null,
       cronjobInstanceEnvConfig: {},
-      cronjobCommand: ['/usr/bin/container_command.py'],
+      cronjobCommand: ['/usr/local/bin/container_command.py'],
       cronjobTargetPodSelector: {},
       cronjobTargetContainerName: null,
       cronjobTargetContainerCommand: null,
