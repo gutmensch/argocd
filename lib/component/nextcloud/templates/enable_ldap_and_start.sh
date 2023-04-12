@@ -43,7 +43,6 @@ test_ldap() {
 
 configure_ldap() {
 	echo "Configuring LDAP from environment variables."
-	run_as "php /var/www/html/occ ldap:set-config s01 ldapTLS ${LDAP_TLS}"
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapUserFilter \"${LDAP_USER_FILTER}\""
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapGroupFilter \"${LDAP_GROUP_FILTER}\""
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapLoginFilter \"${LDAP_LOGIN_FILTER}\""
@@ -64,6 +63,10 @@ configure_ldap() {
 	run_as "php /var/www/html/occ ldap:set-config s01 hasMemberOfFilterSupport 1"
 	run_as "php /var/www/html/occ ldap:set-config s01 useMemberOfToDetectMembership 1"
 	run_as "php /var/www/html/occ ldap:set-config s01 ldapConfigurationActive 1"
+	run_as "php /var/www/html/occ ldap:set-config s01 ldapCacheTTL 180"
+	run_as "php /var/www/html/occ ldap:set-config s01 ldapTLS ${LDAP_TLS}"
+	run_as "php /var/www/html/occ ldap:set-config s01 ldapQuotaAttribute nextcloudQuota"
+	run_as "php /var/www/html/occ ldap:set-config s01 ldapQuotaDefault 50G"
 }
 
 sync_admins_from_ldap() {
