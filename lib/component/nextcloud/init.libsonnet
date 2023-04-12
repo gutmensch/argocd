@@ -13,7 +13,7 @@ local kube = import '../../kube.libsonnet';
       imageVersion: '25.0.5-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
-      replicas: 0,
+      replicas: 1,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
       mysqlDatabaseUsers: [],
