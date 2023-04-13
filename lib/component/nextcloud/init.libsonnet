@@ -190,6 +190,7 @@ local kube = import '../../kube.libsonnet';
         template: {
           metadata: {
             annotations: {
+              'checksum/nextcloud-cfg': std.md5(std.toString(this.configmap_nextcloud_config)),
               'checksum/nextcloud-env': std.md5(std.toString(this.configmap_nextcloud_env)),
               'checksum/nextcloud-secret-env': std.md5(std.toString(this.secret_nextcloud_env)),
               'checksum/nginx-config-hash': std.md5(std.toString(this.configmap_nextcloud_nginxconfig)),
