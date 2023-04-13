@@ -13,7 +13,7 @@ local kube = import '../../kube.libsonnet';
       imageVersion: '25.0.5-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
-      replicas: 1,
+      replicas: 0,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
       mysqlDatabaseUsers: [],
@@ -62,6 +62,8 @@ local kube = import '../../kube.libsonnet';
       ldapEmailAttribute: 'mail',
       defaultPhoneRegion: 'DE',
       lostPasswordLink: 'https://pwreset.bln.space',
+      phpMemoryLimit: '512M',
+      phpUploadLimit: '512M',
     }
   ):: helper.uniquify({
 
@@ -145,10 +147,13 @@ local kube = import '../../kube.libsonnet';
         LDAP_BASE_GROUPS_DN: config.ldapBaseGroupsDN,
         LDAP_GROUP_MEMBER_ASSOC_ATTR: config.ldapGroupMemberAssocAttr,
         LDAP_EMAIL_ATTRIBUTE: config.ldapEmailAttribute,
-        OVERWRITE_HOST: config.publicFQDN,
-        OVERWRITE_PROTOCOL: 'https',
+        // OVERWRITE_HOST: config.publicFQDN,
+        // OVERWRITE_PROTOCOL: 'https',
+        OVERWRITECLIURL: 'https://%s' % [config.publicFQDN],
         DEFAULT_PHONE_REGION: config.defaultPhoneRegion,
         LOST_PASSWORD_LINK: config.lostPasswordLink,
+        PHP_MEMORY_LIMIT: config.phpMemoryLimit,
+        PHP_UPLOAD_LIMIT: config.phpUploadLimit,
       },
       metadata+: {
         labels+: config.labels,
