@@ -87,7 +87,7 @@ local kube = import '../../kube.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, 'v%s' % [config.imageVersion]),
                 imagePullPolicy: 'IfNotPresent',
                 args: std.prune([
-                  '--log-level=info',
+                  '--log-level=debug',
                   '--log-format=text',
                   '--interval=1m',
                   '--policy=upsert-only',
