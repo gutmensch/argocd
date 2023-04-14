@@ -14,7 +14,7 @@ local def = import 'defaults.libsonnet';
         { group: '', kind: 'Namespace' },
         { group: 'rbac.authorization.k8s.io', kind: 'ClusterRole' },
         { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
-        { group: 'cert-manager.io', kind: 'CertIssuer' },
+        { group: 'cert-manager.io', kind: 'ClusterIssuer' },
       ],
     }),
   ],
