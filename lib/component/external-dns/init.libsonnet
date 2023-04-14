@@ -76,6 +76,12 @@ local kube = import '../../kube.libsonnet';
             nodeSelector: {
               'topology.kubernetes.io/region': region,
             },
+            securityContext: {
+              fsGroup: 65534,
+              fsGroupChangePolicy: 'OnRootMismatch',
+              runAsGroup: 65534,
+              runAsUser: 65534,
+            },
             containers: [
               {
                 env: std.prune([
@@ -113,7 +119,6 @@ local kube = import '../../kube.libsonnet';
                   periodSeconds: 10,
                   timeoutSeconds: 5,
                 },
-
                 livenessProbe: {
                   failureThreshold: 2,
                   httpGet: {
@@ -140,12 +145,14 @@ local kube = import '../../kube.libsonnet';
                 ]),
               },
             ],
+            serviceAccountName: this.service_account.metadata.name,
             resources: {},
             volumes: [
               {
                 name: this.secret_google_credentials.metadata.name,
                 secret: {
                   secretName: this.secret_google_credentials.metadata.name,
+                  defaultMode: std.parseOctal('0600'),
                 },
               },
             ],
