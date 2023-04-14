@@ -163,7 +163,7 @@ local kube = import '../../kube.libsonnet';
         {
           apiGroups: [''],
           resources: ['nodes'],
-          verbs: ['watch', 'list', 'get'],
+          verbs: ['watch', 'list'],
         },
         {
           apiGroups: [''],
@@ -172,16 +172,11 @@ local kube = import '../../kube.libsonnet';
         },
         {
           apiGroups: [''],
-          resources: ['services'],
+          resources: ['services', 'endpoints'],
           verbs: ['watch', 'list', 'get'],
         },
         {
-          apiGroups: [''],
-          resources: ['endpoints'],
-          verbs: ['watch', 'list', 'get'],
-        },
-        {
-          apiGroups: ['networking', 'extensions', 'networking.k8s.io'],
+          apiGroups: ['extensions', 'networking.k8s.io'],
           resources: ['ingresses'],
           verbs: ['watch', 'list', 'get'],
         },
