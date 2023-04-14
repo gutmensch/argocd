@@ -14,7 +14,9 @@
     protect: true,
   },
   project: {
-    clusterResourceAllowList: [{ group: '', kind: 'Namespace' }],
+    clusterResourceAllowList: [
+      { group: '', kind: 'Namespace' },
+    ],
   },
 
   withApp(map): $.app + map,
