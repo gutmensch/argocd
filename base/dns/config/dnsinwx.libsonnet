@@ -83,6 +83,7 @@
         { name: 'drone1.borg', rtype: 'A', content: ips.hetznerDrone1v4 },
         { name: 'drone1.borg', rtype: 'AAAA', content: ips.hetznerDrone1v6 },
         { name: '%s._domainkey' % [dkimSelectors['kubectl.me']], rtype: 'TXT', content: dkimKeys.rsa2022 },
+        { name: 'svc', rtype: 'NS', content: ['ns-cloud-c%d.googledomains.com' % id for id in [1, 2, 3, 4]] },
       ] + defaultRecords,
       'robattix.com': [
         { name: '%s._domainkey' % [dkimSelectors['robattix.com']], rtype: 'TXT', content: dkimKeys.rsa2022 },
