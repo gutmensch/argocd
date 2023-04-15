@@ -102,5 +102,5 @@ if ! checkBucketExists $BUCKET ; then
 }
 
 # Try connecting to MinIO instance
-scheme=http
+scheme=https
 connectToMinio $scheme

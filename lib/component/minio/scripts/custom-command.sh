@@ -39,5 +39,5 @@ runCommand() {
 }
 
 # Try connecting to MinIO instance
-scheme=http
+scheme=https
 connectToMinio $scheme
