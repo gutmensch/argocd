@@ -19,6 +19,7 @@ local kube = import '../../kube.libsonnet';
       provider: 'google',
       googleProjectID: null,
       googleServiceAccount: {},
+      certManagerNamespace: 'cert-manager-system',
     },
   ):: helper.uniquify({
 
@@ -35,7 +36,7 @@ local kube = import '../../kube.libsonnet';
 
     secret: kube.Secret('%s-credentials' % [instance]) {
       metadata+: {
-        namespace: namespace,
+        namespace: config.certManagerNamespace,
         labels+: config.labels,
       },
       stringData: {
@@ -45,7 +46,6 @@ local kube = import '../../kube.libsonnet';
 
     certIssuer: kube._Object('cert-manager.io/v1', 'ClusterIssuer', instance) {
       metadata+: {
-        namespace: namespace,
         labels+: config.labels,
       },
       spec+: {

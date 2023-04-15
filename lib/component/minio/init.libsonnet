@@ -285,7 +285,7 @@ local policy = import 'templates/policy.libsonnet';
         labels: config.labels,
         namespace: namespace,
         annotations: {
-          'external-dns.alpha.kubernetes.io/hostname': std.join('.', [componentName, namespace, config.servicePublicDomain]),
+          'external-dns.alpha.kubernetes.io/internal-hostname': std.join('.', [componentName, namespace, config.servicePublicDomain]),
         },
       },
       spec+: {
