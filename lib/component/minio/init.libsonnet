@@ -82,7 +82,11 @@ local policy = import 'templates/policy.libsonnet';
         'add-custom-policy.sh': std.join('\n', [
           '#!/bin/sh',
           'source /config/add-policy.sh',
-          '${MC} admin policy attach myminio consoleAdmin --group %s' % [config.ldapAdminGroupDN],
+          'if ! ${MC} admin policy entities myminio/ --policy consoleAdmin | grep -q %s; then' % [config.ldapAdminGroupDN],
+          '  ${MC} admin policy attach myminio consoleAdmin --group %s' % [config.ldapAdminGroupDN],
+          'else',
+          '  echo ldap group %s is already attached to consoleAdmin policy' % [config.ldapAdminGroupDN],
+          'fi',
         ] + this.policies),
       } + this.policyFiles,
       metadata+: {

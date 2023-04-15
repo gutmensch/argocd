@@ -49,13 +49,18 @@ createPolicy() {
 	echo "Checking policy: $NAME (in $FILENAME)"
 	if ! checkPolicyExists $NAME; then
 		echo "Creating policy '$NAME'"
+		${MC} admin policy create myminio $NAME $FILENAME
+		sleep 2
 	else
 		echo "Policy '$NAME' already exists."
 	fi
 	sleep 2
-	${MC} admin policy create myminio $NAME $FILENAME
-	sleep 2
-	${MC} admin policy attach myminio $NAME --group $LDAPGROUP
+	if ! ${MC} admin policy entities myminio/ --policy $NAME | grep -q $LDAPGROUP; then
+		echo Attaching LDAP group $LDAPGROUP to policy $NAME
+		${MC} admin policy attach myminio $NAME --group $LDAPGROUP
+	else
+		echo LDAP group $LDAPGROUP is already attached to $NAME policy
+	fi
 }
 
 # Try connecting to MinIO instance
