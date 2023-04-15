@@ -16,6 +16,7 @@ local kube = import '../../kube.libsonnet';
       googleProjectID: null,
       googleServiceAccount: {},
       replicas: 1,
+      logLevel: 'info',
     }
   ):: helper.uniquify({
 
@@ -93,7 +94,7 @@ local kube = import '../../kube.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, 'v%s' % [config.imageVersion]),
                 imagePullPolicy: 'IfNotPresent',
                 args: std.prune([
-                  '--log-level=debug',
+                  '--log-level=%s' % [config.logLevel],
                   '--log-format=text',
                   '--interval=1m',
                   '--policy=upsert-only',

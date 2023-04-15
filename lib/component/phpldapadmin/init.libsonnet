@@ -108,7 +108,7 @@ local kube = import '../../kube.libsonnet';
           'cert-manager.io/cluster-issuer': config.certIssuer,
           'kubernetes.io/ingress.class': 'nginx',
           'nginx.ingress.kubernetes.io/auth-type': 'basic',
-          'nginx.ingress.kubernetes.io/auth-secret': '%s-basic-auth' % [componentName],
+          'nginx.ingress.kubernetes.io/auth-secret': this.basicauthsecret.metadata.name,
           'nginx.ingress.kubernetes.io/auth-realm': 'Authentication Required',
         },
         labels+: config.labels,

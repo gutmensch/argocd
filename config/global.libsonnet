@@ -22,6 +22,8 @@
       '65.108.70.42',
       '46.4.71.17',
     ],
+    servicePublicDomain: 'svc.kubectl.me',
+    servicePublicCertIssuer: 'letsencrypt-prod-google',
   },
   staging: {
     ldapHost: 'openldap.base-auth-staging.svc.cluster.local',

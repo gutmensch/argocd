@@ -8,9 +8,9 @@ local policy = import 'templates/policy.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: 'quay.io',
       imageRef: 'minio/minio',
-      imageVersion: 'RELEASE.2023-01-25T00-19-54Z',
+      imageVersion: 'RELEASE.2023-04-13T03-08-07Z',
       imageConsoleRef: 'minio/mc',
-      imageConsoleVersion: 'RELEASE.2023-01-11T03-14-16Z',
+      imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -36,7 +36,7 @@ local policy = import 'templates/policy.libsonnet';
         // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
       },
       consoleIngress: null,
-      certIssuer: 'letsencrypt-prod',
+      consoleCertIssuer: 'letsencrypt-prod',
     }
   ):: {
 
@@ -50,6 +50,23 @@ local policy = import 'templates/policy.libsonnet';
     local appName = name,
     local componentName = 'minio',
     local ingressRestricted = true,
+
+    service_certificate: kube._Object('cert-manager.io/v1', 'Certificate', '%s-svc-cert' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels+: config.labels,
+      },
+      spec: {
+        secretName: '%s-svc-cert' % [componentName],
+        issuerRef: {
+          name: config.servicePublicCertIssuer,
+          kind: 'ClusterIssuer',
+        },
+        dnsNames: [
+          std.join('.', [componentName, namespace, config.servicePublicDomain]),
+        ],
+      },
+    },
 
     configmap: kube.ConfigMap(componentName) {
       data: {
@@ -136,7 +153,7 @@ local policy = import 'templates/policy.libsonnet';
                 envFrom: [
                   {
                     secretRef: {
-                      name: componentName,
+                      name: this.secret.metadata.name,
                     },
                   },
                 ],
@@ -165,7 +182,7 @@ local policy = import 'templates/policy.libsonnet';
                   sources: [
                     {
                       configMap: {
-                        name: componentName,
+                        name: this.configmap.metadata.name,
                       },
                     },
                   ],
@@ -222,7 +239,7 @@ local policy = import 'templates/policy.libsonnet';
                 envFrom: [
                   {
                     secretRef: {
-                      name: componentName,
+                      name: this.secret.metadata.name,
                     },
                   },
                 ],
@@ -251,7 +268,7 @@ local policy = import 'templates/policy.libsonnet';
                   sources: [
                     {
                       configMap: {
-                        name: componentName,
+                        name: this.configmap.metadata.name,
                       },
                     },
                   ],
@@ -267,6 +284,9 @@ local policy = import 'templates/policy.libsonnet';
       metadata+: {
         labels: config.labels,
         namespace: namespace,
+        annotations: {
+          'external-dns.alpha.kubernetes.io/hostname': std.join('.', [componentName, namespace, config.servicePublicDomain]),
+        },
       },
       spec+: {
         ports: [
@@ -301,22 +321,12 @@ local policy = import 'templates/policy.libsonnet';
       },
     },
 
-    basicauthsecret: kube.Secret('%s-basic-auth' % [componentName]) {
-      metadata+: {
-        namespace: namespace,
-        labels+: config.labels,
-      },
-      stringData: {
-        auth: config.httpBasicAuth,
-      },
-    },
-
     ingress: if std.get(config, 'consoleIngress') != null then kube.Ingress('%s-console' % [componentName], ingressRestricted) {
       local ing = self,
       metadata+: {
         namespace: namespace,
         annotations+: {
-          'cert-manager.io/cluster-issuer': config.certIssuer,
+          'cert-manager.io/cluster-issuer': config.consoleCertIssuer,
           'kubernetes.io/ingress.class': 'nginx',
         },
         labels+: config.labels,
@@ -413,7 +423,7 @@ local policy = import 'templates/policy.libsonnet';
                 envFrom: [
                   {
                     configMapRef: {
-                      name: '%s-config' % [componentName],
+                      name: this.configmapcfg.metadata.name,
                     },
                   },
                   {
@@ -422,7 +432,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),  // orig: 'quay.io/minio/minio:RELEASE.2022-10-24T18-35-07Z',
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio',
                 ports: [
@@ -449,22 +459,46 @@ local policy = import 'templates/policy.libsonnet';
                     mountPath: '/cache',
                     name: 'cache',
                   },
-                  // {
-                  //   mountPath: '/etc/minio/certs/public.crt',
-                  //   name: 'certificate',
-                  //   subPath: 'tls.crt',
-                  // },
-                  // {
-                  //   mountPath: '/etc/minio/certs/private.key',
-                  //   name: 'certificate',
-                  //   subPath: 'tls.key',
-                  // },
-                  // {
-                  //   mountPath: '/etc/minio/certs/ca.crt',
-                  //   name: 'certificate',
-                  //   subPath: 'ca.crt',
-                  // },
+                  {
+                    mountPath: '/etc/minio/certs/public.crt',
+                    name: this.service_certificate.metadata.name,
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: '/etc/minio/certs/private.key',
+                    name: this.service_certificate.metadata.name,
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: '/etc/minio/certs/ca.crt',
+                    name: this.service_certificate.metadata.name,
+                    subPath: 'ca.crt',
+                  },
                 ],
+                readinessProbe: {
+                  failureThreshold: 3,
+                  httpGet: {
+                    path: '/minio/health/live',
+                    port: 'http',
+                    scheme: 'HTTPS',
+                  },
+                  initialDelaySeconds: 30,
+                  successThreshold: 1,
+                  periodSeconds: 15,
+                  timeoutSeconds: 5,
+                },
+                livenessProbe: {
+                  failureThreshold: 3,
+                  httpGet: {
+                    path: '/minio/health/live',
+                    port: 'http',
+                    scheme: 'HTTPS',
+                  },
+                  initialDelaySeconds: 30,
+                  successThreshold: 1,
+                  periodSeconds: 30,
+                  timeoutSeconds: 5,
+                },
               },
             ],
             securityContext: {
@@ -475,12 +509,12 @@ local policy = import 'templates/policy.libsonnet';
             },
             serviceAccountName: componentName,
             volumes: [
-              //  {
-              //    name: 'certificate',
-              //    secret: {
-              //      secretName: '%s-server-cert' % [componentName],
-              //    },
-              //  },
+              {
+                name: this.service_certificate.metadata.name,
+                secret: {
+                  secretName: this.service_certificate.spec.secretName,
+                },
+              },
             ],
           },
         },
