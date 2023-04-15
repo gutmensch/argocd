@@ -11,7 +11,7 @@
     storageClass: 'zfs-fast-xfs',
     storageSize: '30Gi',
     backupMinioEnable: true,
-    backupMinioEndpoint: 'http://minio.base-minio-lts.svc.cluster.local:9000',
+    backupMinioEndpoint: 'https://minio.base-minio-lts.svc.kubectl.me:9000',
     backupMinioBucket: 'mysql-backup',
   },
 }
