@@ -328,6 +328,7 @@ local policy = import 'templates/policy.libsonnet';
         annotations+: {
           'cert-manager.io/cluster-issuer': config.consoleCertIssuer,
           'kubernetes.io/ingress.class': 'nginx',
+          'nginx.ingress.kubernetes.io/backend-protocol': 'HTTPS',
         },
         labels+: config.labels,
       },
@@ -348,7 +349,7 @@ local policy = import 'templates/policy.libsonnet';
                 {
                   backend: {
                     service: {
-                      name: ing.metadata.name,
+                      name: this.service_console.metadata.name,
                       port: {
                         name: 'http',
                       },
