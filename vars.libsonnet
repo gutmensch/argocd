@@ -16,6 +16,9 @@ local def = import 'defaults.libsonnet';
         { group: 'rbac.authorization.k8s.io', kind: 'ClusterRoleBinding' },
         { group: 'cert-manager.io', kind: 'ClusterIssuer' },
       ],
+      // XXX: cert manager is installed via ansible in bootstrap but we need
+      // to create secrets from argocd for google dns too
+      additionalNamespaces: ['cert-manager-system'],
     }),
   ],
 

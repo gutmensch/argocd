@@ -14,6 +14,7 @@
     protect: true,
   },
   project: {
+    additionalNamespaces: [],
     clusterResourceAllowList: [
       { group: '', kind: 'Namespace' },
     ],

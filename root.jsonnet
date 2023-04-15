@@ -8,7 +8,7 @@ local projects = [
                  if app.project == proj.name then '%s-%s-%s' % [proj.name, app.name, tenant] else null
                  for app in vars.appList
                  for tenant in app.tenant
-               ]),
+               ] + proj.additionalNamespaces),
                proj.desc,
                proj.clusterResourceAllowList)
   for proj in vars.projectList
