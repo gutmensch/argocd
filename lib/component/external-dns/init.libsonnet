@@ -99,6 +99,7 @@ local kube = import '../../kube.libsonnet';
                   '--interval=1m',
                   '--policy=upsert-only',
                   '--registry=txt',
+                  '--publish-internal-services',
                   '--provider=%s' % [config.provider],
                   if config.provider == 'google' then '--google-project=%s' % [config.googleProjectID] else null,
                   '--txt-owner-id=%s' % [namespace],
