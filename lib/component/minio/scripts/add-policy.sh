@@ -53,7 +53,7 @@ createPolicy() {
 		echo "Policy '$NAME' already exists."
 	fi
 	sleep 2
-	${MC} admin policy add myminio $NAME $FILENAME
+	${MC} admin policy attach myminio $NAME $FILENAME
 	sleep 2
 	${MC} admin policy set myminio $NAME "group=${LDAPGROUP}"
 }
