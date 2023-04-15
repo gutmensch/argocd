@@ -55,7 +55,7 @@ createPolicy() {
 	sleep 2
 	${MC} admin policy create myminio $NAME $FILENAME
 	sleep 2
-	${MC} admin policy attach myminio $NAME "group=${LDAPGROUP}"
+	${MC} admin policy attach myminio $NAME --group $LDAPGROUP
 }
 
 # Try connecting to MinIO instance
