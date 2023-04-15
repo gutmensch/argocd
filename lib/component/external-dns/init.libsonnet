@@ -16,7 +16,7 @@ local kube = import '../../kube.libsonnet';
       googleProjectID: null,
       googleServiceAccount: {},
       replicas: 1,
-      logLevel: 'info',
+      logLevel: 'debug',
     }
   ):: helper.uniquify({
 
