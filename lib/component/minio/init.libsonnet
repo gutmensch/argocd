@@ -211,7 +211,7 @@ local policy = import 'templates/policy.libsonnet';
           keystore: {
             gcp: {
               secretmanager: {
-                endpoint: 'https://secretmanager.googleapis.com:443',
+                endpoint: 'https://secretmanager.googleapis.com',
                 project_id: config.googleProjectID,
                 credentials: {
                   client_email: config.googleServiceAccount.secretManager.client_email,
@@ -654,6 +654,12 @@ local policy = import 'templates/policy.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: 'kes',
+                securityContext: {
+                  capabilities: {
+                    add: ['CAP_IPC_LOCK'],
+                    drop: ['ALL'],
+                  },
+                },
                 ports: [
                   {
                     containerPort: 7373,
