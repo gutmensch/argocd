@@ -601,6 +601,21 @@ local policy = import 'templates/policy.libsonnet';
                     name: this.service_certificate.metadata.name,
                     subPath: 'ca.crt',
                   },
+                  {
+                    mountPath: config.minioKesClientCertPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: config.minioKesClientKeyPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: config.kesRootCAPath,
+                    name: this.kesServerCert.metadata.name,
+                    subPath: 'ca.crt',
+                  },
                 ],
                 readinessProbe: {
                   failureThreshold: 3,
