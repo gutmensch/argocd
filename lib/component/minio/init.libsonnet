@@ -211,6 +211,7 @@ local policy = import 'templates/policy.libsonnet';
           keystore: {
             gcp: {
               secretmanager: {
+                endpoint: 'https://secretmanager.googleapis.com:443',
                 project_id: config.googleProjectID,
                 credentials: {
                   client_email: config.googleServiceAccount.secretManager.client_email,
@@ -543,10 +544,11 @@ local policy = import 'templates/policy.libsonnet';
             ],
             containers: [
               {
+                // wait for kes container
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/bin/sleep 10; /usr/bin/docker-entrypoint.sh minio server /storage --certs-dir /etc/minio/certs/ --address :9000 --console-address :9001',
+                  '/bin/sleep 20; /usr/bin/docker-entrypoint.sh minio server /storage --certs-dir /etc/minio/certs/ --address :9000 --console-address :9001',
                 ],
                 envFrom: [
                   {
