@@ -45,6 +45,7 @@ local policy = import 'templates/policy.libsonnet';
       kesServerCertPath: '/opt/certs/kes-server.cert',
       minioKesClientCertPath: '/opt/certs/minio-kes-client.cert',
       minioKesClientKeyPath: '/opt/certs/minio-kes-client.key',
+      kesAuth: 'on',
     }
   ):: {
 
@@ -545,7 +546,7 @@ local policy = import 'templates/policy.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/usr/bin/docker-entrypoint.sh minio server /storage --certs-dir /etc/minio/certs/ --address :9000 --console-address :9001',
+                  '/bin/sleep 10; /usr/bin/docker-entrypoint.sh minio server /storage --certs-dir /etc/minio/certs/ --address :9000 --console-address :9001',
                 ],
                 envFrom: [
                   {
@@ -646,7 +647,7 @@ local policy = import 'templates/policy.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/entrypoint.sh kes server --config /config.yml --address 0.0.0.0:7373',
+                  '/entrypoint.sh kes server --config /config.yml --addr 0.0.0.0:7373 --auth %s' % [config.kesAuth],
                 ],
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
