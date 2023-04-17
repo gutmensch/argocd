@@ -756,7 +756,7 @@ local policy = import 'templates/policy.libsonnet';
                 name: this.secret_kes.metadata.name,
                 secret: {
                   secretName: this.secret_kes.metadata.name,
-                  defaultMode: std.parseOctal('0700'),
+                  defaultMode: std.parseOctal('0770'),
                 },
               },
             ],
