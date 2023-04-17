@@ -40,7 +40,7 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       stringData: {
-        'key.json': std.toString(config.googleServiceAccount),
+        'key.json': std.toString(config.googleServiceAccount.cloudDNS),
       },
     },
 

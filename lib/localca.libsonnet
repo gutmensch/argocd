@@ -5,7 +5,7 @@ local kube = import 'kube.libsonnet';
   local selfSignedIssuer = 'selfsigned',
   local localIssuer = 'local-root-ca',
 
-  serverCert(name, namespace, createIssuer, dnsNames, labels, ipAddresses=[], keySize=2048, duration='2160h0m0s', renewBefore='360h0m0s'): {
+  serverCert(name, namespace, createIssuer, dnsNames, labels, ipAddresses=[], keySize=2048, duration='2160h0m0s', renewBefore='360h0m0s', rotationPolicy='Never'): {
 
     [if createIssuer then 'localrootcacert']: kube._Object('cert-manager.io/v1', 'Certificate', localIssuer) {
       metadata+: {
@@ -17,17 +17,17 @@ local kube = import 'kube.libsonnet';
         isCA: true,
         issuerRef: {
           group: 'cert-manager.io',
-  	kind: 'ClusterIssuer',
-  	name: selfSignedIssuer,
+          kind: 'ClusterIssuer',
+          name: selfSignedIssuer,
         },
         privateKey: {
           algorithm: 'ECDSA',
           size: 256,
         },
         secretName: localIssuer,
-      }
+      },
     },
-  
+
     [if createIssuer then 'localcertissuer']: kube._Object('cert-manager.io/v1', 'Issuer', localIssuer) {
       metadata+: {
         namespace: namespace,
@@ -39,9 +39,9 @@ local kube = import 'kube.libsonnet';
         },
       },
     },
-  
-    assert std.length(dnsNames) > 0: 'server certificate needs at least one dnsNames list entry',
-  
+
+    assert std.length(dnsNames) > 0 : 'server certificate needs at least one dnsNames list entry',
+
     localservercert: kube._Object('cert-manager.io/v1', 'Certificate', '%s-server-cert' % [name]) {
       metadata+: {
         namespace: namespace,
@@ -61,6 +61,7 @@ local kube = import 'kube.libsonnet';
           algorithm: 'RSA',
           encoding: 'PKCS1',
           size: keySize,
+          rotationPolicy: rotationPolicy,
         },
         renewBefore: renewBefore,
         secretName: '%s-server-cert' % [name],
@@ -79,6 +80,6 @@ local kube = import 'kube.libsonnet';
           'client auth',
         ],
       },
-    }
-  }
+    },
+  },
 }

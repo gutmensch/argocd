@@ -26,12 +26,13 @@
     servicePublicCertIssuer: 'letsencrypt-prod-google',
   },
   staging: {
-    ldapHost: 'openldap.base-auth-staging.svc.cluster.local',
-    ldapBaseDN: 'o=auth,dc=local',
-    mxInternalHost: 'mx.base-mx-staging.svc.cluster.local',
-    mxPublicHost: 'mxstg.bln.space',
+    // ldapHost: 'openldap.base-auth-staging.svc.kubectl.me',
+    // ldapBaseDN: 'o=auth,dc=local',
+    // mxInternalHost: 'mx.base-mx-staging.svc.cluster.local',
+    // mxPublicHost: 'mxstg.bln.space',
   },
   lts: {
+    s3Host: 'minio.base-minio-lts.svc.kubectl.me',
     ldapHost: 'openldap.base-auth-lts.svc.cluster.local',
     ldapBaseDN: 'o=auth,dc=local',
     mxInternalHost: 'mx.base-mx-lts.svc.cluster.local',

@@ -1,5 +1,6 @@
 local helper = import '../../helper.libsonnet';
 local kube = import '../../kube.libsonnet';
+local ca = import '../../localca.libsonnet';
 local policy = import 'templates/policy.libsonnet';
 
 {
@@ -11,6 +12,8 @@ local policy = import 'templates/policy.libsonnet';
       imageVersion: 'RELEASE.2023-04-13T03-08-07Z',
       imageConsoleRef: 'minio/mc',
       imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
+      imageKesRef: 'minio/kes',
+      imageKesVersion: '2023-04-03T16-41-28Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -37,6 +40,11 @@ local policy = import 'templates/policy.libsonnet';
       },
       consoleIngress: null,
       consoleCertIssuer: 'letsencrypt-prod',
+      kesRootCAPath: '/opt/certs/ca.crt',
+      kesServerKeyPath: '/opt/certs/kes-server.key',
+      kesServerCertPath: '/opt/certs/kes-server.cert',
+      minioKesClientCertPath: '/opt/certs/minio-kes-client.cert',
+      minioKesClientKeyPath: '/opt/certs/minio-kes-client.key',
     }
   ):: {
 
@@ -50,6 +58,26 @@ local policy = import 'templates/policy.libsonnet';
     local appName = name,
     local componentName = 'minio',
     local ingressRestricted = true,
+
+    local kesRoot = ca.serverCert(
+      name='kes-server',
+      namespace=namespace,
+      createIssuer=true,
+      dnsNames=['kes-server.local'],
+      labels=config.labels,
+    ),
+    kesRootCA: kesRoot.localrootcacert,
+    kesRootCAIssuer: kesRoot.localcertissuer,
+
+    kesServerCert: kesRoot.localservercert,
+
+    minioKesClientCert: ca.serverCert(
+      name='minio-kes-client',
+      namespace=namespace,
+      createIssuer=false,
+      dnsNames=['minio-kes-client.local'],
+      labels=config.labels,
+    ).localservercert,
 
     service_certificate: kube._Object('cert-manager.io/v1', 'Certificate', '%s-svc-cert' % [componentName]) {
       metadata+: {
@@ -105,6 +133,94 @@ local policy = import 'templates/policy.libsonnet';
         MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER: config.ldapGroupSearchFilter,
         MINIO_IDENTITY_LDAP_TLS_SKIP_VERIFY: std.toString(config.ldapTlsSkipVerify),
         MINIO_IDENTITY_LDAP_SERVER_STARTTLS: std.toString(config.ldapStartTls),
+        MINIO_KMS_KES_ENDPOINT: 'https://kes-server.local:7373',
+        MINIO_KMS_KES_CERT_FILE: config.minioKesClientCertPath,
+        MINIO_KMS_KES_KEY_FILE: config.minioKesClientKeyPath,
+        MINIO_KMS_KES_CAPATH: config.kesRootCAPath,
+        MINIO_KMS_KES_KEY_NAME: 'minio-backend-default-key',
+        MINIO_KMS_KES_ENCLAVE: namespace,
+      },
+      metadata+: {
+        labels+: config.labels,
+        namespace: namespace,
+      },
+    },
+
+    secret_kes: kube.Secret('%s-kes-config' % [componentName]) {
+      stringData: {
+        'entrypoint.sh': std.join('\n', [
+          '#!/bin/sh',
+          'export PATH=/:$PATH',
+          // the identity should stay the same even after cert rotation
+          // ref. https://github.com/minio/kes/issues/184
+          'export MINIO_CLIENT_IDENTITY_HASH=$(kes identity of %s | cut -d: -f2 | tr -d " " | tr -d "\n")' % [config.minioKesClientCertPath],
+          'exec "$@"',
+        ]),
+        'config.yml': std.manifestYamlDoc({
+          version: 'v1',
+          admin: {
+            identity: 'disabled',
+          },
+          log: {
+            'error': 'on',
+            audit: 'off',
+          },
+          tls: {
+            key: config.kesServerKeyPath,
+            cert: config.kesServerCertPath,
+            ca: config.kesRootCAPath,
+          },
+          cache: {
+            expiry: {
+              any: '5m0s',
+              unused: '20s',
+              offline: '0s',
+            },
+          },
+          api: {
+            '/v1/status': {
+              skip_auth: true,
+              timeout: '15s',
+
+            },
+            '/v1/metrics': {
+              skip_auth: true,
+              timeout: '15s',
+
+            },
+          },
+          policy: {
+            minio: {
+              allow: [
+                '/v1/key/create/*',
+                '/v1/key/generate/*',
+                '/v1/key/decrypt/*',
+                '/v1/key/bulk/decrypt',
+                '/v1/key/list',
+                '/v1/status',
+                '/v1/metrics',
+                '/v1/log/audit',
+                '/v1/log/error',
+              ],
+              identities: [
+                '${MINIO_CLIENT_IDENTITY_HASH}',
+              ],
+            },
+          },
+          keystore: {
+            gcp: {
+              secretmanager: {
+                project_id: config.googleProjectID,
+                credentials: {
+                  client_email: config.googleServiceAccount.secretManager.client_email,
+                  client_id: config.googleServiceAccount.secretManager.client_id,
+                  private_key_id: config.googleServiceAccount.secretManager.private_key_id,
+                  private_key: config.googleServiceAccount.secretManager.private_key,
+                },
+              },
+            },
+          },
+        }),
       },
       metadata+: {
         labels+: config.labels,
@@ -418,6 +534,12 @@ local policy = import 'templates/policy.libsonnet';
             name: 'minio',
           },
           spec: {
+            hostAliases: [
+              {
+                ip: '127.0.0.1',
+                hostnames: ['kes-server.local', 'minio-kes-client.local'],
+              },
+            ],
             containers: [
               {
                 command: [
@@ -505,6 +627,89 @@ local policy = import 'templates/policy.libsonnet';
                   timeoutSeconds: 5,
                 },
               },
+              {
+                command: [
+                  '/bin/sh',
+                  '-ce',
+                  '/entrypoint.sh',
+                  'kes server --config /config.yml --address 0.0.0.0:7373',
+                ],
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
+                imagePullPolicy: 'IfNotPresent',
+                name: 'minio',
+                ports: [
+                  {
+                    containerPort: 7373,
+                    name: 'http',
+                  },
+                ],
+                resources: {
+                  // requests: {
+                  //   memory: '16Gi',
+                  // },
+                },
+                volumeMounts: [
+                  {
+                    mountPath: '/config.yml',
+                    name: this.secret_kes.metadata.name,
+                    subPath: 'config.yml',
+                  },
+                  {
+                    mountPath: '/entrypoint.sh',
+                    name: this.secret_kes.metadata.name,
+                    subPath: 'entrypoint.sh',
+                  },
+                  {
+                    mountPath: config.kesServerCertPath,
+                    name: this.kesServerCert.metadata.name,
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: config.kesServerKeyPath,
+                    name: this.kesServerCert.metadata.name,
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: config.minioKesClientCertPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: config.minioKesClientKeyPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: config.kesRootCAPath,
+                    name: this.kesServerCert.metadata.name,
+                    subPath: 'ca.crt',
+                  },
+                ],
+                //readinessProbe: {
+                //  failureThreshold: 3,
+                //  httpGet: {
+                //    path: '/v1/status',
+                //    port: 'http',
+                //    scheme: 'HTTPS',
+                //  },
+                //  initialDelaySeconds: 30,
+                //  successThreshold: 1,
+                //  periodSeconds: 15,
+                //  timeoutSeconds: 5,
+                //},
+                //livenessProbe: {
+                //  failureThreshold: 3,
+                //  httpGet: {
+                //    path: '/v1/status',
+                //    port: 'http',
+                //    scheme: 'HTTPS',
+                //  },
+                //  initialDelaySeconds: 30,
+                //  successThreshold: 1,
+                //  periodSeconds: 30,
+                //  timeoutSeconds: 5,
+                //},
+              },
             ],
             securityContext: {
               fsGroup: 1000,
@@ -518,6 +723,25 @@ local policy = import 'templates/policy.libsonnet';
                 name: this.service_certificate.metadata.name,
                 secret: {
                   secretName: this.service_certificate.spec.secretName,
+                },
+              },
+              {
+                name: this.minioKesClientCert.metadata.name,
+                secret: {
+                  secretName: this.minioKesClientCert.spec.secretName,
+                },
+              },
+              {
+                name: this.kesServerCert.metadata.name,
+                secret: {
+                  secretName: this.kesServerCert.spec.secretName,
+                },
+              },
+              {
+                name: this.secret_kes.metadata.name,
+                secret: {
+                  secretName: this.secret_kes.metadata.name,
+                  defaultMode: std.parseOctal('0700'),
                 },
               },
             ],

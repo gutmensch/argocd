@@ -30,7 +30,7 @@ local kube = import '../../kube.libsonnet';
 
     assert std.length(config.managedDomains) > 0 : error 'managedDomains must not be empty',
     assert config.provider != null : error 'provider must not be null',
-    assert config.provider == 'google' && std.length(std.objectFields(config.googleServiceAccount)) > 0 : error 'google service account must be valid json',
+    assert config.provider == 'google' && std.length(std.objectFields(config.googleServiceAccount.cloudDNS)) > 0 : error 'google service account must be valid json',
     assert config.provider == 'google' && config.googleProjectID != null : error 'google project must not be null',
 
     service_account: kube.ServiceAccount('%s-%s' % [componentName, config.provider]) {
@@ -46,7 +46,7 @@ local kube = import '../../kube.libsonnet';
         namespace: namespace,
       },
       stringData: {
-        'key.json': std.toString(config.googleServiceAccount),
+        'key.json': std.toString(config.googleServiceAccount.cloudDNS),
       },
     } else null,
 
