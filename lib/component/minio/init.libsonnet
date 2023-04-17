@@ -640,7 +640,7 @@ local policy = import 'templates/policy.libsonnet';
                 ports: [
                   {
                     containerPort: 7373,
-                    name: 'http',
+                    name: 'http-kes',
                   },
                 ],
                 resources: {
