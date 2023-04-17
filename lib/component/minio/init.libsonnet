@@ -646,8 +646,7 @@ local policy = import 'templates/policy.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  '/entrypoint.sh',
-                  'kes server --config /config.yml --address 0.0.0.0:7373',
+                  '/entrypoint.sh kes server --config /config.yml --address 0.0.0.0:7373',
                 ],
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
