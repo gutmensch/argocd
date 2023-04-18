@@ -531,6 +531,7 @@ local policy = import 'templates/policy.libsonnet';
             annotations: {
               'checksum/config': std.md5(std.toString(this.configmapcfg)),
               'checksum/secrets': std.md5(std.toString(this.secret)),
+              'checksum/kes': std.md5(std.toString(this.secret_kes)),
             },
             labels: config.labels,
             name: 'minio',
