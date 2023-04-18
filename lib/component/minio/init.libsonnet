@@ -13,6 +13,7 @@ local policy = import 'templates/policy.libsonnet';
       imageConsoleRef: 'minio/mc',
       imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
       imageKesRef: 'minio/kes',
+      // XXX: replace with new image after iter bug is fixed
       //imageKesVersion: '2023-04-17T23-01-06Z',
       imageKesVersion: '2023-02-15T14-54-37Z',
       rootUser: 'root',
@@ -661,9 +662,9 @@ local policy = import 'templates/policy.libsonnet';
                   runAsNonRoot: false,
                   runAsUser: 0,
                   capabilities: {
-                    add: ['ALL'],
-                    //add: ['IPC_LOCK'],
-                    // drop: ['ALL'],
+                    // add: ['ALL'],
+                    add: ['IPC_LOCK'],
+                    drop: ['ALL'],
                   },
                 },
                 ports: [
