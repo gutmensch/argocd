@@ -657,7 +657,7 @@ local policy = import 'templates/policy.libsonnet';
                 name: 'kes',
                 securityContext: {
                   capabilities: {
-                    add: ['CAP_IPC_LOCK'],
+                    add: ['IPC_LOCK'],
                     drop: ['ALL'],
                   },
                 },
