@@ -662,7 +662,6 @@ local policy = import 'templates/policy.libsonnet';
                   runAsNonRoot: false,
                   runAsUser: 0,
                   capabilities: {
-                    // add: ['ALL'],
                     add: ['IPC_LOCK'],
                     drop: ['ALL'],
                   },
@@ -673,11 +672,7 @@ local policy = import 'templates/policy.libsonnet';
                     name: 'http-kes',
                   },
                 ],
-                resources: {
-                  // requests: {
-                  //   memory: '16Gi',
-                  // },
-                },
+                resources: {},
                 volumeMounts: [
                   {
                     mountPath: '/config.yml',
@@ -715,30 +710,26 @@ local policy = import 'templates/policy.libsonnet';
                     subPath: 'ca.crt',
                   },
                 ],
-                //readinessProbe: {
-                //  failureThreshold: 3,
-                //  httpGet: {
-                //    path: '/v1/status',
-                //    port: 'http',
-                //    scheme: 'HTTPS',
-                //  },
-                //  initialDelaySeconds: 30,
-                //  successThreshold: 1,
-                //  periodSeconds: 15,
-                //  timeoutSeconds: 5,
-                //},
-                //livenessProbe: {
-                //  failureThreshold: 3,
-                //  httpGet: {
-                //    path: '/v1/status',
-                //    port: 'http',
-                //    scheme: 'HTTPS',
-                //  },
-                //  initialDelaySeconds: 30,
-                //  successThreshold: 1,
-                //  periodSeconds: 30,
-                //  timeoutSeconds: 5,
-                //},
+                livenessProbe: {
+                  exec: {
+                    command: ['/bin/sh', '-ce', 'curl --connect-timeout 1 --cacert %s --cert %s --key %s -s --fail -o /dev/null https://kes-server.local:7373/v1/status' % [config.kesRootCAPath, config.minioKesClientCertPath, config.minioKesClientKeyPath]],
+                  },
+                  failureThreshold: 5,
+                  initialDelaySeconds: 10,
+                  periodSeconds: 10,
+                  successThreshold: 1,
+                  timeoutSeconds: 2,
+                },
+                readinessProbe: {
+                  exec: {
+                    command: ['/bin/sh', '-ce', 'curl --connect-timeout 1 --cacert %s --cert %s --key %s -s --fail -o /dev/null https://kes-server.local:7373/v1/status' % [config.kesRootCAPath, config.minioKesClientCertPath, config.minioKesClientKeyPath]],
+                  },
+                  failureThreshold: 3,
+                  initialDelaySeconds: 15,
+                  periodSeconds: 10,
+                  successThreshold: 1,
+                  timeoutSeconds: 2,
+                },
               },
             ],
             securityContext: {
