@@ -211,7 +211,7 @@ local policy = import 'templates/policy.libsonnet';
           keystore: {
             gcp: {
               secretmanager: {
-                endpoint: 'https://secretmanager.googleapis.com:443',
+                // endpoint: 'https://secretmanager.googleapis.com:443',
                 project_id: config.googleProjectID,
                 credentials: {
                   client_email: config.googleServiceAccount.secretManager.client_email,
