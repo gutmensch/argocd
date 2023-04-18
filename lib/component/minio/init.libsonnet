@@ -13,7 +13,7 @@ local policy = import 'templates/policy.libsonnet';
       imageConsoleRef: 'minio/mc',
       imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
       imageKesRef: 'minio/kes',
-      imageKesVersion: '2023-04-03T16-41-28Z',
+      imageKesVersion: '2023-04-17T23-01-06Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
