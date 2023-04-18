@@ -657,6 +657,8 @@ local policy = import 'templates/policy.libsonnet';
                 name: 'kes',
                 securityContext: {
                   allowPrivilegeEscalation: true,
+                  runAsNonRoot: false,
+                  runAsUser: 0,
                   capabilities: {
                     add: ['ALL'],
                     //add: ['IPC_LOCK'],
