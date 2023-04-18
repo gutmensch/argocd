@@ -655,6 +655,7 @@ local policy = import 'templates/policy.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: 'kes',
+                privileged: true,
                 securityContext: {
                   capabilities: {
                     add: ['IPC_LOCK'],
