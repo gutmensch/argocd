@@ -16,15 +16,18 @@
         locks: false,
         versioning: false,
         expiry: 60,
+        quota: '50Gi',
       },
       'openldap-backup': {
         locks: false,
         versioning: false,
         expiry: 180,
+        quota: '5Gi',
       },
       nextcloud: {
         locks: false,
         versioning: false,
+        quota: '500Gi',
       },
     },
     policies: {
