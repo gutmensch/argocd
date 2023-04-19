@@ -15,7 +15,7 @@ local policy = import 'templates/policy.libsonnet';
       imageKesRef: 'minio/kes',
       // XXX: replace with new image after iter bug is fixed
       //imageKesVersion: '2023-04-17T23-01-06Z',
-      imageKesVersion: '2023-02-15T14-54-37Z',
+      imageKesVersion: '2023-04-18T19-36-09Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
