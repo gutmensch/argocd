@@ -15,7 +15,7 @@ local policy = import 'templates/policy.libsonnet';
       // XXX: workaround till http probes implemented or image has curl again
       imageKesRegistry: '',
       imageKesRef: 'gutmensch/minio-kes',
-      imageKesVersion: '2023-04-18T19-36-09Z',
+      imageKesVersion: '2023-04-18T19-36-09Z-1',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -35,7 +35,7 @@ local policy = import 'templates/policy.libsonnet';
       replicas: 1,
       prometheusAuthType: 'public',
       buckets: {
-        // example: { locks: false, versioning: true },
+        // example: { locks: false, versioning: true, quota: '10Gi' },
       },
       policies: {
         // examplerw: { bucket: 'example', actions: ['list', 'write', 'read', 'delete'], group: 'cn=BackupRW,ou=Groups,o=auth,dc=local' },
@@ -236,11 +236,12 @@ local policy = import 'templates/policy.libsonnet';
     },
 
     buckets:: [
-      'sleep 1\n${MC} mb --ignore-existing %s %s myminio/%s%s' % [
+      'sleep 1\n${MC} mb --ignore-existing %s %s myminio/%s\n%s\n%s' % [
         if config.buckets[b].locks then '--with-locks' else '',
         if config.buckets[b].versioning then '--with-versioning' else '',
         b,
-        if std.get(config.buckets[b], 'expiry', 0) > 0 then '\nif ! ${MC} ilm ls myminio/%s 2>/dev/null; then sleep 1; echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [b, b, config.buckets[b].expiry] else '',
+        if std.get(config.buckets[b], 'expiry', 0) > 0 then 'if ! ${MC} ilm ls myminio/%s 2>/dev/null; then sleep 1; echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [b, b, config.buckets[b].expiry] else '',
+        if std.get(config.buckets[b], 'quota', null) != 0 then 'echo "Setting quota of %s on bucket %s"; ${MC} quota set myminio/%s --size %s' % [config.buckets[b].quota, b, b, config.buckets[b].quota] else '',
       ]
       for b in std.objectFields(config.buckets)
     ],
@@ -661,9 +662,9 @@ local policy = import 'templates/policy.libsonnet';
                 imagePullPolicy: 'IfNotPresent',
                 name: 'kes',
                 securityContext: {
-                  allowPrivilegeEscalation: true,
-                  runAsNonRoot: false,
-                  runAsUser: 0,
+                  // allowPrivilegeEscalation: true,
+                  // runAsNonRoot: false,
+                  // runAsUser: 0,
                   capabilities: {
                     add: ['IPC_LOCK'],
                     drop: ['ALL'],
