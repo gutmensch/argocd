@@ -12,11 +12,10 @@ local policy = import 'templates/policy.libsonnet';
       imageVersion: 'RELEASE.2023-04-13T03-08-07Z',
       imageConsoleRef: 'minio/mc',
       imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
-      imageKesRef: 'minio/kes',
-      // XXX: replace with new image after iter bug is fixed
-      //imageKesVersion: '2023-04-17T23-01-06Z',
-      //imageKesVersion: '2023-04-18T19-36-09Z',
-      imageKesVersion: '2023-02-15T14-54-37Z',
+      // XXX: workaround till http probes implemented or image has curl again
+      imageKesRegistry: '',
+      imageKesRef: 'gutmensch/minio-kes',
+      imageKesVersion: '2023-04-18T19-36-09Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -655,7 +654,7 @@ local policy = import 'templates/policy.libsonnet';
                   '-ce',
                   '/entrypoint.sh kes server --config /config.yml --addr 0.0.0.0:7373 --auth %s' % [config.kesAuth],
                 ],
-                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageKesRef, config.imageKesVersion),
+                image: helper.getImage(config.imageRegistryMirror, config.imageKesRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: 'kes',
                 securityContext: {
