@@ -48,6 +48,7 @@ local policy = import 'templates/policy.libsonnet';
       minioKesClientCertPath: '/opt/certs/minio-kes-client.cert',
       minioKesClientKeyPath: '/opt/certs/minio-kes-client.key',
       kesAuth: 'on',
+      kesAdminOperations: true,
     }
   ):: {
 
@@ -204,7 +205,9 @@ local policy = import 'templates/policy.libsonnet';
                 '/v1/metrics',
                 '/v1/log/audit',
                 '/v1/log/error',
-              ],
+              ] + if config.kesAdminOperations then [
+                '/v1/key/delete/*',
+              ] else [],
               identities: [
                 '${MINIO_CLIENT_IDENTITY_HASH}',
               ],
