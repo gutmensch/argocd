@@ -15,18 +15,21 @@
       'mysql-backup': {
         locks: false,
         versioning: false,
+        encrypt: true,
         expiry: 60,
         quota: '50Gi',
       },
       'openldap-backup': {
         locks: false,
         versioning: false,
+        encrypt: true,
         expiry: 180,
         quota: '5Gi',
       },
       nextcloud: {
         locks: false,
         versioning: false,
+        encrypt: true,
         quota: '500Gi',
       },
     },

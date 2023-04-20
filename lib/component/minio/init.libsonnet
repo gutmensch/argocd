@@ -62,12 +62,13 @@ local policy = import 'templates/policy.libsonnet';
     local appName = name,
     local componentName = 'minio',
     local ingressRestricted = true,
+    local minioPodFQDN = '%s-0.%s-headless.%s.svc.cluster.local' % [componentName, componentName, namespace],
 
     local kesRoot = ca.serverCert(
       name='kes-server',
       namespace=namespace,
       createIssuer=true,
-      dnsNames=['kes-server.local'],
+      dnsNames=['kes-server.local', minioPodFQDN],
       labels=config.labels,
     ),
     kesRootCA: kesRoot.localrootcacert,
@@ -235,14 +236,25 @@ local policy = import 'templates/policy.libsonnet';
       },
     },
 
+    manage_bucket_script(bucket, obj)::
+      local _versioning = if std.get(obj, 'versioning', false) then '--with-versioning' else '';
+      local _locks = if std.get(obj, 'locks', false) then '--with-locks' else '';
+      local createCmd = '${MC} mb --ignore-existing %s %s myminio/%s' % [_versioning, _locks, bucket];
+      local createKeyCmd = if std.get(obj, 'encrypt', false) then
+        'curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s --cert %s --key %s --cafile %s' % [namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
+      local setKeyCmd = if std.get(obj, 'encrypt', false) then '${MC} encrypt set sse-kms %s myminio/%s' % [bucket, bucket] else '';
+      local setExpiryCmd = if std.get(obj, 'expiry', 0) > 0 then 'if ! ${MC} ilm ls myminio/%s 2>/dev/null; then echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [bucket, bucket, obj.expiry] else '';
+      local setQuotaCmd = if std.get(obj, 'quota', null) != null then 'echo "Setting quota of %s on bucket %s"; ${MC} quota set myminio/%s --size %s' % [obj.quota, bucket, bucket, obj.quota] else '';
+      std.join('\n', std.prune([
+        createCmd,
+        createKeyCmd,
+        setKeyCmd,
+        setExpiryCmd,
+        setQuotaCmd,
+      ])),
+
     buckets:: [
-      'sleep 1\n${MC} mb --ignore-existing %s %s myminio/%s\n%s\n%s' % [
-        if config.buckets[b].locks then '--with-locks' else '',
-        if config.buckets[b].versioning then '--with-versioning' else '',
-        b,
-        if std.get(config.buckets[b], 'expiry', 0) > 0 then 'if ! ${MC} ilm ls myminio/%s 2>/dev/null; then sleep 1; echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [b, b, config.buckets[b].expiry] else '',
-        if std.get(config.buckets[b], 'quota', null) != 0 then 'echo "Setting quota of %s on bucket %s"; ${MC} quota set myminio/%s --size %s' % [config.buckets[b].quota, b, b, config.buckets[b].quota] else '',
-      ]
+      this.manage_bucket_script(b, config.buckets[b])
       for b in std.objectFields(config.buckets)
     ],
 
@@ -271,7 +283,7 @@ local policy = import 'templates/policy.libsonnet';
                 env: [
                   {
                     name: 'MINIO_ENDPOINT',
-                    value: '%s-0.%s-headless.%s.svc.cluster.local' % [componentName, componentName, namespace],
+                    value: minioPodFQDN,
                   },
                   {
                     name: 'MINIO_PORT',
@@ -285,7 +297,7 @@ local policy = import 'templates/policy.libsonnet';
                     },
                   },
                 ],
-                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),  // orig: 'quay.io/minio/mc:RELEASE.2022-10-20T23-26-33Z',
+                image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: 'minio-mc',
                 resources: {
@@ -297,6 +309,21 @@ local policy = import 'templates/policy.libsonnet';
                   {
                     mountPath: '/config',
                     name: 'minio-configuration',
+                  },
+                  {
+                    mountPath: config.minioKesClientCertPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.crt',
+                  },
+                  {
+                    mountPath: config.minioKesClientKeyPath,
+                    name: this.minioKesClientCert.metadata.name,
+                    subPath: 'tls.key',
+                  },
+                  {
+                    mountPath: config.kesRootCAPath,
+                    name: this.kesServerCert.metadata.name,
+                    subPath: 'ca.crt',
                   },
                 ],
               },
@@ -316,6 +343,18 @@ local policy = import 'templates/policy.libsonnet';
                   ],
                 },
               },
+              {
+                name: this.minioKesClientCert.metadata.name,
+                secret: {
+                  secretName: this.minioKesClientCert.spec.secretName,
+                },
+              },
+              {
+                name: this.kesServerCert.metadata.name,
+                secret: {
+                  secretName: this.kesServerCert.spec.secretName,
+                },
+              },
             ],
           },
         },
@@ -328,7 +367,7 @@ local policy = import 'templates/policy.libsonnet';
     },
 
     policies:: [
-      'sleep 5; createPolicy %s /config/policy-%s.json "%s"' % [p, p, config.policies[p].group]
+      'createPolicy %s /config/policy-%s.json "%s"' % [p, p, config.policies[p].group]
       for p in std.objectFields(config.policies)
     ],
 
@@ -665,6 +704,8 @@ local policy = import 'templates/policy.libsonnet';
                   // allowPrivilegeEscalation: true,
                   // runAsNonRoot: false,
                   // runAsUser: 0,
+                  // this needs setcap cap_ipc_lock+ep /kes on original app container otherwise
+                  // use root user
                   capabilities: {
                     add: ['IPC_LOCK'],
                     drop: ['ALL'],
