@@ -322,7 +322,7 @@ local policy = import 'templates/policy.libsonnet';
                   },
                   {
                     mountPath: config.kesRootCAPath,
-                    name: this.minioKesClientCert,
+                    name: this.minioKesClientCert.metadata.name,
                     subPath: 'ca.crt',
                   },
                 ],
