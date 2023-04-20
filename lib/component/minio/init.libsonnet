@@ -142,7 +142,7 @@ local policy = import 'templates/policy.libsonnet';
         MINIO_KMS_KES_CERT_FILE: config.minioKesClientCertPath,
         MINIO_KMS_KES_KEY_FILE: config.minioKesClientKeyPath,
         MINIO_KMS_KES_CAPATH: config.kesRootCAPath,
-        MINIO_KMS_KES_KEY_NAME: 'minio-backend-default-key',
+        MINIO_KMS_KES_KEY_NAME: '%s-default' % [namespace],
         MINIO_KMS_KES_ENCLAVE: namespace,
       },
       metadata+: {
