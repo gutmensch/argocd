@@ -241,7 +241,7 @@ local policy = import 'templates/policy.libsonnet';
       local _locks = if std.get(obj, 'locks', false) then '--with-locks' else '';
       local createCmd = '${MC} mb --ignore-existing %s %s myminio/%s' % [_versioning, _locks, bucket];
       local createKeyCmd = if std.get(obj, 'encrypt', false) then
-        'curl -v -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
+        'curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
       local setKeyCmd = if std.get(obj, 'encrypt', false) then '${MC} encrypt set sse-kms %s-%s myminio/%s' % [namespace, bucket, bucket] else '';
       local setExpiryCmd = if std.get(obj, 'expiry', 0) > 0 then 'if ! ${MC} ilm ls myminio/%s 2>/dev/null; then echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [bucket, bucket, obj.expiry] else '';
       local setQuotaCmd = if std.get(obj, 'quota', null) != null then 'echo "Setting quota of %s on bucket %s"; ${MC} quota set myminio/%s --size %s' % [obj.quota, bucket, bucket, obj.quota] else '';
