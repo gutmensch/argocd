@@ -10,10 +10,10 @@ local kube = import '../../kube.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'library/nextcloud',
-      imageVersion: '25.0.5-fpm-alpine',
+      imageVersion: '25.0.6-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
-      replicas: 0,
+      replicas: 1,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
       mysqlDatabaseUsers: [],
@@ -63,7 +63,7 @@ local kube = import '../../kube.libsonnet';
       defaultPhoneRegion: 'DE',
       lostPasswordLink: 'https://pwreset.bln.space',
       phpMemoryLimit: '512M',
-      phpUploadLimit: '512M',
+      phpUploadLimit: '5200M',
     }
   ):: helper.uniquify({
 
