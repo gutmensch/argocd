@@ -47,6 +47,7 @@ local kube = import '../../kube.libsonnet';
       displayProductInfo: 0,
       cipherMethod: 'AES-256-CBC',
       usernameDomain: null,
+      usernameDomainForced: false,
     },
   ):: helper.uniquify({
 
@@ -101,6 +102,7 @@ local kube = import '../../kube.libsonnet';
           display_product_info: config.displayProductInfo,
           cipher_method: config.cipherMethod,
           username_domain: config.usernameDomain,
+          username_domain_forced: config.usernameDomainForced,
         }))),
       },
     },
