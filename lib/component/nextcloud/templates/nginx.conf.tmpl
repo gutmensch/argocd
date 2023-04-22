@@ -123,6 +123,9 @@ http {
         location = /.well-known/carddav   { return 301 __PUBLIC_FQDN__/remote.php/dav/; }
         location = /.well-known/caldav    { return 301 __PUBLIC_FQDN__/remote.php/dav/; }
 
+        # oidc provider app
+        rewrite ^/\.well-known/openid-configuration   __PUBLIC_FQDN__/index.php/apps/oidc/openid-configuration  last;
+
         try_files $uri $uri/ =404;
     }
 
