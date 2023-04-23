@@ -15,7 +15,7 @@ local policies = import 'policies.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'gutmensch/toolbox',
-      imageVersion: '0.0.6',
+      imageVersion: '0.0.16',
       updateInterval: '*/30',
       podSelector: {},
       portsInternal: [],
