@@ -30,6 +30,7 @@ local def = import 'defaults.libsonnet';
       files: [
         'storage-class-zfs-fast-xfs.yaml',
         'storage-class-zfs-slow-xfs.yaml',
+        'snapshot-class-zfs-snapshot-default.yaml',
       ],
     }),
   ],
