@@ -70,7 +70,7 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       stringData: {
-        PHP_MEMORY_LIMIT_MB: config.memoryLimitMB,
+        PHP_MEMORY_LIMIT_MB: std.toString(config.memoryLimitMB),
         // XXX: double base64 encoded in secret, decoded by entrypoint
         RCCONFIG: std.base64(helper.manifestPhpConfig(std.prune({
           db_dsnw: 'mysql://%s:%s@%s/%s?%s' % [
