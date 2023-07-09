@@ -30,6 +30,9 @@ echo ":msg, contains, \"WHITELISTED [10.244.\"    stop" >>$RSYSLOG_CONF
 # fix logrotate directory handling even though fsGroup is set (but syslog user and root group?!)
 chmod o-w /var/log/mail
 
+# fix for cron mail sending to root@mx.bln.space => root@localhost
+sed -i "s%SHELL=%MAILTO=root@localhost\nSHELL=%" /etc/crontab
+
 # generate IP based whitelist for postgrey based on spf records
 # and remove upstream whitelist clients domain_list
 rm -v /etc/postgrey/whitelist_recipients
