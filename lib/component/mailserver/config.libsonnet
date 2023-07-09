@@ -111,6 +111,9 @@ local helper = import '../../helper.libsonnet';
     lmtp_save_to_detail_mailbox: 'yes',
     postmaster_address: this.mailerConfig.postmasterAddress,
     quota_full_tempfail: 'yes',
+    // avoid sendmail execution (e.g. sieve related) because of file permission issues on
+    // /var/spool/postfix/maildrop and use tcp submission connection instead
+    submission_host: 'localhost',
   }),
 
   'postfix-main.cf': helper.manifestPostConf({
