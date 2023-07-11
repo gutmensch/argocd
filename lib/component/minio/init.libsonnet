@@ -7,15 +7,16 @@ local policy = import 'templates/policy.libsonnet';
   generate(
     name, namespace, region, tenant, appConfig, defaultConfig={
       imageRegistryMirror: '',
-      imageRegistry: 'quay.io',
+      // imageRegistry: 'quay.io',
+      imageRegistry: '',
       imageRef: 'minio/minio',
-      imageVersion: 'RELEASE.2023-04-13T03-08-07Z',
+      imageVersion: 'RELEASE.2023-07-07T07-13-57Z',
       imageConsoleRef: 'minio/mc',
-      imageConsoleVersion: 'RELEASE.2023-04-12T02-21-51Z',
-      // XXX: workaround till http probes implemented or image has curl again
+      imageConsoleVersion: 'RELEASE.2023-07-07T05-25-51Z',
+      // imageKesRegistry: 'quay.io',
       imageKesRegistry: '',
-      imageKesRef: 'gutmensch/minio-kes',
-      imageKesVersion: '2023-04-18T19-36-09Z-1',
+      imageKesRef: 'minio/kes',
+      imageKesVersion: '2023-05-02T22-48-10Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -191,7 +192,10 @@ local policy = import 'templates/policy.libsonnet';
             '/v1/metrics': {
               skip_auth: true,
               timeout: '15s',
-
+            },
+            '/v1/ready': {
+              skip_auth: true,
+              timeout: '15s',
             },
           },
           policy: {
@@ -751,25 +755,27 @@ local policy = import 'templates/policy.libsonnet';
                     subPath: 'ca.crt',
                   },
                 ],
-                livenessProbe: {
-                  exec: {
-                    command: ['/bin/sh', '-ce', 'curl --connect-timeout 1 --cacert %s --cert %s --key %s -s --fail -o /dev/null https://kes-server.local:7373/v1/status' % [config.kesRootCAPath, config.minioKesClientCertPath, config.minioKesClientKeyPath]],
-                  },
-                  failureThreshold: 5,
-                  initialDelaySeconds: 10,
-                  periodSeconds: 10,
-                  successThreshold: 1,
-                  timeoutSeconds: 2,
-                },
                 readinessProbe: {
-                  exec: {
-                    command: ['/bin/sh', '-ce', 'curl --connect-timeout 1 --cacert %s --cert %s --key %s -s --fail -o /dev/null https://kes-server.local:7373/v1/status' % [config.kesRootCAPath, config.minioKesClientCertPath, config.minioKesClientKeyPath]],
-                  },
                   failureThreshold: 3,
-                  initialDelaySeconds: 15,
-                  periodSeconds: 10,
+                  httpGet: {
+                    path: '/v1/ready',
+                    port: 'http',
+                  },
+                  initialDelaySeconds: 30,
                   successThreshold: 1,
-                  timeoutSeconds: 2,
+                  periodSeconds: 10,
+                  timeoutSeconds: 5,
+                },
+                livenessProbe: {
+                  failureThreshold: 3,
+                  httpGet: {
+                    path: '/v1/ready',
+                    port: 'http',
+                  },
+                  initialDelaySeconds: 30,
+                  successThreshold: 1,
+                  periodSeconds: 20,
+                  timeoutSeconds: 5,
                 },
               },
             ],
