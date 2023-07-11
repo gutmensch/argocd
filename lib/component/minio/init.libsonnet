@@ -702,9 +702,9 @@ local policy = import 'templates/policy.libsonnet';
                 name: 'kes',
                 securityContext: {
                   // allowPrivilegeEscalation: true,
-                  // runAsNonRoot: false,
-                  // runAsUser: 0,
-                  // this needs setcap cap_ipc_lock+ep /kes on original app container otherwise
+                  runAsNonRoot: false,
+                  runAsUser: 0,
+                  // XXX: this needs setcap cap_ipc_lock+ep /kes on original app container otherwise
                   // use root user
                   capabilities: {
                     add: ['IPC_LOCK'],
@@ -760,6 +760,7 @@ local policy = import 'templates/policy.libsonnet';
                   httpGet: {
                     path: '/v1/ready',
                     port: 'http-kes',
+                    scheme: 'HTTPS',
                   },
                   initialDelaySeconds: 30,
                   successThreshold: 1,
@@ -771,6 +772,7 @@ local policy = import 'templates/policy.libsonnet';
                   httpGet: {
                     path: '/v1/ready',
                     port: 'http-kes',
+                    scheme: 'HTTPS',
                   },
                   initialDelaySeconds: 30,
                   successThreshold: 1,
