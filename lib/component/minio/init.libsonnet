@@ -759,7 +759,7 @@ local policy = import 'templates/policy.libsonnet';
                   failureThreshold: 3,
                   httpGet: {
                     path: '/v1/ready',
-                    port: 'http',
+                    port: 'http-kes',
                   },
                   initialDelaySeconds: 30,
                   successThreshold: 1,
@@ -770,7 +770,7 @@ local policy = import 'templates/policy.libsonnet';
                   failureThreshold: 3,
                   httpGet: {
                     path: '/v1/ready',
-                    port: 'http',
+                    port: 'http-kes',
                   },
                   initialDelaySeconds: 30,
                   successThreshold: 1,
