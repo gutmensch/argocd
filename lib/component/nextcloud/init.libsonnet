@@ -340,10 +340,10 @@ local kube = import '../../kube.libsonnet';
               },
               {
                 configMap: {
-                  name: '%s-ldap-cfg' % [componentName],
+                  name: '%s-start-hook-cfg' % [componentName],
                   defaultMode: std.parseOctal('0750'),
                 },
-                name: '%s-ldap-cfg' % [componentName],
+                name: '%s-start-hook-cfg' % [componentName],
               },
               {
                 configMap: {
