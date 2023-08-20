@@ -171,9 +171,9 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    configmap_nextcloud_ldap_integration: kube.ConfigMap('%s-ldap-cfg' % [componentName]) {
+    configmap_nextcloud_start_hook: kube.ConfigMap('%s-start-hook-cfg' % [componentName]) {
       data: {
-        'enable_ldap_and_start.sh': importstr 'templates/enable_ldap_and_start.sh',
+        '001_enable_ldap.sh': importstr 'templates/enable_ldap.sh',
       },
       metadata+: {
         labels+: config.labels,
@@ -229,9 +229,6 @@ local kube = import '../../kube.libsonnet';
                 image: helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageRef, config.imageVersion),
                 imagePullPolicy: 'IfNotPresent',
                 name: componentName,
-                // the fpm image runs php-fpm as arg for entrypoint, we inject ldap configuration before
-                // and then exec php-fpm as last step in our script
-                args: ['/bin/sh', '/usr/local/bin/enable_ldap_and_start.sh'],
                 resources: {},
                 volumeMounts: [
                   {
@@ -255,9 +252,9 @@ local kube = import '../../kube.libsonnet';
                   for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'objectstore.config.php', 'settings.config.php']
                 ] + [
                   {
-                    mountPath: '/usr/local/bin/enable_ldap_and_start.sh',
-                    name: '%s-ldap-cfg' % [componentName],
-                    subPath: 'enable_ldap_and_start.sh',
+                    mountPath: '/docker-entrypoint-hooks.d/before-starting/001_enable_ldap.sh',
+                    name: '%s-start-hook-cfg' % [componentName],
+                    subPath: '001_enable_ldap.sh',
                   },
                 ],
               },

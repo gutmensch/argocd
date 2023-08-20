@@ -90,7 +90,7 @@ check_environment() {
 	fi
 }
 
-# run ldap integration functions
+# run ldap integration functions at 'before-starting' hook of original image
 if check_environment; then
 
 	if ! check_plugin_ldap; then
@@ -129,6 +129,3 @@ else
 	echo "  - LDAP_AGENT_PASSWORD"
 	echo "Continuing startup without LDAP."
 fi
-
-# run original docker container command
-exec php-fpm
