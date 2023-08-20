@@ -199,7 +199,7 @@ local kube = import '../../kube.libsonnet';
               'checksum/nextcloud-env': std.md5(std.toString(this.configmap_nextcloud_env)),
               'checksum/nextcloud-secret-env': std.md5(std.toString(this.secret_nextcloud_env)),
               'checksum/nginx-config-hash': std.md5(std.toString(this.configmap_nextcloud_nginxconfig)),
-              'checksum/ldap-config-hash': std.md5(std.toString(this.configmap_nextcloud_ldap_integration)),
+              'checksum/start-hook-hash': std.md5(std.toString(this.configmap_nextcloud_start_hook)),
             },
             labels: config.labels,
           },
