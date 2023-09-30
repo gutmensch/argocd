@@ -1,7 +1,7 @@
-local certIssuer = import '../../lib/component/cert-issuer/init.libsonnet';
-local externalDNS = import '../../lib/component/external-dns/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local certIssuer = import '../../../lib/component/cert-issuer/init.libsonnet';
+local externalDNS = import '../../../lib/component/external-dns/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

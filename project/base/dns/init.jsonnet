@@ -1,6 +1,6 @@
-local dns = import '../../lib/component/dnsinwx/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local dns = import '../../../lib/component/dnsinwx/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

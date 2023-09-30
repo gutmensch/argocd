@@ -1,8 +1,8 @@
-local cronjob = import '../../lib/component/container-cronjob//init.libsonnet';
-local openldap = import '../../lib/component/openldap/init.libsonnet';
-local phpldapadmin = import '../../lib/component/phpldapadmin/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local cronjob = import '../../../lib/component/container-cronjob//init.libsonnet';
+local openldap = import '../../../lib/component/openldap/init.libsonnet';
+local phpldapadmin = import '../../../lib/component/phpldapadmin/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

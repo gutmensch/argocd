@@ -1,8 +1,8 @@
-local cronjob = import '../../lib/component/container-cronjob/init.libsonnet';
-local nextcloud = import '../../lib/component/nextcloud/init.libsonnet';
-local redis = import '../../lib/component/redis/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local cronjob = import '../../../lib/component/container-cronjob/init.libsonnet';
+local nextcloud = import '../../../lib/component/nextcloud/init.libsonnet';
+local redis = import '../../../lib/component/redis/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

@@ -1,7 +1,7 @@
-local memcached = import '../../lib/component/memcached/init.libsonnet';
-local roundcube = import '../../lib/component/roundcube/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local memcached = import '../../../lib/component/memcached/init.libsonnet';
+local roundcube = import '../../../lib/component/roundcube/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

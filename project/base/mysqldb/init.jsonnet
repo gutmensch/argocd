@@ -1,8 +1,8 @@
-local mysqlBackup = import '../../lib/component/mysql-backup/init.libsonnet';
-local mysqlSingleNode = import '../../lib/component/mysql-single-node/init.libsonnet';
-local mysqlUser = import '../../lib/component/mysql-user/init.libsonnet';
-local helper = import '../../lib/helper.libsonnet';
-local kube = import '../../lib/kube.libsonnet';
+local mysqlBackup = import '../../../lib/component/mysql-backup/init.libsonnet';
+local mysqlSingleNode = import '../../../lib/component/mysql-single-node/init.libsonnet';
+local mysqlUser = import '../../../lib/component/mysql-user/init.libsonnet';
+local helper = import '../../../lib/helper.libsonnet';
+local kube = import '../../../lib/kube.libsonnet';
 
 function(name, namespace, project, tenant, region)
 

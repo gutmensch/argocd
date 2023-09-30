@@ -42,7 +42,7 @@ local kube = import 'kube.libsonnet';
       source: {
         repoURL: app.repoURL,
         targetRevision: app.targetRevision,
-        path: std.join('/', [app.project, app.path]),
+        path: std.join('/', ['project', app.project, app.path]),
         directory: {
           recurse: false,
           jsonnet: {

@@ -20,6 +20,14 @@ local def = import 'defaults.libsonnet';
       // to create secrets from argocd for google dns too
       additionalNamespaces: ['cert-manager-system'],
     }),
+    def.withProject({
+      name: 'rsc',
+      desc: 'Project for content of rsc',
+      clusterResourceAllowList: [
+        { group: '', kind: 'Namespace' },
+      ],
+    }),
+
   ],
 
   // --- manage global cluster resources like storage classes, clusterroles, etc.
