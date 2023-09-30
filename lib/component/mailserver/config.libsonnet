@@ -43,6 +43,7 @@ local helper = import '../../helper.libsonnet';
     'authy.com',
     'bitwarden.com',
     'booking.com',
+    'cbp.dhs.gov',
     'cloudfiltering.com',
     'cloudflare.com',
     'codeberg.org',
