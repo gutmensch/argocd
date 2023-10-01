@@ -115,7 +115,6 @@ local policy = import 'templates/policy.libsonnet';
         ] + this.buckets),
         'add-custom-policy.sh': std.join('\n', [
           '#!/bin/sh',
-          'sleep 3600',
           'source /config/add-policy.sh',
           'if ! ${MC} idp ldap policy entities myminio/ --policy consoleAdmin | grep -q %s; then' % [config.ldapAdminGroupDN],
           '  echo adding ldapGroup:%s to minioPolicy:%s via idp ldap' % [config.ldapAdminGroupDN, 'consoleAdmin'],
