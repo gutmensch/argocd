@@ -118,6 +118,7 @@ local policy = import 'templates/policy.libsonnet';
           'source /config/add-policy.sh',
           'if ! ${MC} admin policy entities myminio/ --policy consoleAdmin | grep -q %s; then' % [config.ldapAdminGroupDN],
           '  ${MC} admin policy entities myminio/ --policy consoleAdmin',
+          '  ${MC} admin policy entities myminio/',
           '  echo adding ldapGroup:%s to minioPolicy:%s' % [config.ldapAdminGroupDN, 'consoleAdmin'],
           '  ${MC} admin policy attach myminio consoleAdmin --group %s' % [config.ldapAdminGroupDN],
           'else',
