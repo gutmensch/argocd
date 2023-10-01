@@ -16,7 +16,7 @@ local policy = import 'templates/policy.libsonnet';
       // imageKesRegistry: 'quay.io',
       imageKesRegistry: '',
       imageKesRef: 'minio/kes',
-      imageKesVersion: '2023-05-02T22-48-10Z',
+      imageKesVersion: '2023-09-28T19-40-28Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
