@@ -16,7 +16,7 @@ local policy = import 'templates/policy.libsonnet';
       // imageKesRegistry: 'quay.io',
       imageKesRegistry: '',
       imageKesRef: 'minio/kes',
-      imageKesVersion: '2023-09-28T19-40-28Z',
+      imageKesVersion: '2023-08-19T17-27-47Z',
       rootUser: 'root',
       rootPassword: 'changeme',
       storageClass: 'default',
@@ -696,8 +696,7 @@ local policy = import 'templates/policy.libsonnet';
                 command: [
                   '/bin/sh',
                   '-ce',
-                  'sleep 3600',
-                  // '/entrypoint.sh kes server --config /config.yml --addr 0.0.0.0:7373 --auth %s' % [config.kesAuth],
+                  '/entrypoint.sh kes server --config /config.yml --addr 0.0.0.0:7373 --auth %s' % [config.kesAuth],
                 ],
                 image: helper.getImage(config.imageRegistryMirror, config.imageKesRegistry, config.imageKesRef, config.imageKesVersion),
                 imagePullPolicy: 'IfNotPresent',
