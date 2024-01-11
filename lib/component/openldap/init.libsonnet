@@ -18,10 +18,12 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'bitnami/openldap',
-      imageVersion: '2.6.4-debian-11-r7',
+      imageVersion: '2.6.6-debian-11-r61',
       replicas: 1,
       storageClass: 'standard',
       storageSize: '8Gi',
+      ldapPort: 389,
+      ldapsPort: 636,
       ldapRoot: 'o=auth,dc=local',
       ldapInitModules: ['memberof', 'refint'],
       ldapInitMailDomains: [],
@@ -70,6 +72,8 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         labels+: config.labels,
       },
       data: {
+        LDAP_PORT_NUMBER: std.toString(config.ldapPort),
+        LDAP_LDAPS_PORT_NUMBER: std.toString(config.ldapsPort),
         LDAP_ADD_SCHEMAS: 'yes',
         LDAP_ADMIN_PASSWORD_FILE: '',
         LDAP_ALLOW_ANON_BINDING: 'no',
@@ -80,9 +84,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         LDAP_CUSTOM_LDIF_DIR: '/ldifs',
         LDAP_ENABLE_TLS: 'yes',
         LDAP_EXTRA_SCHEMAS: std.join(',', config.ldapIncludeProvidedSchemas + config.ldapIncludeManagedSchemas),
-        LDAP_LDAPS_PORT_NUMBER: '1636',
         LDAP_LOGLEVEL: '256',
-        LDAP_PORT_NUMBER: '1389',
         LDAP_ROOT: config.ldapRoot,
         LDAP_ULIMIT_NOFILES: '1024',
         // unused, we skip default tree and mount schemas in directory and ref as extra
@@ -103,17 +105,19 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         ports: [
           {
             name: 'ldap-port',
-            nodePort: null,
-            port: 389,
+            // nodePort: null,
+            port: config.ldapPort,
             protocol: 'TCP',
-            targetPort: 'ldap-port',
+            // not needed, default value is port value
+            // targetPort: 'ldap-port',
           },
           {
             name: 'ldaps-port',
-            nodePort: null,
-            port: 636,
+            // nodePort: null,
+            port: config.ldapsPort,
             protocol: 'TCP',
-            targetPort: 'ldaps-port',
+            // not needed, default value is port value
+            // targetPort: 'ldaps-port',
           },
         ],
         selector: config.labels,
@@ -134,8 +138,15 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
         ports: [
           {
             name: 'ldap-port',
-            port: 389,
-            targetPort: 'ldap-port',
+            port: config.ldapPort,
+            // not needed, default value is port value
+            // targetPort: 'ldap-port',
+          },
+          {
+            name: 'ldaps-port',
+            port: config.ldapsPort,
+            // not needed, default value is port value
+            // targetPort: 'ldap-port',
           },
         ],
         selector: config.labels,
@@ -238,11 +249,11 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
                 name: componentName,
                 ports: [
                   {
-                    containerPort: 1389,
+                    containerPort: config.ldapPort,
                     name: 'ldap-port',
                   },
                   {
-                    containerPort: 1636,
+                    containerPort: config.ldapsPort,
                     name: 'ldaps-port',
                   },
                 ],
