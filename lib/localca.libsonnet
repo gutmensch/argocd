@@ -14,6 +14,8 @@ local kube = import 'kube.libsonnet';
       },
       spec+: {
         commonName: localIssuer,
+        // 10 years
+        duration: '87600h0m0s',
         isCA: true,
         issuerRef: {
           group: 'cert-manager.io',
