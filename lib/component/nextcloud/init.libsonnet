@@ -10,7 +10,7 @@ local kube = import '../../kube.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'library/nextcloud',
-      imageVersion: '27.1.5-fpm-alpine',
+      imageVersion: '27.1.6-fpm-alpine',
       nginxImageRef: 'library/nginx',
       nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
