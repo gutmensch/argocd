@@ -90,6 +90,7 @@ local helper = import '../../helper.libsonnet';
     'traderepublic.com',
     'tumblr.com',
     'twitter.com',
+    'verwalt-berlin.de',
     'yahoo.com',
     'wargaming.net',
     'web.de',
@@ -123,10 +124,10 @@ local helper = import '../../helper.libsonnet';
     lmtp_host_lookup: 'native',
     smtp_host_lookup: 'native',
     smtpd_helo_required: 'yes',
-    # https://www.postfix.org/smtp-smuggling.html
+    // https://www.postfix.org/smtp-smuggling.html
     smtpd_data_restrictions: 'reject_unauth_pipelining',
     smtpd_discard_ehlo_keywords: ['chunking', 'silent-discard'],
-    # review options above after postfix 3.5 upgrade
+    // review options above after postfix 3.5 upgrade
     smtpd_client_restrictions: ['permit_mynetworks', 'permit_sasl_authenticated', 'reject_unauth_destination', 'reject_unauth_pipelining', 'reject_unknown_client_hostname'],
     smtpd_recipient_restrictions: [
       'permit_sasl_authenticated',
