@@ -12,7 +12,7 @@
     cacheStorageClass: 'zfs-fast-xfs',
     cacheStorageSize: '25Gi',
     toolboxStorageClass: 'zfs-fast-xfs',
-    toolboxStorageSize: '1Gi',
+    toolboxStorageSize: '100Mi',
     buckets: {
       'mysql-backup': {
         locks: false,

@@ -117,8 +117,9 @@ local policy = import 'templates/policy.libsonnet';
         ] + this.buckets),
         'add-custom-policy.sh': std.join('\n', [
           '#!/bin/sh',
+          'exit 0',
           'source /config/add-policy.sh',
-          'if ! ${MC} idp ldap policy entities myminio/ --policy consoleAdmin | grep -q %s; then' % [config.ldapAdminGroupDN],
+          'if ! ${MC} idp ldap policy entities myminio/ --policy consoleAdmin | /toolbox/grep -q %s; then' % [config.ldapAdminGroupDN],
           '  echo adding ldapGroup:%s to minioPolicy:%s via idp ldap' % [config.ldapAdminGroupDN, 'consoleAdmin'],
           '  ${MC} idp ldap policy attach myminio/ consoleAdmin --group %s' % [config.ldapAdminGroupDN],
           'else',
@@ -246,7 +247,7 @@ local policy = import 'templates/policy.libsonnet';
     manage_bucket_script(bucket, obj)::
       local _versioning = if std.get(obj, 'versioning', false) then '--with-versioning' else '';
       local _locks = if std.get(obj, 'locks', false) then '--with-locks' else '';
-      local infoMsg = 'echo ===== bucket configuration: %s =====' % [bucket];
+      local infoMsg = 'echo ===== bucket configuration: %s =====; exit 0' % [bucket];
       local createCmd = '${MC} mb --ignore-existing %s %s myminio/%s' % [_versioning, _locks, bucket];
       local createKeyCmd = if std.get(obj, 'encrypt', false) then
         '/toolbox/curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s; echo' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
@@ -400,6 +401,22 @@ local policy = import 'templates/policy.libsonnet';
       for p in std.objectFields(config.policies)
     ],
 
+    job_policies_toolbox: kube.PersistentVolumeClaim('job-policies-toolbox') {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      spec: {
+        storageClassName: config.toolboxStorageClass,
+        accessModes: ['ReadWriteOnce'],
+        resources: {
+          requests: {
+            storage: config.toolboxStorageSize,
+          },
+        },
+      },
+    },
+
     job_policies: kube.Job('%s-policy-mgmt-%s' % [componentName, std.substr(std.md5(
       std.toString(this.policies) + helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
     ), 23, 8)]) {
@@ -452,6 +469,10 @@ local policy = import 'templates/policy.libsonnet';
                     mountPath: '/config',
                     name: 'minio-configuration',
                   },
+                  {
+                    mountPath: '/toolbox',
+                    name: 'toolbox',
+                  },
                 ],
               },
             ],
@@ -468,6 +489,12 @@ local policy = import 'templates/policy.libsonnet';
                       },
                     },
                   ],
+                },
+              },
+              {
+                name: 'toolbox',
+                persistentVolumeClaim: {
+                  claimName: 'job-policies-toolbox',
                 },
               },
             ],
