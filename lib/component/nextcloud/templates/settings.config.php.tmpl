@@ -3,7 +3,8 @@ $CONFIG = array (
   'trusted_proxies' => ['127.0.0.1', '10.96.0.0/16', '10.244.0.0/16'],
   'default_phone_region' => getenv('DEFAULT_PHONE_REGION'),
   'lost_password_link' => getenv('LOST_PASSWORD_LINK'),
-  'log_type' => 'errorlog',
+  // XXX: stopped working with 28
+  // 'log_type' => 'errorlog',
   'tempdirectory' => '/var/www/tmp',
   'overwrite.cli.url' => 'https://cloud.bln.space',
   'auth.bruteforce.protection.enabled' => false,
