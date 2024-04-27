@@ -246,7 +246,7 @@ local policy = import 'templates/policy.libsonnet';
     manage_bucket_script(bucket, obj)::
       local _versioning = if std.get(obj, 'versioning', false) then '--with-versioning' else '';
       local _locks = if std.get(obj, 'locks', false) then '--with-locks' else '';
-      local infoMsg = 'echo ===== bucket configuration: %s =====; exit 0' % [bucket];
+      local infoMsg = 'echo ===== bucket configuration: %s =====' % [bucket];
       local createCmd = '${MC} mb --ignore-existing %s %s myminio/%s' % [_versioning, _locks, bucket];
       local createKeyCmd = if std.get(obj, 'encrypt', false) then
         '/toolbox/curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s; echo' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
