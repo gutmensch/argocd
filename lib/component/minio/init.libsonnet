@@ -128,6 +128,9 @@ local policy = import 'templates/policy.libsonnet';
       } + this.policyFiles,
       metadata+: {
         labels+: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
         namespace: namespace,
       },
     },
