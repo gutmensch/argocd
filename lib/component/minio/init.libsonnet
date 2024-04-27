@@ -23,6 +23,8 @@ local policy = import 'templates/policy.libsonnet';
       storageSize: '20Gi',
       cacheStorageClass: 'default',
       cacheStorageSize: '1Gi',
+      toolboxStorageClass: 'default',
+      toolboxStorageSize: '1Gi',
       ldapServiceAccountBindDN: '',
       ldapServiceAccountPassword: '',
       ldapHost: '',
@@ -244,10 +246,10 @@ local policy = import 'templates/policy.libsonnet';
     manage_bucket_script(bucket, obj)::
       local _versioning = if std.get(obj, 'versioning', false) then '--with-versioning' else '';
       local _locks = if std.get(obj, 'locks', false) then '--with-locks' else '';
-      local infoMsg = 'echo ===== bucket configuration: %s =====' % [bucket];
+      local infoMsg = 'echo ===== bucket configuration: %s =====; sleep 3600' % [bucket];
       local createCmd = '${MC} mb --ignore-existing %s %s myminio/%s' % [_versioning, _locks, bucket];
       local createKeyCmd = if std.get(obj, 'encrypt', false) then
-        'curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s; echo' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
+        '/toolbox/curl -s -XPOST -d "enclave=%s" https://${MINIO_ENDPOINT}:7373/v1/key/create/%s-%s --cert %s --key %s --cacert %s; echo' % [namespace, namespace, bucket, config.minioKesClientCertPath, config.minioKesClientKeyPath, config.kesRootCAPath] else '';
       local setKeyCmd = if std.get(obj, 'encrypt', false) then '${MC} encrypt set sse-kms %s-%s myminio/%s' % [namespace, bucket, bucket] else '';
       local setExpiryCmd = if std.get(obj, 'expiry', 0) > 0 then 'if ! ${MC} ilm ls myminio/%s 2>/dev/null; then echo "Adding lifecycle for bucket."; ${MC} ilm add myminio/%s --expiry-days %s; else echo "Lifecycle for bucket exists."; fi' % [bucket, bucket, obj.expiry] else '';
       local setQuotaCmd = if std.get(obj, 'quota', null) != null then 'echo "Setting quota of %s on bucket %s"; ${MC} quota set myminio/%s --size %s' % [obj.quota, bucket, bucket, obj.quota] else '';
@@ -264,6 +266,22 @@ local policy = import 'templates/policy.libsonnet';
       this.manage_bucket_script(b, config.buckets[b])
       for b in std.objectFields(config.buckets)
     ],
+
+    job_buckets_toolbox: kube.PersistentVolumeClaim('job-buckets-toolbox') {
+      metadata+: {
+        labels: config.labels,
+        namespace: namespace,
+      },
+      spec: {
+        storageClassName: config.toolboxStorageClass,
+        accessModes: ['ReadWriteOnce'],
+        resources: {
+          requests: {
+            storage: config.toolboxStorageSize,
+          },
+        },
+      },
+    },
 
     job_buckets: kube.Job('%s-bucket-mgmt-%s' % [componentName, std.substr(std.md5(
       std.toString(this.buckets) + helper.getImage(config.imageRegistryMirror, config.imageRegistry, config.imageConsoleRef, config.imageConsoleVersion)
@@ -332,6 +350,10 @@ local policy = import 'templates/policy.libsonnet';
                     name: this.minioKesClientCert.metadata.name,
                     subPath: 'ca.crt',
                   },
+                  {
+                    mountPath: '/toolbox',
+                    name: 'job-buckets-toolbox',
+                  },
                 ],
               },
             ],
@@ -354,6 +376,12 @@ local policy = import 'templates/policy.libsonnet';
                 name: this.minioKesClientCert.metadata.name,
                 secret: {
                   secretName: this.minioKesClientCert.spec.secretName,
+                },
+              },
+              {
+                name: 'toolbox',
+                persistentVolumeClaim: {
+                  claimName: 'job-buckets-toolbox',
                 },
               },
             ],
