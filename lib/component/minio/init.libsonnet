@@ -352,7 +352,7 @@ local policy = import 'templates/policy.libsonnet';
                   },
                   {
                     mountPath: '/toolbox',
-                    name: 'job-buckets-toolbox',
+                    name: 'toolbox',
                   },
                 ],
               },
