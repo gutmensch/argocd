@@ -18,7 +18,7 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       imageRegistryMirror: '',
       imageRegistry: '',
       imageRef: 'bitnami/openldap',
-      imageVersion: '2.6.6-debian-11-r61',
+      imageVersion: '2.6.7-debian-12-r24',
       replicas: 1,
       storageClass: 'standard',
       storageSize: '8Gi',
@@ -408,6 +408,9 @@ local schemaDefinitions = import 'schema/definitions.libsonnet';
       metadata+: {
         namespace: namespace,
         labels: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
       },
       data: {
         [schemaDefinitions[schema].file]: schemaDefinitions[schema].content
