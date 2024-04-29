@@ -139,15 +139,15 @@ http {
             # The rules in this block are an adaptation of the rules
             # in `.htaccess` that concern `/.well-known`.
     
-            location = /.well-known/carddav { return 301 https://__PUBLIC_FQDN__/remote.php/dav/; }
-            location = /.well-known/caldav  { return 301 https://__PUBLIC_FQDN__/remote.php/dav/; }
+            location = /.well-known/carddav { return 301 __PUBLIC_HOST_WITH_PROTO__/remote.php/dav/; }
+            location = /.well-known/caldav  { return 301 __PUBLIC_HOST_WITH_PROTO__/remote.php/dav/; }
     
             location /.well-known/acme-challenge    { try_files $uri $uri/ =404; }
             location /.well-known/pki-validation    { try_files $uri $uri/ =404; }
     
             # Let Nextcloud's API for `/.well-known` URIs handle all other
             # requests by passing them to the front-end controller.
-            return 301 https://__PUBLIC_FQDN__/index.php$request_uri;
+            return 301 __PUBLIC_HOST_WITH_PROTO__/index.php$request_uri;
         }
     
         # Rules borrowed from `.htaccess` to hide certain paths from clients
@@ -204,7 +204,7 @@ http {
     
         # Rule borrowed from `.htaccess`
         location /remote {
-            return 301 https://__PUBLIC_FQDN__/remote.php$request_uri;
+            return 301 __PUBLIC_HOST_WITH_PROTO__/remote.php$request_uri;
         }
     
         location / {
