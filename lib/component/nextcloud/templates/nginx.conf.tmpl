@@ -96,14 +96,11 @@ http {
         # Remove X-Powered-By, which is an information leak
         fastcgi_hide_header X-Powered-By;
     
-        # Set .mjs and .wasm MIME types
-        # Either include it in the default mime.types list
-        # and include that list explicitly or add the file extension
-        # only for Nextcloud like below:
+        # Set .mjs MIME type (not yet included in nginx 1.25)
+        # XXX: will cause warning for override of js
         include mime.types;
         types {
             text/javascript js mjs;
-    	      application/wasm wasm;
         }
     
         # Specify how to handle directories -- specifying `/index.php$request_uri`
