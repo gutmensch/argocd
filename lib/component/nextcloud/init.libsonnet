@@ -64,6 +64,7 @@ local kube = import '../../kube.libsonnet';
       lostPasswordLink: 'https://pwreset.bln.space',
       phpMemoryLimit: '512M',
       phpUploadLimit: '5200M',
+      phpFpmMaxChildren: 20,
     }
   ):: helper.uniquify({
 
@@ -88,6 +89,9 @@ local kube = import '../../kube.libsonnet';
       },
       metadata+: {
         labels+: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
         namespace: namespace,
       },
     },
@@ -171,6 +175,24 @@ local kube = import '../../kube.libsonnet';
       },
       metadata+: {
         labels+: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
+        namespace: namespace,
+      },
+    },
+
+    configmap_nextcloud_fpmpoolconfig: kube.ConfigMap('%s-fpm-cfg' % [componentName]) {
+      data: {
+        'www.conf': std.strReplace(
+          importstr 'templates/php-fpm-pool.conf', '__PHP_FPM_POOL_MAX_CHILDREN__', std.toString(config.phpFpmMaxChildren),
+        ),
+      },
+      metadata+: {
+        labels+: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
         namespace: namespace,
       },
     },
@@ -181,6 +203,9 @@ local kube = import '../../kube.libsonnet';
       },
       metadata+: {
         labels+: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
         namespace: namespace,
       },
     },
@@ -259,6 +284,12 @@ local kube = import '../../kube.libsonnet';
                     mountPath: '/docker-entrypoint-hooks.d/before-starting/001_enable_ldap.sh',
                     name: '%s-start-hook-cfg' % [componentName],
                     subPath: '001_enable_ldap.sh',
+                  },
+                ] + [
+                  {
+                    mountPath: '/usr/local/etc/php-fpm.d/www.conf',
+                    name: '%s-fpm-cfg' % [componentName],
+                    subPath: 'www.conf',
                   },
                 ],
               },
@@ -354,6 +385,12 @@ local kube = import '../../kube.libsonnet';
                   name: '%s-nginx-cfg' % [componentName],
                 },
                 name: '%s-nginx-cfg' % [componentName],
+              },
+              {
+                configMap: {
+                  name: '%s-fpm-cfg' % [componentName],
+                },
+                name: '%s-fpm-cfg' % [componentName],
               },
             ],
           },
