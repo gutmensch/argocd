@@ -12,7 +12,7 @@ local kube = import '../../kube.libsonnet';
       imageRef: 'library/nextcloud',
       imageVersion: '28.0.5-fpm-alpine',
       nginxImageRef: 'library/nginx',
-      nginxImageVersion: '1.25.5-alpine',
+      nginxImageVersion: '1.23.4-alpine',
       replicas: 1,
       mysqlHost: 'mysql',
       mysqlPort: 3306,
