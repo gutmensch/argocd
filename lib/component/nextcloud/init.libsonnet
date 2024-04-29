@@ -64,7 +64,6 @@ local kube = import '../../kube.libsonnet';
       lostPasswordLink: 'https://pwreset.bln.space',
       phpMemoryLimit: '512M',
       phpUploadLimit: '5200M',
-      phpFpmPoolMaxChildren: 20,
     }
   ):: helper.uniquify({
 
@@ -155,7 +154,6 @@ local kube = import '../../kube.libsonnet';
         LOST_PASSWORD_LINK: config.lostPasswordLink,
         PHP_MEMORY_LIMIT: config.phpMemoryLimit,
         PHP_UPLOAD_LIMIT: config.phpUploadLimit,
-        PHP_FPM_POOL_MAX_CHILDREN: std.toString(config.phpFpmPoolMaxChildren),
       },
       metadata+: {
         labels+: config.labels,
@@ -179,8 +177,7 @@ local kube = import '../../kube.libsonnet';
 
     configmap_nextcloud_start_hook: kube.ConfigMap('%s-start-hook-cfg' % [componentName]) {
       data: {
-        '001_configure_php_fpm.sh': importstr 'templates/configure_php_fpm.sh',
-        '002_enable_ldap.sh': importstr 'templates/enable_ldap.sh',
+        '001_enable_ldap.sh': importstr 'templates/enable_ldap.sh',
       },
       metadata+: {
         labels+: config.labels,
@@ -259,14 +256,9 @@ local kube = import '../../kube.libsonnet';
                   for f in ['redis.config.php', 'smtp.config.php', 'autoconfig.php', 'apps.config.php', 'apcu.config.php', 'objectstore.config.php', 'settings.config.php']
                 ] + [
                   {
-                    mountPath: '/docker-entrypoint-hooks.d/before-starting/001_configure_php_fpm.sh',
+                    mountPath: '/docker-entrypoint-hooks.d/before-starting/001_enable_ldap.sh',
                     name: '%s-start-hook-cfg' % [componentName],
-                    subPath: '001_configure_php_fpm.sh',
-                  },
-                  {
-                    mountPath: '/docker-entrypoint-hooks.d/before-starting/002_enable_ldap.sh',
-                    name: '%s-start-hook-cfg' % [componentName],
-                    subPath: '002_enable_ldap.sh',
+                    subPath: '001_enable_ldap.sh',
                   },
                 ],
               },
