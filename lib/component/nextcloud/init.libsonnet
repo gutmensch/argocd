@@ -64,7 +64,7 @@ local kube = import '../../kube.libsonnet';
       lostPasswordLink: 'https://pwreset.bln.space',
       phpMemoryLimit: '512M',
       phpUploadLimit: '5200M',
-      phpFpmMaxChildren: 20,
+      phpFpmMaxChildren: 50,
     }
   ):: helper.uniquify({
 
