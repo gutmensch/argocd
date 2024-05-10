@@ -110,6 +110,9 @@ local kube = import '../../kube.libsonnet';
         metadata+: {
           namespace: namespace,
           labels+: config.labels,
+          annotations+: {
+            'argocd.argoproj.io/sync-options': 'Replace=true',
+          },
         },
         data: {
           // XXX: search base is not configurable per filter, so we need to use the root here
@@ -126,6 +129,13 @@ local kube = import '../../kube.libsonnet';
 
     configmaps: {
       generic: kube.ConfigMap('%s-config' % [componentName]) {
+        metadata+: {
+          namespace: namespace,
+          labels+: config.labels,
+          annotations+: {
+            'argocd.argoproj.io/sync-options': 'Replace=true',
+          },
+        },
         data: {
           'playbook.yml': importstr 'playbook.yml',
           'dns_inwx.py': importstr 'dns_inwx.py',
