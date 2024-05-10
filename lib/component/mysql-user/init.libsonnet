@@ -103,6 +103,13 @@ local kube = import '../../kube.libsonnet';
     },
 
     configmap: kube.ConfigMap('%s-config' % [componentName]) {
+      metadata+: {
+        namespace: namespace,
+        labels: config.labels,
+        annotations+: {
+          'argocd.argoproj.io/sync-options': 'Replace=true',
+        },
+      },
       data: {
         'playbook.yml': importstr 'playbook.yml',
         'run.sh': importstr 'run.sh',
