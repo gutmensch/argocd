@@ -59,38 +59,37 @@ local kube = import '../../kube.libsonnet';
       },
     },
 
-    deployment: argo.CanaryRollout(componentName, null, 80, '/', config) {
+    local volumeMounts = [
+      {
+        mountPath: '/etc/nginx/nginx.conf',
+        name: componentName,
+        subPath: 'nginx.conf',
+      },
+    ],
+
+    deployment: argo.SimpleRollout(componentName, null, 80, '/', std.mergePatch(config, { volumeMounts: volumeMounts })) {
       spec+: {
         template+: {
           metadata+: {
             annotations+: {
-              'checksum/env': std.md5(std.toString(this.configmap)),
+              'checksum/nginx-config-hash': std.md5(std.toString(this.configmap)),
             },
+          },
+          spec+: {
+            volumes: [
+              {
+                configMap: {
+                  name: componentName,
+                },
+                name: componentName,
+              },
+            ],
           },
         },
       },
     },
 
     service: kube.Service(componentName) {
-      metadata+: {
-        namespace: namespace,
-        labels+: config.labels,
-      },
-      spec: {
-        ports: [
-          {
-            name: 'http',
-            port: 80,
-            protocol: 'TCP',
-            targetPort: 'http',
-          },
-        ],
-        selector: config.labels,
-        type: 'ClusterIP',
-      },
-    },
-
-    canaryservice: kube.Service('%s-canary' % componentName) {
       metadata+: {
         namespace: namespace,
         labels+: config.labels,

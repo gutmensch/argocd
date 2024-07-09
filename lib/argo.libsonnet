@@ -186,6 +186,7 @@ local kube = import 'kube.libsonnet';
                   port: 'http',
                 },
               },
+              [if config.volumeMounts != null then 'volumeMounts']: config.volumeMounts,
             },
           ],
         },
@@ -270,7 +271,8 @@ local kube = import 'kube.libsonnet';
           containers: [
             {
               name: name,
-              image: helper.getImage(c.imageRegistry, c.imageRef, c.imageVersion),
+              image: helper.getImage(c.imageRegistryMirror, std.get(c, 'imageRegistry', ''), c.imageRef, c.imageVersion),
+              // image: helper.getImage(c.imageRegistry, c.imageRef, c.imageVersion),
               imagePullPolicy: 'Always',
               envFrom: [
                 {
@@ -304,6 +306,7 @@ local kube = import 'kube.libsonnet';
                   port: 'http',
                 },
               },
+              [if config.volumeMounts != null then 'volumeMounts']: config.volumeMounts,
             },
           ],
         },
