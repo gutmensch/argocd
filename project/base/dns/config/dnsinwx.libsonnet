@@ -56,18 +56,18 @@
         { name: '%s._domainkey' % [dkimSelectors['bln.space']], rtype: 'TXT', content: dkimKeys.rsa2022 },
       ] + defaultRecords,
       'n-os.org': [
-        { name: 'stack', rtype: 'A', content: ips.hetznerStackv4 },
-        { name: 'stack', rtype: 'AAAA', content: ips.hetznerStackv6 },
-        { name: 'registry', rtype: 'A', content: '192.168.2.1' }
-        { name: 'grafana' }
+        { name: 'stack', rtype: 'A', content: ips.hetznerStackv4, status: 'absent' },
+        { name: 'stack', rtype: 'AAAA', content: ips.hetznerStackv6, status: 'absent' },
+        { name: 'registry', rtype: 'A', content: '192.168.2.1', status: 'absent' }
+        { name: 'grafana', status: 'absent' }
         { name: '%s._domainkey' % [dkimSelectors['n-os.org']], rtype: 'TXT', content: dkimKeys.rsa2022 },
       ] + defaultRecords,
       'remembrance.de': [
         { name: '%s._domainkey' % [dkimSelectors['remembrance.de']], rtype: 'TXT', content: dkimKeys.rsa2022 },
       ] + defaultRecords,
       'schumann.link': [
-        { name: 'mail', rtype: 'A', content: '176.9.37.138' },
-        { name: 'mail', rtype: 'AAAA', content: '2a01:4f8:161:3442::1' },
+        { name: 'mail', rtype: 'A', content: '176.9.37.138', status: 'absent' },
+        { name: 'mail', rtype: 'AAAA', content: '2a01:4f8:161:3442::1', status: 'absent' },
         { rtype: 'TXT', content: 'google-site-verification=-choszrnJbbcG2sVcfIN4994p30u-jTRdN3iBl_dfj4' },
         { name: '%s._domainkey' % [dkimSelectors['schumann.link']], rtype: 'TXT', content: dkimKeys.rsa2022 },
       ] + defaultRecords,
