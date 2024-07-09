@@ -47,6 +47,17 @@ local kube = import '../../kube.libsonnet';
         }
       ||| % [domain, helper.manifestMtaSts(std.mergePatch(config.defaultPolicy, config.inboundDomainPolicyMap[domain]))]
       for domain in std.objectFields(config.inboundDomainPolicyMap)
+    ] + [
+      |||
+        server {
+            listen 8080;
+            server_name _;
+            location /ping {
+              default_type text/plain;
+              return 200 "ok";
+            }
+        }
+      |||,
     ],
 
     configmap: kube.ConfigMap(componentName) {
@@ -67,7 +78,7 @@ local kube = import '../../kube.libsonnet';
       },
     ],
 
-    deployment: argo.SimpleRollout(componentName, null, 8080, '/', std.mergePatch(config, { volumeMounts: volumeMounts })) {
+    deployment: argo.SimpleRollout(componentName, null, 8080, '/ping', std.mergePatch(config, { volumeMounts: volumeMounts })) {
       spec+: {
         template+: {
           metadata+: {
