@@ -39,6 +39,7 @@ local kube = import '../../kube.libsonnet';
       |||
         server {
             listen 8080;
+            listen [::]:8080;
             server_name mta-sts.%s;
             location /.well-known/mta-sts.txt {
               default_type text/plain;
@@ -50,7 +51,8 @@ local kube = import '../../kube.libsonnet';
     ] + [
       |||
         server {
-            listen 8080;
+            listen 8080 default_server;
+            listen [::]:8080 default_server;
             server_name _;
             location /ping {
               default_type text/plain;
