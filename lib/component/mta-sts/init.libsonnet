@@ -55,7 +55,7 @@ local kube = import '../../kube.libsonnet';
         labels+: config.labels,
       },
       data: {
-        'nginx.conf': 'http {\ninclude mime.types;\n default_type application/octet-stream;\n' + std.join('\n\n', nginxConfServers) + '\n}\n',
+        'nginx.conf': 'events {}\n\nhttp {\ninclude mime.types;\n default_type application/octet-stream;\n' + std.join('\n\n', nginxConfServers) + '\n}\n',
       },
     },
 
