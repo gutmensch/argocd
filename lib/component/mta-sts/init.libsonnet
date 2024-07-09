@@ -67,7 +67,7 @@ local kube = import '../../kube.libsonnet';
       },
     ],
 
-    deployment: argo.SimpleRollout(componentName, null, 80, '/', std.mergePatch(config, { volumeMounts: volumeMounts })) {
+    deployment: argo.SimpleRollout(componentName, null, 8080, '/', std.mergePatch(config, { volumeMounts: volumeMounts })) {
       spec+: {
         template+: {
           metadata+: {
