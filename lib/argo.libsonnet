@@ -186,7 +186,7 @@ local kube = import 'kube.libsonnet';
                   port: 'http',
                 },
               },
-              [if config.volumeMounts != null then 'volumeMounts']: config.volumeMounts,
+              [if std.get(config, 'volumeMounts') != null then 'volumeMounts']: config.volumeMounts,
             },
           ],
         },
