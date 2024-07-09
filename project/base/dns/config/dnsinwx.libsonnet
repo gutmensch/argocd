@@ -42,11 +42,7 @@
         { rtype: 'CAA', content: '0 issue "letsencrypt.org"' },
         { rtype: 'CAA', content: '0 issuewild ";"' },
         { rtype: 'CAA', content: '0 iodef "mailto:letsencrypt@bln.space"' },
-        // deprecated - entries from stack.n-os.org
-        { rtype: 'A', content: ips.hetznerStackv4, state: 'absent' },
-        { rtype: 'AAAA', content: ips.hetznerStackv6, state: 'absent' },
-        { rtype: 'MX', prio: 10, content: 'mail.schumann.link', state: 'absent' },
-        { rtype: 'CAA', content: '0 iodef "mailto:letsencrypt@n-os.org"', state: 'absent' },
+        { name: 'mta-sts', rtype: 'A', content: ips.hetznerDrone1v4 },
       ],
       'bln.space': [
         { name: '*', rtype: 'A', content: ips.hetznerDrone1v4 },
