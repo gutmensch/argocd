@@ -62,5 +62,6 @@ local def = import 'defaults.libsonnet';
     def.withApp({ name: 'mysqldb', project: 'base', path: 'mysqldb', region: 'falkenstein', tenant: ['staging', 'lts'] }),
     def.withApp({ name: 'roundcube', project: 'base', path: 'roundcube', region: 'falkenstein', tenant: ['lts'] }),
     def.withApp({ name: 'nextcloud', project: 'base', path: 'nextcloud', region: 'falkenstein', tenant: ['lts'] }),
+    def.withApp({ name: 'mtasts', project: 'base', path: 'mtasts', region: 'falkenstein', tenant: ['lts'] }),
   ],
 }

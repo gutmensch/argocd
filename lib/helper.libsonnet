@@ -130,4 +130,18 @@
       for i in std.objectFields(body)
     ]);
     std.join('\n', ['<?php', '$config = [];'] + body_lines(obj) + ['']),
+
+  manifestMtaSts(obj)::
+    local body_lines(body) = std.join([], [
+      local entry = body[i];
+      local elem =
+        if std.isArray(entry) then ['%s: %s' % [i, std.join(', ', entry)]]
+        else ['%s: %s' % [i, entry]];
+      elem
+      for i in std.objectFields(body)
+    ]);
+    // rfc dictates CRLF
+    std.join('\r\n', body_lines(obj) + ['']),
+
+
 }
