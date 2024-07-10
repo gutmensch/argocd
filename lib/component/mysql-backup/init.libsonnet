@@ -47,7 +47,7 @@ local ca = import '../../localca.libsonnet';
           labels: config.labels { 'app.kubernetes.io/component': 'backup', 'app.kubernetes.io/instance': user.database },
         },
         spec+: {
-          schedule: '%s %s * * *' % [helper.strToRandInt(user.database, 60), helper.strToRandInt(user.database, 6)],
+          schedule: '%s %s * * *' % [helper.strToRandIntMod(user.database, 60), helper.strToRandIntMod(user.database, 6)],
           jobTemplate+: {
             metadata+: {
               annotations+: {
