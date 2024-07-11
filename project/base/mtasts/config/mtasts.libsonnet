@@ -1,3 +1,5 @@
+local global = import '../../../../config/global.libsonnet';
+
 {
   default: {
     inboundDomainPolicyMap: {
@@ -10,7 +12,7 @@
     defaultPolicy: {
       version: 'STSv1',
       mode: 'testing',
-      mx: 'mx.bln.space',
+      mx: global.lts.mxPublicHost,
       max_age: 604800,
     },
   },
