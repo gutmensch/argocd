@@ -44,6 +44,7 @@ local helper = import '../../helper.libsonnet';
     'bitwarden.com',
     'booking.com',
     'cbp.dhs.gov',
+    'check24.de',
     'cloudfiltering.com',
     'cloudflare.com',
     'codeberg.org',
