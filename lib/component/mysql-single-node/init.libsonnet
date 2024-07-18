@@ -18,6 +18,7 @@ local ca = import '../../localca.libsonnet';
       imageVersion: '8.0.29-21',
       storageClass: 'standard',
       storageSize: '20Gi',
+      rootPassword: 'changeme',
       myCnf: {
         main: {},
         sections: {
@@ -37,6 +38,8 @@ local ca = import '../../localca.libsonnet';
     local this = self,
 
     local config = std.mergePatch(defaultConfig, appConfig),
+
+    assert config.rootPassword != 'changeme' : error '"changeme" is an invalid password',
 
     local appName = name,
     local componentName = 'mysql-single-node',
