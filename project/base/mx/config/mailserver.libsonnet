@@ -2,11 +2,10 @@
   default: {
     storageClass: 'zfs-fast-xfs',
     // 432000 seconds = 5 days
-    cronjobTargetContainerCommand: 'openssl s_client -starttls smtp -connect localhost:25 -servername mx.bln.space -showcerts < /dev/null 2>/dev/null | openssl x509 -noout -checkend 43200000 || { dovecot reload; postfix reload; }',
+    cronjobTargetContainerCommand: 'openssl s_client -starttls smtp -connect localhost:25 -servername mx.bln.space -showcerts < /dev/null 2>/dev/null | openssl x509 -noout -checkend 432000 || { dovecot reload; postfix reload; }',
     cronjobTargetContainerName: 'mailserver',
     cronjobInstance: 'mailserver-cert-reload-check',
-    //cronjobInterval: '10 */12 * * *',
-    cronjobInterval: '*/10 * * * *',
+    cronjobInterval: '0 */12 * * *',
     cronjobTargetPodSelector: {
       'app.kubernetes.io/project': 'base',
       'app.kubernetes.io/name': 'mx',
