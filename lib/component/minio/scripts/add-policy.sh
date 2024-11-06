@@ -55,7 +55,7 @@ createPolicy() {
 		echo "Policy '$NAME' already exists."
 	fi
 	sleep 2
-	if ! ${MC} idp ldap policy entities myminio/ --policy $NAME | grep -q $LDAPGROUP; then
+	if ! ${MC} idp ldap policy entities myminio/ --policy $NAME | /toolbox/grep -q $LDAPGROUP; then
 		echo Attaching LDAP group $LDAPGROUP to policy $NAME
 		${MC} idp ldap policy attach myminio/ $NAME --group $LDAPGROUP
 	else
